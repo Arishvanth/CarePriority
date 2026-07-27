@@ -1,283 +1,534 @@
+import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import {
+  AlertTriangle, Clock3, Loader2, MapPin, Mic, Search, Siren, Stethoscope, Users, UserPlus,
+} from "lucide-react";
+
 import { PageHeader } from "@/components/care/page-header";
-import { StatCard } from "@/components/care/stat-card";
-import { PriorityBadge } from "@/components/care/priority-badge";
-import { mockPatients, priorityStyles, type Patient, type Priority } from "@/lib/mock-data";
+import { MetricCard } from "@/components/care/metric-card";
+import { Panel } from "@/components/care/panel";
+import { PatientCard } from "@/components/care/patient-card";
+import { PriorityChip, StatusChip } from "@/components/care/chips";
+import { TriageBreakdown } from "@/components/care/triage-breakdown";
+import { RfidScanner, type ScanState } from "@/components/care/rfid-scanner";
+import { VitalsRow } from "@/components/care/vitals";
+import { EmptyState } from "@/components/care/empty-state";
+import { CardsSkeleton, TableSkeleton } from "@/components/care/loading";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
-  AlertTriangle, Ambulance, ArrowUp, Heart, MapPin, Mic, Radio, Search, Siren, Thermometer, Timer, Users, Wind,
-} from "lucide-react";
-import { useMemo, useState } from "react";
-import { cn } from "@/lib/utils";
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import { usePatients, queryKeys } from "@/hooks/use-care-data";
+import { createPatient, findByRfid, promoteToEmergency } from "@/data/patients";
+import { createAlert } from "@/data/alerts";
+import type { Patient } from "@/data/types";
+import { scoreTriage, priorityMeta, type Priority } from "@/lib/triage";
+import { nextPatientCode, randomRfid, waitMinutes } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/app/reception")({
-  head: () => ({ meta: [{ title: "Reception — CarePriority" }, { name: "robots", content: "noindex" }] }),
-  component: Reception,
+  head: () => ({
+    meta: [
+      { title: "Reception — CarePriority" },
+      { name: "description", content: "Register patients, capture vitals and run the live triage queue." },
+      { name: "robots", content: "noindex" },
+    ],
+  }),
+  component: ReceptionPage,
 });
 
-function Reception() {
-  const [patients, setPatients] = useState<Patient[]>(mockPatients);
+const OVERFLOW_THRESHOLD = 8;
+const emptyForm = {
+  full_name: "",
+  age: "",
+  gender: "F",
+  symptoms: "",
+  temperature: "",
+  heart_rate: "",
+  spo2: "",
+  rfid_tag: "",
+};
+
+function ReceptionPage() {
+  const queryClient = useQueryClient();
+  const { data: patients = [], isLoading } = usePatients();
+  const [form, setForm] = useState(emptyForm);
   const [search, setSearch] = useState("");
-  const [recording, setRecording] = useState(false);
-  const [transcript, setTranscript] = useState("");
-  const [emergency, setEmergency] = useState<Patient | null>(null);
+  const [listening, setListening] = useState(false);
+  const [scanState, setScanState] = useState<ScanState>("idle");
+  const [scanMessage, setScanMessage] = useState<string>();
+  const [emergencyTarget, setEmergencyTarget] = useState<Patient | null>(null);
 
-  const overflow = patients.filter((p) => p.status === "waiting").length > 8;
+  const active = patients.filter((p) => p.status !== "completed");
+  const waiting = patients.filter((p) => p.status === "waiting");
+  const overflow = waiting.length >= OVERFLOW_THRESHOLD;
 
-  const grouped = useMemo(() => {
-    const g: Record<Priority, Patient[]> = { HIGH: [], MODERATE: [], LOW: [] };
-    patients.filter((p) => p.status !== "completed").forEach((p) => g[p.priority].push(p));
-    (Object.keys(g) as Priority[]).forEach((k) => g[k].sort((a, b) => a.queuePosition - b.queuePosition));
-    return g;
-  }, [patients]);
+  const lanes = useMemo(() => {
+    const grouped: Record<Priority, Patient[]> = { HIGH: [], MODERATE: [], LOW: [] };
+    for (const p of active) grouped[p.priority].push(p);
+    for (const key of Object.keys(grouped) as Priority[]) {
+      grouped[key].sort((a, b) => a.queue_position - b.queue_position);
+    }
+    return grouped;
+  }, [active]);
 
-  const filtered = patients.filter((p) =>
-    !search || p.name.toLowerCase().includes(search.toLowerCase()) || p.id.includes(search) || p.rfid.includes(search),
-  );
+  const filtered = patients.filter((p) => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return (
+      p.full_name.toLowerCase().includes(q) ||
+      p.patient_code.toLowerCase().includes(q) ||
+      (p.rfid_tag ?? "").toLowerCase().includes(q) ||
+      p.symptoms.toLowerCase().includes(q)
+    );
+  });
 
-  function promote(id: string) {
-    setPatients((prev) => {
-      const target = prev.find((p) => p.id === id);
-      if (!target) return prev;
-      return prev.map((p) => {
-        if (p.id === id) return { ...p, priority: "HIGH", queuePosition: 0 };
-        if (p.priority === "HIGH") return { ...p, queuePosition: p.queuePosition + 1 };
-        return p;
+  const preview = scoreTriage({
+    symptoms: form.symptoms,
+    temperature: form.temperature ? Number(form.temperature) : null,
+    heartRate: form.heart_rate ? Number(form.heart_rate) : null,
+    spo2: form.spo2 ? Number(form.spo2) : null,
+    age: form.age ? Number(form.age) : null,
+  });
+
+  const register = useMutation({
+    mutationFn: async () => {
+      const age = Number(form.age);
+      if (!form.full_name.trim() || !Number.isFinite(age) || age <= 0) {
+        throw new Error("Enter a patient name and a valid age.");
+      }
+      const queuePosition =
+        active.filter((p) => p.priority === preview.priority).length + 1;
+      const patient = await createPatient({
+        patient_code: nextPatientCode(),
+        rfid_tag: form.rfid_tag.trim() || randomRfid(),
+        full_name: form.full_name.trim(),
+        age,
+        gender: form.gender,
+        symptoms: form.symptoms.trim(),
+        temperature: form.temperature ? Number(form.temperature) : null,
+        heart_rate: form.heart_rate ? Number(form.heart_rate) : null,
+        spo2: form.spo2 ? Number(form.spo2) : null,
+        priority: preview.priority,
+        triage_score: preview.score,
+        triage_factors: preview.factors,
+        queue_position: queuePosition,
       });
-    });
-    setEmergency(null);
+      if (preview.priority === "HIGH") {
+        await createAlert({
+          kind: "triage",
+          severity: "critical",
+          title: `High priority patient — ${patient.full_name}`,
+          message: `Triage score ${preview.score}/100. ${preview.factors[0]?.label ?? "Immediate review required"}.`,
+          audience: "doctor",
+          patient_id: patient.id,
+        });
+      }
+      if (waiting.length + 1 >= OVERFLOW_THRESHOLD) {
+        await createAlert({
+          kind: "overflow",
+          severity: "warning",
+          title: "Waiting room approaching capacity",
+          message: `${waiting.length + 1} patients now waiting. Consider re-routing low-priority cases.`,
+          audience: "receptionist",
+        });
+      }
+      return patient;
+    },
+    onSuccess: (patient) => {
+      toast.success(`${patient.full_name} added to the queue`, {
+        description: `${priorityMeta[patient.priority].label} priority · score ${patient.triage_score}`,
+      });
+      setForm(emptyForm);
+      void queryClient.invalidateQueries({ queryKey: queryKeys.patients });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.alerts });
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const escalate = useMutation({
+    mutationFn: async (patient: Patient) => {
+      await promoteToEmergency(patient);
+      await createAlert({
+        kind: "emergency",
+        severity: "critical",
+        title: `Emergency override — ${patient.full_name}`,
+        message: `${patient.patient_code} moved to the front of the queue by reception.`,
+        audience: "doctor",
+        patient_id: patient.id,
+      });
+    },
+    onSuccess: () => {
+      toast.success("Patient promoted to the front of the queue");
+      setEmergencyTarget(null);
+      void queryClient.invalidateQueries({ queryKey: queryKeys.patients });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.alerts });
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  async function handleScan(tag: string) {
+    if (tag === "__scan__") {
+      setScanState("scanning");
+      setScanMessage("Hold the wristband near the reader…");
+      window.setTimeout(() => {
+        const fresh = randomRfid();
+        setForm((f) => ({ ...f, rfid_tag: fresh }));
+        setScanState("found");
+        setScanMessage(`New wristband ${fresh} linked to this registration.`);
+      }, 1200);
+      return;
+    }
+    setScanState("scanning");
+    const existing = await findByRfid(tag).catch(() => null);
+    if (existing) {
+      setScanState("found");
+      setScanMessage(`${existing.full_name} is already registered (${existing.patient_code}).`);
+      setSearch(existing.full_name);
+    } else {
+      setForm((f) => ({ ...f, rfid_tag: tag }));
+      setScanState("found");
+      setScanMessage(`Wristband ${tag} linked to this registration.`);
+    }
   }
+
+  function simulateVoiceCapture() {
+    setListening(true);
+    window.setTimeout(() => {
+      setForm((f) => ({
+        ...f,
+        symptoms:
+          "Patient reports chest tightness for the last 30 minutes with shortness of breath and nausea.",
+      }));
+      setListening(false);
+      toast.success("Transcript captured", { description: "Review before adding to the queue." });
+    }, 1400);
+  }
+
+  const avgWait = waiting.length
+    ? Math.round(waiting.reduce((sum, p) => sum + waitMinutes(p.registered_at), 0) / waiting.length)
+    : 0;
 
   return (
     <>
       <PageHeader
-        eyebrow="Reception"
+        breadcrumbs={[{ label: "Console", to: "/app/reception" }, { label: "Reception" }]}
         title="Live intake & queue"
-        description="Register patients, capture vitals, and watch the queue prioritize itself in real time."
+        description="Register patients, capture vitals, and let the triage engine order the queue automatically."
         actions={
           <>
             <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search name, ID, RFID…" className="h-10 w-64 bg-white/5 pl-9" />
+              <Search
+                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                aria-hidden="true"
+              />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search name, ID, RFID…"
+                aria-label="Search patients"
+                className="h-9.5 w-full pl-9 sm:w-64"
+              />
             </div>
-            <Button variant="outline" className="border-primary/40 bg-primary/10 text-primary hover:bg-primary/20">
-              <Siren className="mr-2 h-4 w-4" /> Emergency
+            <Button
+              variant="emergency"
+              onClick={() => setEmergencyTarget(lanes.MODERATE[0] ?? lanes.LOW[0] ?? active[0] ?? null)}
+              disabled={active.length === 0}
+            >
+              <Siren className="h-4 w-4" /> Emergency
             </Button>
           </>
         }
       />
 
       {overflow && (
-        <div className="mb-6 flex items-start gap-3 rounded-2xl border border-warning/30 bg-warning/10 p-4 text-warning">
-          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
+        <div
+          role="alert"
+          className="mb-6 flex flex-col gap-3 rounded-2xl border border-warning/35 bg-warning-soft p-4 sm:flex-row sm:items-center"
+        >
+          <AlertTriangle className="h-5 w-5 shrink-0 text-warning" aria-hidden="true" />
           <div className="flex-1">
-            <p className="font-medium text-warning">Overflow detected — {patients.filter((p) => p.status === "waiting").length} patients waiting.</p>
-            <p className="text-xs text-warning/80">Consider re-routing low-priority patients to nearby facilities.</p>
+            <p className="text-sm font-medium text-foreground">
+              Overflow warning — {waiting.length} patients waiting
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Above the {OVERFLOW_THRESHOLD}-patient threshold. Consider re-routing low-priority cases.
+            </p>
           </div>
-          <Button size="sm" variant="outline" className="border-warning/40 bg-warning/10 text-warning hover:bg-warning/20"><MapPin className="mr-1.5 h-3.5 w-3.5" /> Nearby hospitals</Button>
+          <Button size="sm" variant="outline">
+            <MapPin className="h-3.5 w-3.5" /> Nearby facilities
+          </Button>
         </div>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="High priority" value={String(grouped.HIGH.length)} icon={Ambulance} accent="primary" delta={12} />
-        <StatCard label="In queue" value={String(patients.filter((p) => p.status === "waiting").length)} icon={Users} accent="warning" delta={5} />
-        <StatCard label="Avg wait" value="9m" icon={Timer} accent="success" delta={-8} />
-        <StatCard label="Completed today" value="47" icon={Heart} accent="success" delta={22} />
-      </div>
-
-      <div className="mt-8 grid gap-6 xl:grid-cols-5">
-        <RegisterPanel
-          className="xl:col-span-2"
-          recording={recording}
-          transcript={transcript}
-          onRecord={() => {
-            setRecording(true);
-            setTranscript("");
-            setTimeout(() => {
-              setTranscript("Patient reports chest tightness for the last 30 minutes, mild shortness of breath, no prior cardiac history.");
-              setRecording(false);
-            }, 1500);
-          }}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <MetricCard label="High priority" value={lanes.HIGH.length} icon={Siren} tone="danger" loading={isLoading} />
+        <MetricCard label="Waiting" value={waiting.length} icon={Users} tone="warning" loading={isLoading} />
+        <MetricCard label="Average wait" value={`${avgWait}m`} icon={Clock3} tone="primary" loading={isLoading} />
+        <MetricCard
+          label="In consultation"
+          value={patients.filter((p) => p.status === "in-consult").length}
+          icon={Stethoscope}
+          tone="success"
+          loading={isLoading}
         />
-        <QueueLanes className="xl:col-span-3" grouped={grouped} onEmergency={setEmergency} />
       </div>
 
-      <div className="mt-8 glass rounded-3xl">
-        <div className="flex items-center justify-between border-b border-white/5 px-6 py-4">
-          <div>
-            <h3 className="font-display text-lg font-semibold">All patients</h3>
-            <p className="text-xs text-muted-foreground">Live view of everyone registered today.</p>
-          </div>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="text-left text-xs uppercase tracking-wider text-muted-foreground">
-              <tr className="[&>th]:px-6 [&>th]:py-3">
-                <th>Patient</th><th>Age</th><th>RFID</th><th>Vitals</th><th>Priority</th><th>Queue</th><th>Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              {filtered.map((p) => (
-                <tr key={p.id} className="transition hover:bg-white/[0.02] [&>td]:px-6 [&>td]:py-3">
-                  <td>
-                    <div className="font-medium">{p.name}</div>
-                    <div className="text-xs text-muted-foreground">{p.id}</div>
-                  </td>
-                  <td className="text-muted-foreground">{p.age} · {p.gender}</td>
-                  <td className="font-mono text-xs text-muted-foreground">{p.rfid}</td>
-                  <td>
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                      <span className="inline-flex items-center gap-1"><Thermometer className="h-3 w-3" /> {p.temperature}°</span>
-                      <span className="inline-flex items-center gap-1"><Heart className="h-3 w-3" /> {p.heartRate}</span>
-                      <span className="inline-flex items-center gap-1"><Wind className="h-3 w-3" /> {p.spo2}%</span>
-                    </div>
-                  </td>
-                  <td><PriorityBadge priority={p.priority} /></td>
-                  <td className="text-muted-foreground">#{p.queuePosition}</td>
-                  <td>
-                    <span className={cn("rounded-full px-2 py-0.5 text-xs",
-                      p.status === "waiting" ? "bg-white/5 text-muted-foreground" :
-                      p.status === "in-consult" ? "bg-warning/15 text-warning" : "bg-success/15 text-success")}>
-                      {p.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {emergency && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="glass w-full max-w-md rounded-3xl p-6 glow-red">
-            <div className="mb-4 flex items-start gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/20 text-primary"><Siren className="h-5 w-5" /></div>
-              <div>
-                <h3 className="font-display text-lg font-semibold">Emergency override</h3>
-                <p className="text-sm text-muted-foreground">Move <span className="text-white">{emergency.name}</span> to the top of the queue?</p>
+      <div className="mt-6 grid gap-5 xl:grid-cols-5 lg:mt-8">
+        <div className="space-y-5 xl:col-span-2">
+          <Panel
+            title="Register patient"
+            description="Every field feeds the triage engine in real time."
+          >
+            <form
+              className="grid gap-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                register.mutate();
+              }}
+            >
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="grid gap-1.5 sm:col-span-2">
+                  <Label htmlFor="full_name">Full name</Label>
+                  <Input
+                    id="full_name"
+                    required
+                    maxLength={120}
+                    value={form.full_name}
+                    onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+                    placeholder="e.g. Aarav Sharma"
+                  />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label htmlFor="age">Age</Label>
+                  <Input
+                    id="age"
+                    type="number"
+                    min={0}
+                    max={120}
+                    required
+                    value={form.age}
+                    onChange={(e) => setForm({ ...form, age: e.target.value })}
+                    placeholder="34"
+                  />
+                </div>
               </div>
-            </div>
-            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3 text-xs text-muted-foreground">{emergency.symptoms}</div>
-            <div className="mt-4 flex justify-end gap-2">
-              <Button variant="ghost" onClick={() => setEmergency(null)}>Cancel</Button>
-              <Button className="bg-primary text-white hover:bg-primary/90" onClick={() => promote(emergency.id)}>
-                <ArrowUp className="mr-1.5 h-4 w-4" /> Promote now
+
+              <fieldset className="grid gap-1.5">
+                <legend className="mb-1.5 text-sm font-medium text-foreground">Gender</legend>
+                <div className="flex gap-2" role="radiogroup">
+                  {[
+                    { value: "F", label: "Female" },
+                    { value: "M", label: "Male" },
+                    { value: "O", label: "Other" },
+                  ].map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      role="radio"
+                      aria-checked={form.gender === option.value}
+                      onClick={() => setForm({ ...form, gender: option.value })}
+                      className={
+                        form.gender === option.value
+                          ? "flex-1 rounded-lg border border-primary bg-primary-light py-2 text-sm font-medium text-primary-hover"
+                          : "flex-1 rounded-lg border border-border bg-surface py-2 text-sm text-muted-foreground transition-colors hover:border-primary/35"
+                      }
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+
+              <div className="grid gap-1.5">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="symptoms">Presenting symptoms</Label>
+                  <Button type="button" size="sm" variant="ghost" onClick={simulateVoiceCapture}>
+                    {listening ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Mic className="h-3.5 w-3.5" />}
+                    {listening ? "Listening…" : "Voice capture"}
+                  </Button>
+                </div>
+                <Textarea
+                  id="symptoms"
+                  rows={3}
+                  maxLength={1000}
+                  value={form.symptoms}
+                  onChange={(e) => setForm({ ...form, symptoms: e.target.value })}
+                  placeholder="Describe what the patient reports…"
+                />
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="grid gap-1.5">
+                  <Label htmlFor="temperature">Temp °C</Label>
+                  <Input
+                    id="temperature"
+                    type="number"
+                    step="0.1"
+                    value={form.temperature}
+                    onChange={(e) => setForm({ ...form, temperature: e.target.value })}
+                    placeholder="37.0"
+                  />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label htmlFor="heart_rate">HR bpm</Label>
+                  <Input
+                    id="heart_rate"
+                    type="number"
+                    value={form.heart_rate}
+                    onChange={(e) => setForm({ ...form, heart_rate: e.target.value })}
+                    placeholder="80"
+                  />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label htmlFor="spo2">SpO₂ %</Label>
+                  <Input
+                    id="spo2"
+                    type="number"
+                    value={form.spo2}
+                    onChange={(e) => setForm({ ...form, spo2: e.target.value })}
+                    placeholder="98"
+                  />
+                </div>
+              </div>
+
+              <RfidScanner onScan={handleScan} state={scanState} message={scanMessage} />
+              {form.rfid_tag && (
+                <p className="text-xs text-muted-foreground">
+                  Linked wristband: <span className="font-mono text-foreground">{form.rfid_tag}</span>
+                </p>
+              )}
+
+              <Button type="submit" size="lg" disabled={register.isPending}>
+                {register.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
+                Add to queue
               </Button>
-            </div>
-          </div>
+            </form>
+          </Panel>
+
+          <Panel title="Triage breakdown" description="Live preview of the score this registration will receive.">
+            <TriageBreakdown score={preview.score} priority={preview.priority} factors={preview.factors} />
+          </Panel>
         </div>
-      )}
+
+        <div className="grid gap-4 md:grid-cols-3 xl:col-span-3 xl:content-start">
+          {(["HIGH", "MODERATE", "LOW"] as Priority[]).map((key) => (
+            <Panel
+              key={key}
+              className="h-fit"
+              title={`${priorityMeta[key].label} priority`}
+              description={priorityMeta[key].description}
+              actions={
+                <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium tabular-nums text-muted-foreground">
+                  {lanes[key].length}
+                </span>
+              }
+              bodyClassName="space-y-3"
+            >
+              {isLoading ? (
+                <CardsSkeleton count={2} />
+              ) : lanes[key].length === 0 ? (
+                <EmptyState icon={Users} title="Lane clear" description="No patients in this lane right now." />
+              ) : (
+                lanes[key].map((patient) => (
+                  <PatientCard key={patient.id} patient={patient} onEmergency={setEmergencyTarget} compact />
+                ))
+              )}
+            </Panel>
+          ))}
+        </div>
+      </div>
+
+      <Panel
+        className="mt-6 lg:mt-8"
+        title="All patients today"
+        description="Everyone registered in this session, newest activity first."
+        flush
+      >
+        {isLoading ? (
+          <TableSkeleton />
+        ) : filtered.length === 0 ? (
+          <EmptyState icon={Search} title="No matching patients" description="Try a different name, ID or wristband tag." />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <caption className="sr-only">Registered patients with triage results</caption>
+              <thead>
+                <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground [&>th]:px-5 [&>th]:py-3 [&>th]:font-medium">
+                  <th scope="col">Patient</th>
+                  <th scope="col">Age</th>
+                  <th scope="col">Wristband</th>
+                  <th scope="col">Vitals</th>
+                  <th scope="col">Score</th>
+                  <th scope="col">Priority</th>
+                  <th scope="col">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {filtered.map((p) => (
+                  <tr key={p.id} className="transition-colors hover:bg-muted/50 [&>td]:px-5 [&>td]:py-3">
+                    <td>
+                      <div className="font-medium text-foreground">{p.full_name}</div>
+                      <div className="text-xs text-muted-foreground">{p.patient_code}</div>
+                    </td>
+                    <td className="text-muted-foreground">
+                      {p.age} · {p.gender}
+                    </td>
+                    <td className="font-mono text-xs text-muted-foreground">{p.rfid_tag ?? "—"}</td>
+                    <td>
+                      <VitalsRow temperature={p.temperature} heartRate={p.heart_rate} spo2={p.spo2} />
+                    </td>
+                    <td className="font-medium tabular-nums text-foreground">{p.triage_score}</td>
+                    <td>
+                      <PriorityChip priority={p.priority} />
+                    </td>
+                    <td>
+                      <StatusChip status={p.status} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Panel>
+
+      <Dialog open={Boolean(emergencyTarget)} onOpenChange={(open) => !open && setEmergencyTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-danger-soft text-danger">
+                <Siren className="h-4 w-4" />
+              </span>
+              Emergency override
+            </DialogTitle>
+            <DialogDescription>
+              Move <span className="font-medium text-foreground">{emergencyTarget?.full_name}</span> to the front of
+              the queue and alert the on-duty doctor immediately.
+            </DialogDescription>
+          </DialogHeader>
+          <p className="rounded-lg border border-border bg-muted/50 p-3 text-sm text-muted-foreground">
+            {emergencyTarget?.symptoms || "No symptoms recorded."}
+          </p>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setEmergencyTarget(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="emergency"
+              disabled={escalate.isPending}
+              onClick={() => emergencyTarget && escalate.mutate(emergencyTarget)}
+            >
+              {escalate.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Siren className="h-4 w-4" />}
+              Promote now
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
-  );
-}
-
-function RegisterPanel({ className, recording, transcript, onRecord }: { className?: string; recording: boolean; transcript: string; onRecord: () => void }) {
-  return (
-    <div className={cn("glass rounded-3xl p-6", className)}>
-      <h3 className="font-display text-lg font-semibold">Register patient</h3>
-      <p className="text-xs text-muted-foreground">All fields feed the AI triage engine.</p>
-      <div className="mt-5 grid gap-4">
-        <div className="grid gap-3 sm:grid-cols-3">
-          <div className="sm:col-span-2 grid gap-1.5"><Label className="text-xs">Full name</Label><Input placeholder="e.g. Aarav Sharma" className="bg-white/5" /></div>
-          <div className="grid gap-1.5"><Label className="text-xs">Age</Label><Input placeholder="34" className="bg-white/5" /></div>
-        </div>
-        <div className="grid gap-1.5"><Label className="text-xs">Gender</Label>
-          <div className="flex gap-2">
-            {["Female", "Male", "Other"].map((g) => (
-              <button key={g} className="flex-1 rounded-lg border border-white/10 bg-white/5 py-2 text-sm transition hover:border-primary/40">{g}</button>
-            ))}
-          </div>
-        </div>
-
-        <div className="grid gap-2 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
-          <div className="flex items-center justify-between">
-            <Label className="text-xs">Voice symptoms</Label>
-            <button onClick={onRecord} className={cn("inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs transition",
-              recording ? "bg-primary/20 text-primary animate-pulse-ring" : "border border-white/10 text-muted-foreground hover:text-white")}>
-              <Mic className="h-3.5 w-3.5" /> {recording ? "Listening…" : "Record"}
-            </button>
-          </div>
-          <div className="min-h-16 rounded-lg border border-white/5 bg-black/20 p-3 text-sm">
-            {transcript || <span className="text-muted-foreground">Transcript will appear here…</span>}
-          </div>
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-3">
-          <VitalInput icon={Thermometer} label="Temp °C" value="37.4" />
-          <VitalInput icon={Heart} label="HR bpm" value="88" />
-          <VitalInput icon={Wind} label="SpO₂ %" value="98" />
-        </div>
-
-        <div className="grid gap-1.5">
-          <Label className="text-xs">RFID wristband</Label>
-          <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 p-2">
-            <Radio className="h-4 w-4 text-primary" />
-            <span className="font-mono text-sm">RF-88D1</span>
-            <button className="ml-auto rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-white/5 hover:text-white">Re-scan</button>
-          </div>
-        </div>
-
-        <div className="mt-2 flex items-center justify-between rounded-2xl border border-primary/30 bg-primary/10 p-4">
-          <div>
-            <p className="text-xs text-muted-foreground">Auto-assigned priority</p>
-            <p className="mt-0.5 font-display text-lg font-semibold text-primary">HIGH · Queue #4</p>
-          </div>
-          <Button className="bg-primary text-white hover:bg-primary/90">Add to queue</Button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function VitalInput({ icon: Icon, label, value }: { icon: typeof Heart; label: string; value: string }) {
-  return (
-    <div className="grid gap-1.5">
-      <Label className="text-xs">{label}</Label>
-      <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2">
-        <Icon className="h-4 w-4 text-primary" />
-        <input defaultValue={value} className="w-full bg-transparent text-sm outline-none" />
-      </div>
-    </div>
-  );
-}
-
-function QueueLanes({ className, grouped, onEmergency }: { className?: string; grouped: Record<Priority, Patient[]>; onEmergency: (p: Patient) => void }) {
-  return (
-    <div className={cn("grid gap-4 md:grid-cols-3", className)}>
-      {(Object.keys(grouped) as Priority[]).map((k) => (
-        <div key={k} className="glass rounded-3xl p-4">
-          <div className="mb-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className={cn("h-2 w-2 rounded-full", priorityStyles[k].dot)} />
-              <h3 className="font-display font-semibold">{priorityStyles[k].label}</h3>
-              <span className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] text-muted-foreground">{grouped[k].length}</span>
-            </div>
-          </div>
-          <div className="space-y-2">
-            {grouped[k].map((p) => (
-              <div key={p.id} className="group rounded-2xl border border-white/5 bg-white/[0.02] p-3 transition hover:border-primary/30">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">{p.name}</p>
-                    <p className="truncate text-xs text-muted-foreground">{p.symptoms}</p>
-                  </div>
-                  <span className="rounded-lg bg-white/5 px-2 py-0.5 text-[11px] text-muted-foreground">#{p.queuePosition}</span>
-                </div>
-                <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
-                  <span>{p.temperature}° · {p.heartRate}bpm · {p.spo2}%</span>
-                  {k !== "HIGH" && (
-                    <button onClick={() => onEmergency(p)} className="opacity-0 transition group-hover:opacity-100 text-primary hover:underline">Emergency ↑</button>
-                  )}
-                </div>
-              </div>
-            ))}
-            {grouped[k].length === 0 && <p className="rounded-lg border border-dashed border-white/10 px-3 py-6 text-center text-xs text-muted-foreground">Empty lane</p>}
-          </div>
-        </div>
-      ))}
-    </div>
   );
 }
