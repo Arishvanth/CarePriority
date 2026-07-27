@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Plus, ShieldCheck, Stethoscope, Trash2, User } from "lucide-react";
 
-export const Route = createFileRoute("/app/admin")({
+export const Route = createFileRoute("/_authenticated/app/admin")({
   head: () => ({ meta: [{ title: "Admin — CarePriority" }, { name: "robots", content: "noindex" }] }),
   component: Admin,
 });
@@ -22,7 +22,7 @@ const users = [
 function Admin() {
   return (
     <>
-      <PageHeader eyebrow="Admin" title="Workspace settings" description="Manage staff, thresholds, and hospital-wide configuration."
+      <PageHeader breadcrumbs={[{ label: "Console", to: "/app/reception" }]} title="Workspace settings" description="Manage staff, thresholds, and hospital-wide configuration."
         actions={<Button className="bg-primary text-white hover:bg-primary/90"><Plus className="mr-2 h-4 w-4" /> Invite user</Button>} />
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="glass rounded-3xl p-6 lg:col-span-2">
