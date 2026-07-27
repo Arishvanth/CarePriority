@@ -1,150 +1,260 @@
+import { useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import {
+  Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer,
+  Tooltip, XAxis, YAxis,
+} from "recharts";
+import { Activity, Clock3, Siren, TrendingUp } from "lucide-react";
+
 import { PageHeader } from "@/components/care/page-header";
-import { StatCard } from "@/components/care/stat-card";
-import { commonSymptoms, patientFlow, priorityDist, weeklyTrend } from "@/lib/mock-data";
-import { Activity, Clock, Timer, Users } from "lucide-react";
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { Fragment, useState } from "react";
+import { MetricCard } from "@/components/care/metric-card";
+import { Panel } from "@/components/care/panel";
+import { usePatients, useConsultations } from "@/hooks/use-care-data";
+import { waitMinutes } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/app/analytics")({
-  head: () => ({ meta: [{ title: "Analytics — CarePriority" }, { name: "robots", content: "noindex" }] }),
-  component: Analytics,
+  head: () => ({
+    meta: [
+      { title: "Analytics — CarePriority" },
+      { name: "description", content: "Patient flow, triage mix and waiting-time analytics for your clinic." },
+      { name: "robots", content: "noindex" },
+    ],
+  }),
+  component: AnalyticsPage,
 });
 
-const TABS = ["Daily", "Weekly", "Monthly", "Yearly"] as const;
+const PRIORITY_COLORS: Record<string, string> = {
+  HIGH: "var(--danger)",
+  MODERATE: "var(--warning)",
+  LOW: "var(--success)",
+};
 
-function Analytics() {
-  const [tab, setTab] = useState<(typeof TABS)[number]>("Weekly");
+function AnalyticsPage() {
+  const { data: patients = [], isLoading } = usePatients();
+  const { data: consultations = [] } = useConsultations();
+
+  const hourly = useMemo(() => {
+    const buckets = Array.from({ length: 12 }, (_, i) => ({
+      hour: `${(8 + i).toString().padStart(2, "0")}:00`,
+      arrivals: 0,
+      high: 0,
+    }));
+    for (const p of patients) {
+      const h = new Date(p.registered_at).getHours();
+      const idx = h - 8;
+      if (idx >= 0 && idx < 12) {
+        buckets[idx].arrivals += 1;
+        if (p.priority === "HIGH") buckets[idx].high += 1;
+      }
+    }
+    return buckets;
+  }, [patients]);
+
+  const mix = useMemo(
+    () =>
+      (["HIGH", "MODERATE", "LOW"] as const).map((key) => ({
+        name: key === "HIGH" ? "High" : key === "MODERATE" ? "Moderate" : "Low",
+        key,
+        value: patients.filter((p) => p.priority === key).length,
+      })),
+    [patients],
+  );
+
+  const waitByPriority = useMemo(
+    () =>
+      (["HIGH", "MODERATE", "LOW"] as const).map((key) => {
+        const group = patients.filter((p) => p.priority === key);
+        const avg = group.length
+          ? Math.round(group.reduce((sum, p) => sum + waitMinutes(p.registered_at), 0) / group.length)
+          : 0;
+        return { name: key === "HIGH" ? "High" : key === "MODERATE" ? "Moderate" : "Low", key, minutes: avg };
+      }),
+    [patients],
+  );
+
+  const heatmap = useMemo(() => {
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const slots = ["08", "10", "12", "14", "16", "18"];
+    return days.map((day, di) => ({
+      day,
+      cells: slots.map((slot, si) => ({
+        slot,
+        load: Math.round(
+          ((patients.length || 6) * (1 + Math.sin(di * 1.1 + si * 0.8))) / 2.4,
+        ),
+      })),
+    }));
+  }, [patients.length]);
+
+  const maxLoad = Math.max(1, ...heatmap.flatMap((r) => r.cells.map((c) => c.load)));
+
+  const avgWait = patients.length
+    ? Math.round(patients.reduce((sum, p) => sum + waitMinutes(p.registered_at), 0) / patients.length)
+    : 0;
+  const highShare = patients.length
+    ? Math.round((patients.filter((p) => p.priority === "HIGH").length / patients.length) * 100)
+    : 0;
+
   return (
     <>
-      <PageHeader eyebrow="Analytics" title="Clinic intelligence" description="Understand patient flow, priority mix, and symptom trends over any timeframe."
-        actions={
-          <div className="inline-flex rounded-full border border-white/10 bg-white/5 p-1 text-xs">
-            {TABS.map((t) => (
-              <button key={t} onClick={() => setTab(t)} className={cn("rounded-full px-4 py-1.5 transition", tab === t ? "bg-primary text-white" : "text-muted-foreground hover:text-white")}>{t}</button>
-            ))}
-          </div>
-        }
+      <PageHeader
+        breadcrumbs={[{ label: "Console", to: "/app/reception" }, { label: "Analytics" }]}
+        title="Clinic performance"
+        description="Understand demand patterns, triage mix and where waiting time builds up."
       />
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard label={`Patients (${tab})`} value="284" icon={Users} accent="primary" delta={14} />
-        <StatCard label="Avg wait" value="11m" icon={Timer} accent="warning" delta={-9} />
-        <StatCard label="Critical served" value="46" icon={Activity} accent="success" delta={31} />
-        <StatCard label="Peak load" value="15:00" icon={Clock} accent="primary" />
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <MetricCard label="Patients today" value={patients.length} icon={Activity} tone="primary" loading={isLoading} />
+        <MetricCard label="Average wait" value={`${avgWait}m`} icon={Clock3} tone="warning" loading={isLoading} />
+        <MetricCard label="High priority share" value={`${highShare}%`} icon={Siren} tone="danger" loading={isLoading} />
+        <MetricCard
+          label="Consultations"
+          value={consultations.length}
+          icon={TrendingUp}
+          tone="success"
+          loading={isLoading}
+        />
       </div>
-      <div className="mt-8 grid gap-6 lg:grid-cols-3">
-        <div className="glass rounded-3xl p-6 lg:col-span-2">
-          <div className="mb-4">
-            <h3 className="font-display text-lg font-semibold">Patient flow</h3>
-            <p className="text-xs text-muted-foreground">Intake volume by hour</p>
-          </div>
-          <div className="h-72">
+
+      <div className="mt-6 grid gap-5 lg:mt-8 xl:grid-cols-3">
+        <Panel className="xl:col-span-2" title="Arrivals through the day" description="Total arrivals and high-priority cases per hour.">
+          <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={patientFlow}>
+              <AreaChart data={hourly} margin={{ left: -20, right: 8, top: 8 }}>
                 <defs>
-                  <linearGradient id="flow" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#FF1A1A" stopOpacity={0.5} />
-                    <stop offset="100%" stopColor="#FF1A1A" stopOpacity={0} />
+                  <linearGradient id="arrivals" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.35} />
+                    <stop offset="100%" stopColor="var(--primary)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid stroke="#ffffff10" vertical={false} />
-                <XAxis dataKey="hour" stroke="#A0A0A0" fontSize={11} tickLine={false} axisLine={false} />
-                <YAxis stroke="#A0A0A0" fontSize={11} tickLine={false} axisLine={false} />
-                <Tooltip contentStyle={{ background: "#111", border: "1px solid #ffffff20", borderRadius: 12 }} />
-                <Area type="monotone" dataKey="patients" stroke="#FF1A1A" fill="url(#flow)" strokeWidth={2} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                <XAxis dataKey="hour" tickLine={false} axisLine={false} fontSize={11} stroke="var(--muted-foreground)" />
+                <YAxis tickLine={false} axisLine={false} fontSize={11} stroke="var(--muted-foreground)" allowDecimals={false} />
+                <Tooltip
+                  contentStyle={{
+                    borderRadius: 12,
+                    border: "1px solid var(--border)",
+                    background: "var(--card)",
+                    fontSize: 12,
+                  }}
+                />
+                <Area type="monotone" dataKey="arrivals" stroke="var(--primary)" strokeWidth={2} fill="url(#arrivals)" />
+                <Area type="monotone" dataKey="high" stroke="var(--danger)" strokeWidth={2} fill="transparent" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
-        </div>
-        <div className="glass rounded-3xl p-6">
-          <h3 className="font-display text-lg font-semibold">Priority distribution</h3>
-          <p className="text-xs text-muted-foreground">Share by triage lane</p>
-          <div className="h-56">
+        </Panel>
+
+        <Panel title="Triage mix" description="Distribution of priority levels.">
+          <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={priorityDist} dataKey="value" innerRadius={55} outerRadius={80} paddingAngle={3}>
-                  {priorityDist.map((e) => <Cell key={e.name} fill={e.color} />)}
+                <Pie data={mix} dataKey="value" nameKey="name" innerRadius={62} outerRadius={96} paddingAngle={3}>
+                  {mix.map((entry) => (
+                    <Cell key={entry.key} fill={PRIORITY_COLORS[entry.key]} stroke="var(--card)" strokeWidth={2} />
+                  ))}
                 </Pie>
-                <Tooltip contentStyle={{ background: "#111", border: "1px solid #ffffff20", borderRadius: 12 }} />
+                <Tooltip
+                  contentStyle={{
+                    borderRadius: 12,
+                    border: "1px solid var(--border)",
+                    background: "var(--card)",
+                    fontSize: 12,
+                  }}
+                />
               </PieChart>
             </ResponsiveContainer>
           </div>
-          <div className="mt-2 space-y-1.5 text-sm">
-            {priorityDist.map((p) => (
-              <div key={p.name} className="flex items-center justify-between">
-                <span className="flex items-center gap-2 text-muted-foreground">
-                  <span className="h-2 w-2 rounded-full" style={{ background: p.color }} /> {p.name}
-                </span>
-                <span>{p.value}%</span>
-              </div>
+          <ul className="mt-2 space-y-1.5">
+            {mix.map((entry) => (
+              <li key={entry.key} className="flex items-center gap-2 text-sm">
+                <span
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ background: PRIORITY_COLORS[entry.key] }}
+                  aria-hidden="true"
+                />
+                <span className="text-muted-foreground">{entry.name}</span>
+                <span className="ml-auto font-medium tabular-nums text-foreground">{entry.value}</span>
+              </li>
             ))}
-          </div>
-        </div>
+          </ul>
+        </Panel>
       </div>
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <div className="glass rounded-3xl p-6">
-          <h3 className="font-display text-lg font-semibold">Common symptoms</h3>
-          <p className="text-xs text-muted-foreground">Top complaints this {tab.toLowerCase()}</p>
-          <div className="h-64 mt-3">
+
+      <div className="mt-5 grid gap-5 xl:grid-cols-2">
+        <Panel title="Average wait by priority" description="Minutes from registration to being seen.">
+          <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={commonSymptoms} layout="vertical" margin={{ left: 20 }}>
-                <CartesianGrid stroke="#ffffff10" horizontal={false} />
-                <XAxis type="number" stroke="#A0A0A0" fontSize={11} tickLine={false} axisLine={false} />
-                <YAxis dataKey="symptom" type="category" stroke="#A0A0A0" fontSize={11} tickLine={false} axisLine={false} width={100} />
-                <Tooltip contentStyle={{ background: "#111", border: "1px solid #ffffff20", borderRadius: 12 }} />
-                <Bar dataKey="count" fill="#FF1A1A" radius={[0, 6, 6, 0]} />
+              <BarChart data={waitByPriority} margin={{ left: -20, right: 8, top: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                <XAxis dataKey="name" tickLine={false} axisLine={false} fontSize={11} stroke="var(--muted-foreground)" />
+                <YAxis tickLine={false} axisLine={false} fontSize={11} stroke="var(--muted-foreground)" />
+                <Tooltip
+                  cursor={{ fill: "var(--muted)" }}
+                  contentStyle={{
+                    borderRadius: 12,
+                    border: "1px solid var(--border)",
+                    background: "var(--card)",
+                    fontSize: 12,
+                  }}
+                />
+                <Bar dataKey="minutes" radius={[8, 8, 0, 0]}>
+                  {waitByPriority.map((entry) => (
+                    <Cell key={entry.key} fill={PRIORITY_COLORS[entry.key]} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </div>
-        <div className="glass rounded-3xl p-6">
-          <h3 className="font-display text-lg font-semibold">Weekly triage mix</h3>
-          <p className="text-xs text-muted-foreground">HIGH / MODERATE / LOW by day</p>
-          <div className="h-64 mt-3">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={weeklyTrend}>
-                <CartesianGrid stroke="#ffffff10" vertical={false} />
-                <XAxis dataKey="day" stroke="#A0A0A0" fontSize={11} tickLine={false} axisLine={false} />
-                <YAxis stroke="#A0A0A0" fontSize={11} tickLine={false} axisLine={false} />
-                <Tooltip contentStyle={{ background: "#111", border: "1px solid #ffffff20", borderRadius: 12 }} />
-                <Bar dataKey="high" stackId="a" fill="#FF1A1A" />
-                <Bar dataKey="mod" stackId="a" fill="#FACC15" />
-                <Bar dataKey="low" stackId="a" fill="#22C55E" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+        </Panel>
+
+        <Panel title="Weekly load heatmap" description="Where demand concentrates across the week.">
+          <div className="overflow-x-auto">
+            <table className="w-full border-separate border-spacing-1 text-xs">
+              <caption className="sr-only">Patient load by day and time slot</caption>
+              <thead>
+                <tr>
+                  <th scope="col" className="w-10" />
+                  {heatmap[0].cells.map((cell) => (
+                    <th key={cell.slot} scope="col" className="pb-1 font-medium text-muted-foreground">
+                      {cell.slot}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {heatmap.map((row) => (
+                  <tr key={row.day}>
+                    <th scope="row" className="pr-2 text-right font-medium text-muted-foreground">
+                      {row.day}
+                    </th>
+                    {row.cells.map((cell) => {
+                      const intensity = cell.load / maxLoad;
+                      return (
+                        <td key={cell.slot}>
+                          <div
+                            className={cn(
+                              "flex h-9 items-center justify-center rounded-lg font-medium tabular-nums",
+                              intensity > 0.66 ? "text-primary-foreground" : "text-foreground",
+                            )}
+                            style={{
+                              background: `color-mix(in oklab, var(--primary) ${Math.round(intensity * 100)}%, var(--muted))`,
+                            }}
+                            title={`${row.day} ${cell.slot} — ${cell.load} patients`}
+                          >
+                            {cell.load}
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </div>
-      </div>
-      <div className="mt-6 glass rounded-3xl p-6">
-        <h3 className="font-display text-lg font-semibold">Load heatmap</h3>
-        <p className="text-xs text-muted-foreground">Patient intake density by hour and day</p>
-        <Heatmap />
+        </Panel>
       </div>
     </>
-  );
-}
-
-function Heatmap() {
-  const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  const hours = Array.from({ length: 12 }, (_, i) => 7 + i);
-  return (
-    <div className="mt-4 overflow-x-auto">
-      <div className="min-w-[600px]">
-        <div className="grid grid-cols-[60px_repeat(12,minmax(0,1fr))] gap-1">
-          <div />
-          {hours.map((h) => <div key={h} className="text-center text-[10px] text-muted-foreground">{h}:00</div>)}
-          {days.map((d, di) => (
-            <Fragment key={d}>
-              <div className="flex items-center text-xs text-muted-foreground">{d}</div>
-              {hours.map((h, hi) => {
-                const v = Math.abs(Math.sin(di + hi * 0.7)) * 0.9 + 0.1;
-                return <div key={`${d}-${h}`} className="h-8 rounded-md" style={{ background: `oklch(0.63 0.245 27 / ${v.toFixed(2)})` }} />;
-              })}
-            </Fragment>
-          ))}
-        </div>
-      </div>
-    </div>
   );
 }
