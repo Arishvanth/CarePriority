@@ -8,7 +8,7 @@ import { CheckCircle2, ClipboardList, FileText, Heart, PlayCircle, Radio, Stetho
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/app/doctor")({
+export const Route = createFileRoute("/_authenticated/app/doctor")({
   head: () => ({ meta: [{ title: "Doctor — CarePriority" }, { name: "robots", content: "noindex" }] }),
   component: Doctor,
 });

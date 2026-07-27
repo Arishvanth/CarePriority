@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Plus, ShieldCheck, Stethoscope, Trash2, User } from "lucide-react";
 
-export const Route = createFileRoute("/app/admin")({
+export const Route = createFileRoute("/_authenticated/app/admin")({
   head: () => ({ meta: [{ title: "Admin — CarePriority" }, { name: "robots", content: "noindex" }] }),
   component: Admin,
 });

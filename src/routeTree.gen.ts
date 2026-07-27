@@ -10,25 +10,20 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AppIndexRouteImport } from './routes/app.index'
-import { Route as AppSettingsRouteImport } from './routes/app.settings'
-import { Route as AppReceptionRouteImport } from './routes/app.reception'
-import { Route as AppProfileRouteImport } from './routes/app.profile'
-import { Route as AppNotificationsRouteImport } from './routes/app.notifications'
-import { Route as AppDoctorRouteImport } from './routes/app.doctor'
-import { Route as AppAnalyticsRouteImport } from './routes/app.analytics'
-import { Route as AppAdminRouteImport } from './routes/app.admin'
+import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
+import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
+import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
+import { Route as AuthenticatedAppReceptionRouteImport } from './routes/_authenticated/app.reception'
+import { Route as AuthenticatedAppProfileRouteImport } from './routes/_authenticated/app.profile'
+import { Route as AuthenticatedAppNotificationsRouteImport } from './routes/_authenticated/app.notifications'
+import { Route as AuthenticatedAppDoctorRouteImport } from './routes/_authenticated/app.doctor'
+import { Route as AuthenticatedAppAnalyticsRouteImport } from './routes/_authenticated/app.analytics'
+import { Route as AuthenticatedAppAdminRouteImport } from './routes/_authenticated/app.admin'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppRoute = AppRouteImport.update({
-  id: '/app',
-  path: '/app',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -36,92 +31,101 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppIndexRoute = AppIndexRouteImport.update({
+const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
+  id: '/_authenticated/app',
+  path: '/app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AppRoute,
+  getParentRoute: () => AuthenticatedAppRoute,
 } as any)
-const AppSettingsRoute = AppSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppReceptionRoute = AppReceptionRouteImport.update({
-  id: '/reception',
-  path: '/reception',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppProfileRoute = AppProfileRouteImport.update({
+const AuthenticatedAppSettingsRoute =
+  AuthenticatedAppSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppReceptionRoute =
+  AuthenticatedAppReceptionRouteImport.update({
+    id: '/reception',
+    path: '/reception',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppProfileRoute = AuthenticatedAppProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
-  getParentRoute: () => AppRoute,
+  getParentRoute: () => AuthenticatedAppRoute,
 } as any)
-const AppNotificationsRoute = AppNotificationsRouteImport.update({
-  id: '/notifications',
-  path: '/notifications',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppDoctorRoute = AppDoctorRouteImport.update({
+const AuthenticatedAppNotificationsRoute =
+  AuthenticatedAppNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppDoctorRoute = AuthenticatedAppDoctorRouteImport.update({
   id: '/doctor',
   path: '/doctor',
-  getParentRoute: () => AppRoute,
+  getParentRoute: () => AuthenticatedAppRoute,
 } as any)
-const AppAnalyticsRoute = AppAnalyticsRouteImport.update({
-  id: '/analytics',
-  path: '/analytics',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppAdminRoute = AppAdminRouteImport.update({
+const AuthenticatedAppAnalyticsRoute =
+  AuthenticatedAppAnalyticsRouteImport.update({
+    id: '/analytics',
+    path: '/analytics',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppAdminRoute = AuthenticatedAppAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
-  getParentRoute: () => AppRoute,
+  getParentRoute: () => AuthenticatedAppRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
-  '/app/admin': typeof AppAdminRoute
-  '/app/analytics': typeof AppAnalyticsRoute
-  '/app/doctor': typeof AppDoctorRoute
-  '/app/notifications': typeof AppNotificationsRoute
-  '/app/profile': typeof AppProfileRoute
-  '/app/reception': typeof AppReceptionRoute
-  '/app/settings': typeof AppSettingsRoute
-  '/app/': typeof AppIndexRoute
+  '/app': typeof AuthenticatedAppRouteWithChildren
+  '/app/admin': typeof AuthenticatedAppAdminRoute
+  '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
+  '/app/doctor': typeof AuthenticatedAppDoctorRoute
+  '/app/notifications': typeof AuthenticatedAppNotificationsRoute
+  '/app/profile': typeof AuthenticatedAppProfileRoute
+  '/app/reception': typeof AuthenticatedAppReceptionRoute
+  '/app/settings': typeof AuthenticatedAppSettingsRoute
+  '/app/': typeof AuthenticatedAppIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/app/admin': typeof AppAdminRoute
-  '/app/analytics': typeof AppAnalyticsRoute
-  '/app/doctor': typeof AppDoctorRoute
-  '/app/notifications': typeof AppNotificationsRoute
-  '/app/profile': typeof AppProfileRoute
-  '/app/reception': typeof AppReceptionRoute
-  '/app/settings': typeof AppSettingsRoute
-  '/app': typeof AppIndexRoute
+  '/app/admin': typeof AuthenticatedAppAdminRoute
+  '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
+  '/app/doctor': typeof AuthenticatedAppDoctorRoute
+  '/app/notifications': typeof AuthenticatedAppNotificationsRoute
+  '/app/profile': typeof AuthenticatedAppProfileRoute
+  '/app/reception': typeof AuthenticatedAppReceptionRoute
+  '/app/settings': typeof AuthenticatedAppSettingsRoute
+  '/app': typeof AuthenticatedAppIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
-  '/app/admin': typeof AppAdminRoute
-  '/app/analytics': typeof AppAnalyticsRoute
-  '/app/doctor': typeof AppDoctorRoute
-  '/app/notifications': typeof AppNotificationsRoute
-  '/app/profile': typeof AppProfileRoute
-  '/app/reception': typeof AppReceptionRoute
-  '/app/settings': typeof AppSettingsRoute
-  '/app/': typeof AppIndexRoute
+  '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
+  '/_authenticated/app/admin': typeof AuthenticatedAppAdminRoute
+  '/_authenticated/app/analytics': typeof AuthenticatedAppAnalyticsRoute
+  '/_authenticated/app/doctor': typeof AuthenticatedAppDoctorRoute
+  '/_authenticated/app/notifications': typeof AuthenticatedAppNotificationsRoute
+  '/_authenticated/app/profile': typeof AuthenticatedAppProfileRoute
+  '/_authenticated/app/reception': typeof AuthenticatedAppReceptionRoute
+  '/_authenticated/app/settings': typeof AuthenticatedAppSettingsRoute
+  '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/app'
     | '/auth'
+    | '/app'
     | '/app/admin'
     | '/app/analytics'
     | '/app/doctor'
@@ -145,22 +149,22 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
-    | '/app'
     | '/auth'
-    | '/app/admin'
-    | '/app/analytics'
-    | '/app/doctor'
-    | '/app/notifications'
-    | '/app/profile'
-    | '/app/reception'
-    | '/app/settings'
-    | '/app/'
+    | '/_authenticated/app'
+    | '/_authenticated/app/admin'
+    | '/_authenticated/app/analytics'
+    | '/_authenticated/app/doctor'
+    | '/_authenticated/app/notifications'
+    | '/_authenticated/app/profile'
+    | '/_authenticated/app/reception'
+    | '/_authenticated/app/settings'
+    | '/_authenticated/app/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRoute
+  AuthenticatedAppRoute: typeof AuthenticatedAppRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -172,13 +176,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/app': {
-      id: '/app'
-      path: '/app'
-      fullPath: '/app'
-      preLoaderRoute: typeof AppRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
@@ -186,93 +183,101 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/app/': {
-      id: '/app/'
+    '/_authenticated/app': {
+      id: '/_authenticated/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AuthenticatedAppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/app/': {
+      id: '/_authenticated/app/'
       path: '/'
       fullPath: '/app/'
-      preLoaderRoute: typeof AppIndexRouteImport
-      parentRoute: typeof AppRoute
+      preLoaderRoute: typeof AuthenticatedAppIndexRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
     }
-    '/app/settings': {
-      id: '/app/settings'
+    '/_authenticated/app/settings': {
+      id: '/_authenticated/app/settings'
       path: '/settings'
       fullPath: '/app/settings'
-      preLoaderRoute: typeof AppSettingsRouteImport
-      parentRoute: typeof AppRoute
+      preLoaderRoute: typeof AuthenticatedAppSettingsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
     }
-    '/app/reception': {
-      id: '/app/reception'
+    '/_authenticated/app/reception': {
+      id: '/_authenticated/app/reception'
       path: '/reception'
       fullPath: '/app/reception'
-      preLoaderRoute: typeof AppReceptionRouteImport
-      parentRoute: typeof AppRoute
+      preLoaderRoute: typeof AuthenticatedAppReceptionRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
     }
-    '/app/profile': {
-      id: '/app/profile'
+    '/_authenticated/app/profile': {
+      id: '/_authenticated/app/profile'
       path: '/profile'
       fullPath: '/app/profile'
-      preLoaderRoute: typeof AppProfileRouteImport
-      parentRoute: typeof AppRoute
+      preLoaderRoute: typeof AuthenticatedAppProfileRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
     }
-    '/app/notifications': {
-      id: '/app/notifications'
+    '/_authenticated/app/notifications': {
+      id: '/_authenticated/app/notifications'
       path: '/notifications'
       fullPath: '/app/notifications'
-      preLoaderRoute: typeof AppNotificationsRouteImport
-      parentRoute: typeof AppRoute
+      preLoaderRoute: typeof AuthenticatedAppNotificationsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
     }
-    '/app/doctor': {
-      id: '/app/doctor'
+    '/_authenticated/app/doctor': {
+      id: '/_authenticated/app/doctor'
       path: '/doctor'
       fullPath: '/app/doctor'
-      preLoaderRoute: typeof AppDoctorRouteImport
-      parentRoute: typeof AppRoute
+      preLoaderRoute: typeof AuthenticatedAppDoctorRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
     }
-    '/app/analytics': {
-      id: '/app/analytics'
+    '/_authenticated/app/analytics': {
+      id: '/_authenticated/app/analytics'
       path: '/analytics'
       fullPath: '/app/analytics'
-      preLoaderRoute: typeof AppAnalyticsRouteImport
-      parentRoute: typeof AppRoute
+      preLoaderRoute: typeof AuthenticatedAppAnalyticsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
     }
-    '/app/admin': {
-      id: '/app/admin'
+    '/_authenticated/app/admin': {
+      id: '/_authenticated/app/admin'
       path: '/admin'
       fullPath: '/app/admin'
-      preLoaderRoute: typeof AppAdminRouteImport
-      parentRoute: typeof AppRoute
+      preLoaderRoute: typeof AuthenticatedAppAdminRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
     }
   }
 }
 
-interface AppRouteChildren {
-  AppAdminRoute: typeof AppAdminRoute
-  AppAnalyticsRoute: typeof AppAnalyticsRoute
-  AppDoctorRoute: typeof AppDoctorRoute
-  AppNotificationsRoute: typeof AppNotificationsRoute
-  AppProfileRoute: typeof AppProfileRoute
-  AppReceptionRoute: typeof AppReceptionRoute
-  AppSettingsRoute: typeof AppSettingsRoute
-  AppIndexRoute: typeof AppIndexRoute
+interface AuthenticatedAppRouteChildren {
+  AuthenticatedAppAdminRoute: typeof AuthenticatedAppAdminRoute
+  AuthenticatedAppAnalyticsRoute: typeof AuthenticatedAppAnalyticsRoute
+  AuthenticatedAppDoctorRoute: typeof AuthenticatedAppDoctorRoute
+  AuthenticatedAppNotificationsRoute: typeof AuthenticatedAppNotificationsRoute
+  AuthenticatedAppProfileRoute: typeof AuthenticatedAppProfileRoute
+  AuthenticatedAppReceptionRoute: typeof AuthenticatedAppReceptionRoute
+  AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
+  AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
 }
 
-const AppRouteChildren: AppRouteChildren = {
-  AppAdminRoute: AppAdminRoute,
-  AppAnalyticsRoute: AppAnalyticsRoute,
-  AppDoctorRoute: AppDoctorRoute,
-  AppNotificationsRoute: AppNotificationsRoute,
-  AppProfileRoute: AppProfileRoute,
-  AppReceptionRoute: AppReceptionRoute,
-  AppSettingsRoute: AppSettingsRoute,
-  AppIndexRoute: AppIndexRoute,
+const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
+  AuthenticatedAppAdminRoute: AuthenticatedAppAdminRoute,
+  AuthenticatedAppAnalyticsRoute: AuthenticatedAppAnalyticsRoute,
+  AuthenticatedAppDoctorRoute: AuthenticatedAppDoctorRoute,
+  AuthenticatedAppNotificationsRoute: AuthenticatedAppNotificationsRoute,
+  AuthenticatedAppProfileRoute: AuthenticatedAppProfileRoute,
+  AuthenticatedAppReceptionRoute: AuthenticatedAppReceptionRoute,
+  AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,
+  AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
 }
 
-const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+const AuthenticatedAppRouteWithChildren =
+  AuthenticatedAppRoute._addFileChildren(AuthenticatedAppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRoute,
+  AuthenticatedAppRoute: AuthenticatedAppRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

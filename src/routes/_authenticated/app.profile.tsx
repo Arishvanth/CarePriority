@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/care/page-header";
 import { StatCard } from "@/components/care/stat-card";
 import { Award, CheckCircle2, Clock, Stethoscope } from "lucide-react";
 
-export const Route = createFileRoute("/app/profile")({
+export const Route = createFileRoute("/_authenticated/app/profile")({
   head: () => ({ meta: [{ title: "Profile — CarePriority" }, { name: "robots", content: "noindex" }] }),
   component: Profile,
 });

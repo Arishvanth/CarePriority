@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/care/page-header";
 import { AlertTriangle, Ambulance, Bell, CheckCircle2, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/app/notifications")({
+export const Route = createFileRoute("/_authenticated/app/notifications")({
   head: () => ({ meta: [{ title: "Notifications — CarePriority" }, { name: "robots", content: "noindex" }] }),
   component: Notifications,
 });

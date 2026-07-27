@@ -12,7 +12,7 @@ import {
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/app/reception")({
+export const Route = createFileRoute("/_authenticated/app/reception")({
   head: () => ({ meta: [{ title: "Reception — CarePriority" }, { name: "robots", content: "noindex" }] }),
   component: Reception,
 });

@@ -7,7 +7,7 @@ import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, Res
 import { Fragment, useState } from "react";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/app/analytics")({
+export const Route = createFileRoute("/_authenticated/app/analytics")({
   head: () => ({ meta: [{ title: "Analytics — CarePriority" }, { name: "robots", content: "noindex" }] }),
   component: Analytics,
 });
