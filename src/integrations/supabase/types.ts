@@ -14,16 +14,219 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      alerts: {
+        Row: {
+          acknowledged_at: string | null
+          audience: Database["public"]["Enums"]["app_role"] | null
+          created_at: string
+          id: string
+          kind: string
+          message: string
+          patient_id: string | null
+          severity: string
+          title: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          audience?: Database["public"]["Enums"]["app_role"] | null
+          created_at?: string
+          id?: string
+          kind?: string
+          message?: string
+          patient_id?: string | null
+          severity?: string
+          title: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          audience?: Database["public"]["Enums"]["app_role"] | null
+          created_at?: string
+          id?: string
+          kind?: string
+          message?: string
+          patient_id?: string | null
+          severity?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alerts_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consultations: {
+        Row: {
+          diagnosis: string
+          doctor_id: string | null
+          ended_at: string | null
+          id: string
+          notes: string
+          outcome: string
+          patient_id: string
+          started_at: string
+        }
+        Insert: {
+          diagnosis?: string
+          doctor_id?: string | null
+          ended_at?: string | null
+          id?: string
+          notes?: string
+          outcome?: string
+          patient_id: string
+          started_at?: string
+        }
+        Update: {
+          diagnosis?: string
+          doctor_id?: string | null
+          ended_at?: string | null
+          id?: string
+          notes?: string
+          outcome?: string
+          patient_id?: string
+          started_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultations_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patients: {
+        Row: {
+          age: number
+          emergency_override: boolean
+          full_name: string
+          gender: string
+          heart_rate: number | null
+          id: string
+          medical_history: string[]
+          patient_code: string
+          priority: Database["public"]["Enums"]["triage_priority"]
+          queue_position: number
+          registered_at: string
+          rfid_tag: string | null
+          spo2: number | null
+          status: Database["public"]["Enums"]["patient_status"]
+          symptoms: string
+          temperature: number | null
+          triage_factors: Json
+          triage_score: number
+          updated_at: string
+        }
+        Insert: {
+          age: number
+          emergency_override?: boolean
+          full_name: string
+          gender?: string
+          heart_rate?: number | null
+          id?: string
+          medical_history?: string[]
+          patient_code: string
+          priority?: Database["public"]["Enums"]["triage_priority"]
+          queue_position?: number
+          registered_at?: string
+          rfid_tag?: string | null
+          spo2?: number | null
+          status?: Database["public"]["Enums"]["patient_status"]
+          symptoms?: string
+          temperature?: number | null
+          triage_factors?: Json
+          triage_score?: number
+          updated_at?: string
+        }
+        Update: {
+          age?: number
+          emergency_override?: boolean
+          full_name?: string
+          gender?: string
+          heart_rate?: number | null
+          id?: string
+          medical_history?: string[]
+          patient_code?: string
+          priority?: Database["public"]["Enums"]["triage_priority"]
+          queue_position?: number
+          registered_at?: string
+          rfid_tag?: string | null
+          spo2?: number | null
+          status?: Database["public"]["Enums"]["patient_status"]
+          symptoms?: string
+          temperature?: number | null
+          triage_factors?: Json
+          triage_score?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          department: string
+          full_name: string
+          id: string
+          job_title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          department?: string
+          full_name?: string
+          id: string
+          job_title?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          department?: string
+          full_name?: string
+          id?: string
+          job_title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "doctor" | "nurse" | "receptionist"
+      patient_status: "waiting" | "in-consult" | "completed"
+      triage_priority: "HIGH" | "MODERATE" | "LOW"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +353,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "doctor", "nurse", "receptionist"],
+      patient_status: ["waiting", "in-consult", "completed"],
+      triage_priority: ["HIGH", "MODERATE", "LOW"],
+    },
   },
 } as const
