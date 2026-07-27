@@ -95,7 +95,6 @@ export function RfidScanner({ onScan, state, message, className, label = "Scan w
           onClick={() => {
             setManual(false);
             captureRef.current?.focus();
-            submit(""); // triggers scanning state upstream via onScan guard
             void onScan("__scan__");
           }}
         >
