@@ -13,7 +13,7 @@ export const Route = createFileRoute("/_authenticated/app/settings")({
 function Settings() {
   return (
     <>
-      <PageHeader eyebrow="Settings" title="Preferences" description="Personalize how the console behaves for you." />
+      <PageHeader breadcrumbs={[{ label: "Console", to: "/app/reception" }]} title="Preferences" description="Personalize how the console behaves for you." />
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="glass rounded-3xl p-6">
           <h3 className="font-display text-lg font-semibold">General</h3>
