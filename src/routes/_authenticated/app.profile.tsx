@@ -1,35 +1,69 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { CheckCircle2, Clock3, Stethoscope } from "lucide-react";
 import { PageHeader } from "@/components/care/page-header";
-import { StatCard } from "@/components/care/stat-card";
-import { Award, CheckCircle2, Clock, Stethoscope } from "lucide-react";
+import { MetricCard } from "@/components/care/metric-card";
+import { Panel } from "@/components/care/panel";
+import { usePatients } from "@/hooks/use-care-data";
+import { useSession, useProfile } from "@/hooks/use-session";
+import { initials } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/app/profile")({
-  head: () => ({ meta: [{ title: "Profile — CarePriority" }, { name: "robots", content: "noindex" }] }),
-  component: Profile,
+  head: () => ({
+    meta: [
+      { title: "Profile — CarePriority" },
+      { name: "description", content: "Your clinical profile, role and activity summary." },
+      { name: "robots", content: "noindex" },
+    ],
+  }),
+  component: ProfilePage,
 });
 
-function Profile() {
+function ProfilePage() {
+  const { user } = useSession();
+  const profile = useProfile(user?.id);
+  const { data: patients = [], isLoading } = usePatients();
+  const name = profile?.full_name || user?.email?.split("@")[0] || "Staff member";
+
   return (
     <>
-      <PageHeader eyebrow="Profile" title="Your account" description="A quick snapshot of your activity on CarePriority." />
-      <div className="glass rounded-3xl p-8">
-        <div className="flex flex-wrap items-center gap-5">
-          <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-primary to-secondary text-2xl font-semibold text-white">RM</div>
-          <div>
-            <h3 className="font-display text-2xl font-semibold">Dr. Rhea Menon</h3>
-            <p className="text-sm text-muted-foreground">Chief Physician · Sunrise Community Clinic</p>
-            <div className="mt-2 flex gap-2 text-xs">
-              <span className="rounded-full bg-primary/15 px-2 py-0.5 text-primary">MBBS, MD</span>
-              <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-muted-foreground">MCI Reg. 4438201</span>
-            </div>
+      <PageHeader
+        breadcrumbs={[{ label: "Console", to: "/app/reception" }, { label: "Profile" }]}
+        title="Your profile"
+        description="Details shown to colleagues across the CarePriority console."
+      />
+
+      <Panel>
+        <div className="flex flex-wrap items-center gap-4">
+          <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-lg font-semibold text-primary-foreground">
+            {initials(name)}
+          </span>
+          <div className="min-w-0">
+            <p className="font-display text-xl font-semibold text-foreground">{name}</p>
+            <p className="text-sm text-muted-foreground">
+              {profile?.job_title || "Clinical staff"}
+              {profile?.department ? ` · ${profile.department}` : ""}
+            </p>
+            <p className="text-sm text-muted-foreground">{user?.email}</p>
           </div>
         </div>
-      </div>
-      <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Patients this month" value="1,284" icon={Stethoscope} accent="primary" delta={11} />
-        <StatCard label="Avg consult time" value="7.8m" icon={Clock} accent="warning" delta={-6} />
-        <StatCard label="Successful triage" value="98%" icon={CheckCircle2} accent="success" delta={2} />
-        <StatCard label="Awards" value="3" icon={Award} accent="primary" />
+      </Panel>
+
+      <div className="mt-5 grid gap-4 sm:grid-cols-3">
+        <MetricCard label="Patients today" value={patients.length} icon={Stethoscope} loading={isLoading} />
+        <MetricCard
+          label="Completed"
+          value={patients.filter((p) => p.status === "completed").length}
+          icon={CheckCircle2}
+          tone="success"
+          loading={isLoading}
+        />
+        <MetricCard
+          label="Currently waiting"
+          value={patients.filter((p) => p.status === "waiting").length}
+          icon={Clock3}
+          tone="warning"
+          loading={isLoading}
+        />
       </div>
     </>
   );
