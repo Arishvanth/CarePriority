@@ -415,7 +415,7 @@ function ReceptionPage() {
           </Panel>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3 xl:col-span-3 xl:content-start">
+        <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3 xl:col-span-3 xl:content-start">
           {(["HIGH", "MODERATE", "LOW"] as Priority[]).map((key) => (
             <Panel
               key={key}
