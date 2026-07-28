@@ -39,19 +39,19 @@ export function PatientCard({ patient, onSelect, onEmergency, selected, compact 
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-foreground">
           {initials(patient.full_name)}
         </span>
-        <span className="min-w-0 flex-1">
-          <span className="flex items-center gap-2">
+        <span className="block min-w-0 flex-1">
+          <span className="flex min-w-0 items-center gap-2">
             <span className="truncate text-sm font-medium text-foreground">{patient.full_name}</span>
             {patient.emergency_override && (
               <Siren className="h-3.5 w-3.5 shrink-0 text-danger" aria-label="Emergency override" />
             )}
           </span>
-          <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
-            <span>
+          <span className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
+            <span className="truncate">
               {patient.patient_code} · {patient.age}
               {patient.gender}
             </span>
-            <span className="inline-flex items-center gap-1">
+            <span className="inline-flex shrink-0 items-center gap-1">
               <Clock className="h-3 w-3" aria-hidden="true" /> {waited}m
             </span>
           </span>
@@ -59,7 +59,7 @@ export function PatientCard({ patient, onSelect, onEmergency, selected, compact 
             <span className="mt-1.5 line-clamp-2 block text-xs text-muted-foreground">{patient.symptoms}</span>
           )}
         </span>
-        <span className="shrink-0 text-right">
+        <span className="block shrink-0 text-right">
           <span className="block font-display text-lg font-semibold tabular-nums text-foreground">
             {patient.triage_score}
           </span>
