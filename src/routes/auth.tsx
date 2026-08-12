@@ -15,6 +15,12 @@ const signInSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters").max(128),
 });
 
+const DEMO_ACCOUNTS = [
+  { label: "Administrator", email: "admin@carepriority.local", password: "Admin@123" },
+  { label: "Doctor", email: "doctor@carepriority.local", password: "Doctor@123" },
+  { label: "Receptionist", email: "reception@carepriority.local", password: "Reception@123" },
+];
+
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
@@ -167,6 +173,22 @@ function AuthPage() {
               </Button>
               <Link to="/" className="text-center text-xs text-muted-foreground hover:text-foreground">← Back to homepage</Link>
             </form>
+            <div className="mt-6 rounded-2xl border border-dashed border-border bg-muted/40 p-4">
+              <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Demo accounts (development)</p>
+              <div className="mt-2 grid gap-1.5">
+                {DEMO_ACCOUNTS.map((a) => (
+                  <button
+                    key={a.email}
+                    type="button"
+                    onClick={() => { setEmail(a.email); setPassword(a.password); setErrors({}); }}
+                    className="flex items-center justify-between rounded-lg px-2 py-1.5 text-left text-xs transition-colors hover:bg-background"
+                  >
+                    <span className="font-medium">{a.label}</span>
+                    <span className="text-muted-foreground">{a.email}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
