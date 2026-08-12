@@ -3,10 +3,17 @@ import { Logo } from "@/components/care/logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowRight, Loader2, Mail, Lock, ShieldCheck, Sparkles, Stethoscope, User } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ArrowRight, Eye, EyeOff, Loader2, Mail, Lock, ShieldCheck, Sparkles, Stethoscope } from "lucide-react";
 import { useEffect, useState } from "react";
+import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
+const signInSchema = z.object({
+  email: z.string().trim().min(1, "Email is required").email("Enter a valid email address").max(255),
+  password: z.string().min(6, "Password must be at least 6 characters").max(128),
+});
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -22,10 +29,11 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const nav = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
-  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [remember, setRemember] = useState(true);
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -34,45 +42,50 @@ function AuthPage() {
     });
   }, [nav]);
 
+  useEffect(() => {
+    const saved = typeof window !== "undefined" ? window.localStorage.getItem("cp_remembered_email") : null;
+    if (saved) setEmail(saved);
+  }, []);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (busy) return;
+    const parsed = signInSchema.safeParse({ email, password });
+    if (!parsed.success) {
+      const fieldErrors: { email?: string; password?: string } = {};
+      for (const issue of parsed.error.issues) {
+        const key = issue.path[0] as "email" | "password";
+        if (!fieldErrors[key]) fieldErrors[key] = issue.message;
+      }
+      setErrors(fieldErrors);
+      return;
+    }
+    setErrors({});
     setBusy(true);
     try {
-      if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email: email.trim(),
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/app/reception`,
-            data: { full_name: fullName.trim(), job_title: "Clinical staff" },
-          },
-        });
-        if (error) throw error;
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
-          password,
-        });
-        if (signInError) {
-          toast.success("Account created. Check your inbox to confirm, then sign in.");
-          setMode("signin");
-          return;
-        }
-        toast.success("Welcome to CarePriority.");
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
-          password,
-        });
-        if (error) throw error;
-        toast.success("Signed in.");
-      }
+      const { error } = await supabase.auth.signInWithPassword({
+        email: parsed.data.email,
+        password: parsed.data.password,
+      });
+      if (error) throw error;
+      if (remember) window.localStorage.setItem("cp_remembered_email", parsed.data.email);
+      else window.localStorage.removeItem("cp_remembered_email");
+      toast.success("Signed in.");
       nav({ to: "/app/reception", replace: true });
     } catch (err) {
       toast.error((err as Error).message || "Authentication failed");
     } finally {
       setBusy(false);
     }
+  }
+
+  async function handleForgotPassword() {
+    const emailOnly = signInSchema.shape.email.safeParse(email);
+    if (!emailOnly.success) {
+      setErrors((e) => ({ ...e, email: "Enter your email first to reset your password" }));
+      return;
+    }
+    toast.info("Password reset is coming soon. Contact your clinic administrator.");
   }
 
   return (
@@ -108,43 +121,49 @@ function AuthPage() {
           <div className="lg:hidden"><Logo /></div>
           <div className="mt-6 rounded-3xl border border-border bg-card p-8 shadow-lg">
             <div className="mb-6">
-              <div className="inline-flex rounded-full border border-border bg-muted p-1 text-xs">
-                {(["signin", "signup"] as const).map((m) => (
-                  <button type="button" key={m} onClick={() => setMode(m)} className={`rounded-full px-4 py-1.5 transition ${mode === m ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
-                    {m === "signin" ? "Sign in" : "Create account"}
-                  </button>
-                ))}
-              </div>
-              <h1 className="mt-5 font-display text-2xl font-semibold">{mode === "signin" ? "Welcome back" : "Get started"}</h1>
-              <p className="mt-1 text-sm text-muted-foreground">Access your CarePriority workspace.</p>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted px-3 py-1 text-[11px] font-medium text-muted-foreground">
+                <ShieldCheck className="h-3.5 w-3.5 text-primary" /> Secure staff access
+              </span>
+              <h1 className="mt-5 font-display text-2xl font-semibold">Welcome back</h1>
+              <p className="mt-1 text-sm text-muted-foreground">Sign in to your CarePriority workspace.</p>
             </div>
-            <form className="grid gap-4" onSubmit={handleSubmit}>
-              {mode === "signup" && (
-                <div className="grid gap-1.5">
-                  <Label htmlFor="name" className="text-xs">Full name</Label>
-                  <div className="relative">
-                    <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input id="name" required value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Dr. Rhea Menon" className="h-11 pl-9" />
-                  </div>
-                </div>
-              )}
+            <form className="grid gap-4" onSubmit={handleSubmit} noValidate>
               <div className="grid gap-1.5">
                 <Label htmlFor="email" className="text-xs">Work email</Label>
                 <div className="relative">
                   <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input id="email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@clinic.org" className="h-11 pl-9" />
+                  <Input id="email" type="email" inputMode="email" autoComplete="email" aria-invalid={!!errors.email} value={email} onChange={(e) => { setEmail(e.target.value); setErrors((p) => ({ ...p, email: undefined })); }} placeholder="you@clinic.org" className="h-11 pl-9" />
                 </div>
+                {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
               </div>
               <div className="grid gap-1.5">
-                <Label htmlFor="password" className="text-xs">Password</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password" className="text-xs">Password</Label>
+                  <button type="button" onClick={handleForgotPassword} className="text-xs font-medium text-primary hover:underline">
+                    Forgot password?
+                  </button>
+                </div>
                 <div className="relative">
                   <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input id="password" type="password" required minLength={6} autoComplete={mode === "signin" ? "current-password" : "new-password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="h-11 pl-9" />
+                  <Input id="password" type={showPassword ? "text" : "password"} autoComplete="current-password" aria-invalid={!!errors.password} value={password} onChange={(e) => { setPassword(e.target.value); setErrors((p) => ({ ...p, password: undefined })); }} placeholder="••••••••" className="h-11 pl-9 pr-10" />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
                 </div>
+                {errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox id="remember" checked={remember} onCheckedChange={(v) => setRemember(v === true)} />
+                <Label htmlFor="remember" className="text-xs font-normal text-muted-foreground">Remember me on this device</Label>
               </div>
               <Button type="submit" disabled={busy} className="h-11 gap-2">
                 {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                {mode === "signin" ? "Enter console" : "Create account"} <ArrowRight className="h-4 w-4" />
+                Login <ArrowRight className="h-4 w-4" />
               </Button>
               <Link to="/" className="text-center text-xs text-muted-foreground hover:text-foreground">← Back to homepage</Link>
             </form>
