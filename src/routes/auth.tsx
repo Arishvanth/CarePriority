@@ -15,6 +15,12 @@ const signInSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters").max(128),
 });
 
+const DEMO_ACCOUNTS = [
+  { label: "Administrator", email: "admin@carepriority.local", password: "Admin@123" },
+  { label: "Doctor", email: "doctor@carepriority.local", password: "Doctor@123" },
+  { label: "Receptionist", email: "reception@carepriority.local", password: "Reception@123" },
+];
+
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
