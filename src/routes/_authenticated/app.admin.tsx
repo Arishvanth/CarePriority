@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireRole } from "@/lib/rbac";
 import { PageHeader } from "@/components/care/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Plus, ShieldCheck, Stethoscope, Trash2, User } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/app/admin")({
+  beforeLoad: () => requireRole(["admin"]),
   head: () => ({ meta: [{ title: "Admin — CarePriority" }, { name: "robots", content: "noindex" }] }),
   component: Admin,
 });

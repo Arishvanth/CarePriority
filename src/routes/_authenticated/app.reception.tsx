@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { requireRole } from "@/lib/rbac";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -31,6 +32,7 @@ import { scoreTriage, priorityMeta, type Priority } from "@/lib/triage";
 import { nextPatientCode, randomRfid, waitMinutes } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/app/reception")({
+  beforeLoad: () => requireRole(["receptionist", "nurse", "admin"]),
   head: () => ({
     meta: [
       { title: "Reception — CarePriority" },
