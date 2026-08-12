@@ -38,7 +38,7 @@ function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) nav({ to: "/app/reception", replace: true });
+      if (data.session) nav({ to: "/app", replace: true });
     });
   }, [nav]);
 
@@ -71,7 +71,7 @@ function AuthPage() {
       if (remember) window.localStorage.setItem("cp_remembered_email", parsed.data.email);
       else window.localStorage.removeItem("cp_remembered_email");
       toast.success("Signed in.");
-      nav({ to: "/app/reception", replace: true });
+      nav({ to: "/app", replace: true });
     } catch (err) {
       toast.error((err as Error).message || "Authentication failed");
     } finally {
