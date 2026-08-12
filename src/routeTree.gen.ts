@@ -14,7 +14,6 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
-import { Route as ApiPublicSeedDemoRouteImport } from './routes/api/public/seed-demo'
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
 import { Route as AuthenticatedAppReceptionRouteImport } from './routes/_authenticated/app.reception'
 import { Route as AuthenticatedAppProfileRouteImport } from './routes/_authenticated/app.profile'
@@ -46,11 +45,6 @@ const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedAppRoute,
-} as any)
-const ApiPublicSeedDemoRoute = ApiPublicSeedDemoRouteImport.update({
-  id: '/api/public/seed-demo',
-  path: '/api/public/seed-demo',
-  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAppSettingsRoute =
   AuthenticatedAppSettingsRouteImport.update({
@@ -103,7 +97,6 @@ export interface FileRoutesByFullPath {
   '/app/profile': typeof AuthenticatedAppProfileRoute
   '/app/reception': typeof AuthenticatedAppReceptionRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
-  '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
   '/app/': typeof AuthenticatedAppIndexRoute
 }
 export interface FileRoutesByTo {
@@ -116,7 +109,6 @@ export interface FileRoutesByTo {
   '/app/profile': typeof AuthenticatedAppProfileRoute
   '/app/reception': typeof AuthenticatedAppReceptionRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
-  '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
   '/app': typeof AuthenticatedAppIndexRoute
 }
 export interface FileRoutesById {
@@ -132,7 +124,6 @@ export interface FileRoutesById {
   '/_authenticated/app/profile': typeof AuthenticatedAppProfileRoute
   '/_authenticated/app/reception': typeof AuthenticatedAppReceptionRoute
   '/_authenticated/app/settings': typeof AuthenticatedAppSettingsRoute
-  '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
 }
 export interface FileRouteTypes {
@@ -148,7 +139,6 @@ export interface FileRouteTypes {
     | '/app/profile'
     | '/app/reception'
     | '/app/settings'
-    | '/api/public/seed-demo'
     | '/app/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -161,7 +151,6 @@ export interface FileRouteTypes {
     | '/app/profile'
     | '/app/reception'
     | '/app/settings'
-    | '/api/public/seed-demo'
     | '/app'
   id:
     | '__root__'
@@ -176,7 +165,6 @@ export interface FileRouteTypes {
     | '/_authenticated/app/profile'
     | '/_authenticated/app/reception'
     | '/_authenticated/app/settings'
-    | '/api/public/seed-demo'
     | '/_authenticated/app/'
   fileRoutesById: FileRoutesById
 }
@@ -184,7 +172,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
-  ApiPublicSeedDemoRoute: typeof ApiPublicSeedDemoRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -223,13 +210,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/'
       preLoaderRoute: typeof AuthenticatedAppIndexRouteImport
       parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/api/public/seed-demo': {
-      id: '/api/public/seed-demo'
-      path: '/api/public/seed-demo'
-      fullPath: '/api/public/seed-demo'
-      preLoaderRoute: typeof ApiPublicSeedDemoRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/app/settings': {
       id: '/_authenticated/app/settings'
@@ -323,7 +303,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
-  ApiPublicSeedDemoRoute: ApiPublicSeedDemoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
