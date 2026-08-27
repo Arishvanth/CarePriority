@@ -54,7 +54,7 @@ function DoctorPage() {
   const [notes, setNotes] = useState("");
   const [diagnosis, setDiagnosis] = useState("");
   const [outcome, setOutcome] = useState("discharged");
-  const justCompletedRef = useRef(false);
+  const [suppressAutoSelect, setSuppressAutoSelect] = useState(false);
 
   const queue = useMemo(
     () =>
@@ -70,14 +70,14 @@ function DoctorPage() {
   );
 
   const inConsult = patients.filter((p) => p.status === "in-consult");
-  const selected =
-    patients.find((p) => p.id === selectedId) ?? inConsult[0] ?? queue[0] ?? null;
+  const selected = useMemo(() => {
+    if (!selectedId && suppressAutoSelect) return null;
+    return (
+      patients.find((p) => p.id === selectedId) ?? inConsult[0] ?? queue[0] ?? null
+    );
+  }, [patients, selectedId, inConsult, queue, suppressAutoSelect]);
 
   useEffect(() => {
-    if (justCompletedRef.current) {
-      justCompletedRef.current = false;
-      return;
-    }
     if (!selectedId && selected) setSelectedId(selected.id);
   }, [selected, selectedId]);
 
@@ -120,7 +120,7 @@ function DoctorPage() {
       setNotes("");
       setDiagnosis("");
       setOutcome("discharged");
-      justCompletedRef.current = true;
+      setSuppressAutoSelect(true);
       setSelectedId(null);
       void queryClient.invalidateQueries({ queryKey: queryKeys.patients });
       void queryClient.invalidateQueries({ queryKey: queryKeys.consultations });
