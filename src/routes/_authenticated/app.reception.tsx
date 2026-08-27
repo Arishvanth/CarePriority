@@ -63,7 +63,11 @@ function ReceptionPage() {
   const [listening, setListening] = useState(false);
   const [scanState, setScanState] = useState<ScanState>("idle");
   const [scanMessage, setScanMessage] = useState<string>();
+  const [emergencyOpen, setEmergencyOpen] = useState(false);
   const [emergencyTarget, setEmergencyTarget] = useState<Patient | null>(null);
+  const [emergencyReason, setEmergencyReason] = useState("");
+  const [emergencySearch, setEmergencySearch] = useState("");
+  const { user } = useSession();
 
   const active = patients.filter((p) => p.status !== "completed");
   const waiting = patients.filter((p) => p.status === "waiting");
