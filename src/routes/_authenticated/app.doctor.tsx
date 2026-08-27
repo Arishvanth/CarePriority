@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { requireRole } from "@/lib/rbac";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -54,6 +54,7 @@ function DoctorPage() {
   const [notes, setNotes] = useState("");
   const [diagnosis, setDiagnosis] = useState("");
   const [outcome, setOutcome] = useState("discharged");
+  const justCompletedRef = useRef(false);
 
   const queue = useMemo(
     () =>
@@ -73,6 +74,10 @@ function DoctorPage() {
     patients.find((p) => p.id === selectedId) ?? inConsult[0] ?? queue[0] ?? null;
 
   useEffect(() => {
+    if (justCompletedRef.current) {
+      justCompletedRef.current = false;
+      return;
+    }
     if (!selectedId && selected) setSelectedId(selected.id);
   }, [selected, selectedId]);
 
@@ -115,6 +120,7 @@ function DoctorPage() {
       setNotes("");
       setDiagnosis("");
       setOutcome("discharged");
+      justCompletedRef.current = true;
       setSelectedId(null);
       void queryClient.invalidateQueries({ queryKey: queryKeys.patients });
       void queryClient.invalidateQueries({ queryKey: queryKeys.consultations });
