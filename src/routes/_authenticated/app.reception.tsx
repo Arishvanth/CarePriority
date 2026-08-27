@@ -499,8 +499,17 @@ function ReceptionPage() {
         )}
       </Panel>
 
-      <Dialog open={Boolean(emergencyTarget)} onOpenChange={(open) => !open && setEmergencyTarget(null)}>
-        <DialogContent>
+      <Dialog
+        open={emergencyOpen}
+        onOpenChange={(open) => {
+          setEmergencyOpen(open);
+          if (!open) {
+            setEmergencyTarget(null);
+            setEmergencyReason("");
+          }
+        }}
+      >
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-danger-soft text-danger">
@@ -509,28 +518,81 @@ function ReceptionPage() {
               Emergency override
             </DialogTitle>
             <DialogDescription>
-              Move <span className="font-medium text-foreground">{emergencyTarget?.full_name}</span> to the front of
-              the queue and alert the on-duty doctor immediately.
+              Select the patient experiencing the emergency. They will be moved to position #1 and the on-duty doctor
+              alerted. All other patients keep their current order.
             </DialogDescription>
           </DialogHeader>
-          <p className="rounded-lg border border-border bg-muted/50 p-3 text-sm text-muted-foreground">
-            {emergencyTarget?.symptoms || "No symptoms recorded."}
-          </p>
+
+          <div className="space-y-2">
+            <Label>Waiting patients</Label>
+            <Input
+              value={emergencySearch}
+              onChange={(e) => setEmergencySearch(e.target.value)}
+              placeholder="Search name or RFID…"
+              aria-label="Search waiting patients"
+              className="h-9"
+            />
+            <div
+              role="radiogroup"
+              aria-label="Select patient for emergency override"
+              className="max-h-64 space-y-2 overflow-y-auto rounded-lg border border-border p-2"
+            >
+              {emergencyCandidates.length === 0 && (
+                <p className="p-3 text-sm text-muted-foreground">No waiting patients match this search.</p>
+              )}
+              {emergencyCandidates.map((p) => {
+                const selected = emergencyTarget?.id === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    onClick={() => setEmergencyTarget(p)}
+                    className={`flex w-full items-center gap-3 rounded-lg border p-2.5 text-left transition-colors ${
+                      selected ? "border-danger bg-danger-soft" : "border-border hover:border-primary/40"
+                    }`}
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-medium text-foreground">{p.full_name}</span>
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {p.patient_code} · RFID {p.rfid_tag ?? "—"} · Queue #{p.queue_position}
+                      </span>
+                    </span>
+                    <PriorityChip priority={p.priority} />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="emergency-reason">Override reason</Label>
+            <Textarea
+              id="emergency-reason"
+              value={emergencyReason}
+              onChange={(e) => setEmergencyReason(e.target.value)}
+              placeholder="Describe the emergency (e.g. sudden collapse, severe bleeding)…"
+              rows={3}
+            />
+          </div>
+
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setEmergencyTarget(null)}>
+            <Button variant="ghost" onClick={() => setEmergencyOpen(false)}>
               Cancel
             </Button>
             <Button
               variant="emergency"
-              disabled={escalate.isPending}
+              disabled={escalate.isPending || !emergencyTarget || !emergencyReason.trim()}
               onClick={() => emergencyTarget && escalate.mutate(emergencyTarget)}
             >
               {escalate.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Siren className="h-4 w-4" />}
-              Promote now
+              Confirm emergency override
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
     </>
   );
 }
