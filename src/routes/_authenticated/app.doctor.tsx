@@ -70,14 +70,14 @@ function DoctorPage() {
   );
 
   const inConsult = patients.filter((p) => p.status === "in-consult");
-  const selected =
-    patients.find((p) => p.id === selectedId) ?? inConsult[0] ?? queue[0] ?? null;
+  const selected = useMemo(() => {
+    if (!selectedId && suppressAutoSelect) return null;
+    return (
+      patients.find((p) => p.id === selectedId) ?? inConsult[0] ?? queue[0] ?? null
+    );
+  }, [patients, selectedId, inConsult, queue, suppressAutoSelect]);
 
   useEffect(() => {
-    if (justCompletedRef.current) {
-      justCompletedRef.current = false;
-      return;
-    }
     if (!selectedId && selected) setSelectedId(selected.id);
   }, [selected, selectedId]);
 
