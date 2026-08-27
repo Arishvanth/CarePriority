@@ -178,22 +178,27 @@ function ReceptionPage() {
 
   const escalate = useMutation({
     mutationFn: async (patient: Patient) => {
-      await promoteToEmergency(patient);
+      const actor = user?.email ?? "reception";
+      const reason = emergencyReason.trim();
+      await promoteToEmergency(patient, { reason, actor });
       await createAlert({
         kind: "emergency",
         severity: "critical",
         title: `Emergency override — ${patient.full_name}`,
-        message: `${patient.patient_code} moved to the front of the queue by reception.`,
+        message: `${patient.patient_code} (was ${patient.priority} priority, queue #${patient.queue_position}) moved to position #1 by ${actor}. Reason: ${reason}`,
         audience: "doctor",
         patient_id: patient.id,
       });
     },
     onSuccess: () => {
       toast.success("Patient promoted to the front of the queue");
+      setEmergencyOpen(false);
       setEmergencyTarget(null);
+      setEmergencyReason("");
       void queryClient.invalidateQueries({ queryKey: queryKeys.patients });
       void queryClient.invalidateQueries({ queryKey: queryKeys.alerts });
     },
+
     onError: (err: Error) => toast.error(err.message),
   });
 
