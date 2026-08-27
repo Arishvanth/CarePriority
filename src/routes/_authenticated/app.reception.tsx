@@ -25,6 +25,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { usePatients, queryKeys } from "@/hooks/use-care-data";
+import { useSession } from "@/hooks/use-session";
 import { createPatient, findByRfid, promoteToEmergency } from "@/data/patients";
 import { createAlert } from "@/data/alerts";
 import type { Patient } from "@/data/types";
@@ -63,7 +64,11 @@ function ReceptionPage() {
   const [listening, setListening] = useState(false);
   const [scanState, setScanState] = useState<ScanState>("idle");
   const [scanMessage, setScanMessage] = useState<string>();
+  const [emergencyOpen, setEmergencyOpen] = useState(false);
   const [emergencyTarget, setEmergencyTarget] = useState<Patient | null>(null);
+  const [emergencyReason, setEmergencyReason] = useState("");
+  const [emergencySearch, setEmergencySearch] = useState("");
+  const { user } = useSession();
 
   const active = patients.filter((p) => p.status !== "completed");
   const waiting = patients.filter((p) => p.status === "waiting");
@@ -77,6 +82,25 @@ function ReceptionPage() {
     }
     return grouped;
   }, [active]);
+
+  const priorityRank: Record<Priority, number> = { HIGH: 0, MODERATE: 1, LOW: 2 };
+  const emergencyCandidates = useMemo(() => {
+    const q = emergencySearch.trim().toLowerCase();
+    return waiting
+      .filter(
+        (p) =>
+          !q ||
+          p.full_name.toLowerCase().includes(q) ||
+          p.patient_code.toLowerCase().includes(q) ||
+          (p.rfid_tag ?? "").toLowerCase().includes(q),
+      )
+      .sort(
+        (a, b) =>
+          priorityRank[a.priority] - priorityRank[b.priority] || a.queue_position - b.queue_position,
+      );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [waiting, emergencySearch]);
+
 
   const filtered = patients.filter((p) => {
     if (!search.trim()) return true;
@@ -154,22 +178,27 @@ function ReceptionPage() {
 
   const escalate = useMutation({
     mutationFn: async (patient: Patient) => {
-      await promoteToEmergency(patient);
+      const actor = user?.email ?? "reception";
+      const reason = emergencyReason.trim();
+      await promoteToEmergency(patient, { reason, actor });
       await createAlert({
         kind: "emergency",
         severity: "critical",
         title: `Emergency override — ${patient.full_name}`,
-        message: `${patient.patient_code} moved to the front of the queue by reception.`,
+        message: `${patient.patient_code} (was ${patient.priority} priority, queue #${patient.queue_position}) moved to position #1 by ${actor}. Reason: ${reason}`,
         audience: "doctor",
         patient_id: patient.id,
       });
     },
     onSuccess: () => {
       toast.success("Patient promoted to the front of the queue");
+      setEmergencyOpen(false);
       setEmergencyTarget(null);
+      setEmergencyReason("");
       void queryClient.invalidateQueries({ queryKey: queryKeys.patients });
       void queryClient.invalidateQueries({ queryKey: queryKeys.alerts });
     },
+
     onError: (err: Error) => toast.error(err.message),
   });
 
@@ -238,8 +267,13 @@ function ReceptionPage() {
             </div>
             <Button
               variant="emergency"
-              onClick={() => setEmergencyTarget(lanes.MODERATE[0] ?? lanes.LOW[0] ?? active[0] ?? null)}
-              disabled={active.length === 0}
+              onClick={() => {
+                setEmergencyTarget(null);
+                setEmergencyReason("");
+                setEmergencySearch("");
+                setEmergencyOpen(true);
+              }}
+              disabled={waiting.length === 0}
             >
               <Siren className="h-4 w-4" /> Emergency
             </Button>
@@ -437,7 +471,12 @@ function ReceptionPage() {
                 <EmptyState icon={Users} title="Lane clear" description="No patients in this lane right now." />
               ) : (
                 lanes[key].map((patient) => (
-                  <PatientCard key={patient.id} patient={patient} onEmergency={setEmergencyTarget} compact />
+                  <PatientCard key={patient.id} patient={patient} onEmergency={(p) => {
+                      setEmergencyTarget(p);
+                      setEmergencyReason("");
+                      setEmergencySearch("");
+                      setEmergencyOpen(true);
+                    }} compact />
                 ))
               )}
             </Panel>
@@ -499,8 +538,17 @@ function ReceptionPage() {
         )}
       </Panel>
 
-      <Dialog open={Boolean(emergencyTarget)} onOpenChange={(open) => !open && setEmergencyTarget(null)}>
-        <DialogContent>
+      <Dialog
+        open={emergencyOpen}
+        onOpenChange={(open) => {
+          setEmergencyOpen(open);
+          if (!open) {
+            setEmergencyTarget(null);
+            setEmergencyReason("");
+          }
+        }}
+      >
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-danger-soft text-danger">
@@ -509,28 +557,81 @@ function ReceptionPage() {
               Emergency override
             </DialogTitle>
             <DialogDescription>
-              Move <span className="font-medium text-foreground">{emergencyTarget?.full_name}</span> to the front of
-              the queue and alert the on-duty doctor immediately.
+              Select the patient experiencing the emergency. They will be moved to position #1 and the on-duty doctor
+              alerted. All other patients keep their current order.
             </DialogDescription>
           </DialogHeader>
-          <p className="rounded-lg border border-border bg-muted/50 p-3 text-sm text-muted-foreground">
-            {emergencyTarget?.symptoms || "No symptoms recorded."}
-          </p>
+
+          <div className="space-y-2">
+            <Label>Waiting patients</Label>
+            <Input
+              value={emergencySearch}
+              onChange={(e) => setEmergencySearch(e.target.value)}
+              placeholder="Search name or RFID…"
+              aria-label="Search waiting patients"
+              className="h-9"
+            />
+            <div
+              role="radiogroup"
+              aria-label="Select patient for emergency override"
+              className="max-h-64 space-y-2 overflow-y-auto rounded-lg border border-border p-2"
+            >
+              {emergencyCandidates.length === 0 && (
+                <p className="p-3 text-sm text-muted-foreground">No waiting patients match this search.</p>
+              )}
+              {emergencyCandidates.map((p) => {
+                const selected = emergencyTarget?.id === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    onClick={() => setEmergencyTarget(p)}
+                    className={`flex w-full items-center gap-3 rounded-lg border p-2.5 text-left transition-colors ${
+                      selected ? "border-danger bg-danger-soft" : "border-border hover:border-primary/40"
+                    }`}
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-medium text-foreground">{p.full_name}</span>
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {p.patient_code} · RFID {p.rfid_tag ?? "—"} · Queue #{p.queue_position}
+                      </span>
+                    </span>
+                    <PriorityChip priority={p.priority} />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="emergency-reason">Override reason</Label>
+            <Textarea
+              id="emergency-reason"
+              value={emergencyReason}
+              onChange={(e) => setEmergencyReason(e.target.value)}
+              placeholder="Describe the emergency (e.g. sudden collapse, severe bleeding)…"
+              rows={3}
+            />
+          </div>
+
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setEmergencyTarget(null)}>
+            <Button variant="ghost" onClick={() => setEmergencyOpen(false)}>
               Cancel
             </Button>
             <Button
               variant="emergency"
-              disabled={escalate.isPending}
+              disabled={escalate.isPending || !emergencyTarget || !emergencyReason.trim()}
               onClick={() => emergencyTarget && escalate.mutate(emergencyTarget)}
             >
               {escalate.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Siren className="h-4 w-4" />}
-              Promote now
+              Confirm emergency override
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
     </>
   );
 }

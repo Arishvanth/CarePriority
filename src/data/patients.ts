@@ -53,18 +53,33 @@ export async function updatePatient(id: string, patch: Partial<Patient>): Promis
   if (error) throw error;
 }
 
-export async function promoteToEmergency(patient: Patient): Promise<void> {
+export interface EmergencyOverrideMeta {
+  reason: string;
+  actor?: string | null;
+}
+
+export async function promoteToEmergency(
+  patient: Patient,
+  meta?: EmergencyOverrideMeta,
+): Promise<void> {
+  const when = new Date().toISOString();
+  const reason = meta?.reason?.trim();
   await updatePatient(patient.id, {
     priority: "HIGH",
     emergency_override: true,
     queue_position: 0,
     triage_score: 100,
     triage_factors: [
-      { label: "Manual emergency override by staff", weight: 100, kind: "override" },
+      {
+        label: `Emergency override by ${meta?.actor ?? "staff"} at ${new Date(when).toLocaleString()} — was ${patient.priority}${reason ? `. Reason: ${reason}` : ""}`,
+        weight: 100,
+        kind: "override",
+      },
       ...patient.triage_factors,
     ],
   });
 }
+
 
 export async function findByRfid(tag: string): Promise<Patient | null> {
   const { data, error } = await supabase
