@@ -74,6 +74,10 @@ function DoctorPage() {
     patients.find((p) => p.id === selectedId) ?? inConsult[0] ?? queue[0] ?? null;
 
   useEffect(() => {
+    if (justCompletedRef.current) {
+      justCompletedRef.current = false;
+      return;
+    }
     if (!selectedId && selected) setSelectedId(selected.id);
   }, [selected, selectedId]);
 
