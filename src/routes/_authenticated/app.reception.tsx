@@ -83,6 +83,25 @@ function ReceptionPage() {
     return grouped;
   }, [active]);
 
+  const priorityRank: Record<Priority, number> = { HIGH: 0, MODERATE: 1, LOW: 2 };
+  const emergencyCandidates = useMemo(() => {
+    const q = emergencySearch.trim().toLowerCase();
+    return waiting
+      .filter(
+        (p) =>
+          !q ||
+          p.full_name.toLowerCase().includes(q) ||
+          p.patient_code.toLowerCase().includes(q) ||
+          (p.rfid_tag ?? "").toLowerCase().includes(q),
+      )
+      .sort(
+        (a, b) =>
+          priorityRank[a.priority] - priorityRank[b.priority] || a.queue_position - b.queue_position,
+      );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [waiting, emergencySearch]);
+
+
   const filtered = patients.filter((p) => {
     if (!search.trim()) return true;
     const q = search.toLowerCase();
