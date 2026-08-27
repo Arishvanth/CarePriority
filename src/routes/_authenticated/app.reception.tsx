@@ -267,8 +267,13 @@ function ReceptionPage() {
             </div>
             <Button
               variant="emergency"
-              onClick={() => setEmergencyTarget(lanes.MODERATE[0] ?? lanes.LOW[0] ?? active[0] ?? null)}
-              disabled={active.length === 0}
+              onClick={() => {
+                setEmergencyTarget(null);
+                setEmergencyReason("");
+                setEmergencySearch("");
+                setEmergencyOpen(true);
+              }}
+              disabled={waiting.length === 0}
             >
               <Siren className="h-4 w-4" /> Emergency
             </Button>
@@ -466,7 +471,12 @@ function ReceptionPage() {
                 <EmptyState icon={Users} title="Lane clear" description="No patients in this lane right now." />
               ) : (
                 lanes[key].map((patient) => (
-                  <PatientCard key={patient.id} patient={patient} onEmergency={setEmergencyTarget} compact />
+                  <PatientCard key={patient.id} patient={patient} onEmergency={(p) => {
+                      setEmergencyTarget(p);
+                      setEmergencyReason("");
+                      setEmergencySearch("");
+                      setEmergencyOpen(true);
+                    }} compact />
                 ))
               )}
             </Panel>
