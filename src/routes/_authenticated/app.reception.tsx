@@ -25,6 +25,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { usePatients, queryKeys } from "@/hooks/use-care-data";
+import { useSession } from "@/hooks/use-session";
 import { createPatient, findByRfid, promoteToEmergency } from "@/data/patients";
 import { createAlert } from "@/data/alerts";
 import type { Patient } from "@/data/types";
