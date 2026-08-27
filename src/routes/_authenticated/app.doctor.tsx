@@ -120,6 +120,7 @@ function DoctorPage() {
       setNotes("");
       setDiagnosis("");
       setOutcome("discharged");
+      justCompletedRef.current = true;
       setSelectedId(null);
       void queryClient.invalidateQueries({ queryKey: queryKeys.patients });
       void queryClient.invalidateQueries({ queryKey: queryKeys.consultations });
