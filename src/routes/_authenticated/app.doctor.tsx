@@ -54,6 +54,7 @@ function DoctorPage() {
   const [notes, setNotes] = useState("");
   const [diagnosis, setDiagnosis] = useState("");
   const [outcome, setOutcome] = useState("discharged");
+  const justCompletedRef = useRef(false);
 
   const queue = useMemo(
     () =>
