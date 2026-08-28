@@ -68,7 +68,19 @@ function ReceptionPage() {
   const [emergencyTarget, setEmergencyTarget] = useState<Patient | null>(null);
   const [emergencyReason, setEmergencyReason] = useState("");
   const [emergencySearch, setEmergencySearch] = useState("");
+  const [editTarget, setEditTarget] = useState<Patient | null>(null);
+  const [editForm, setEditForm] = useState({ temperature: "", heart_rate: "", spo2: "", symptoms: "" });
   const { user } = useSession();
+
+  function openAssessment(patient: Patient) {
+    setEditTarget(patient);
+    setEditForm({
+      temperature: patient.temperature === null ? "" : String(patient.temperature),
+      heart_rate: patient.heart_rate === null ? "" : String(patient.heart_rate),
+      spo2: patient.spo2 === null ? "" : String(patient.spo2),
+      symptoms: patient.symptoms ?? "",
+    });
+  }
 
   const active = patients.filter((p) => p.status !== "completed");
   const waiting = patients.filter((p) => p.status === "waiting");
