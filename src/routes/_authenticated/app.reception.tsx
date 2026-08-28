@@ -586,6 +586,18 @@ function ReceptionPage() {
                     <td>
                       <StatusChip status={p.status} />
                     </td>
+                    <td>
+                      {missingAssessment(p).length > 0 ? (
+                        <AssessmentPendingChip />
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Complete</span>
+                      )}
+                    </td>
+                    <td className="text-right">
+                      <Button size="sm" variant="outline" onClick={() => openAssessment(p)}>
+                        Update
+                      </Button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
