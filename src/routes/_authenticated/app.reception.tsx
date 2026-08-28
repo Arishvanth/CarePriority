@@ -214,6 +214,48 @@ function ReceptionPage() {
     onError: (err: Error) => toast.error(err.message),
   });
 
+  const saveAssessment = useMutation({
+    mutationFn: async (patient: Patient) => {
+      const temperature = editForm.temperature.trim() ? Number(editForm.temperature) : null;
+      const heart_rate = editForm.heart_rate.trim() ? Number(editForm.heart_rate) : null;
+      const spo2 = editForm.spo2.trim() ? Number(editForm.spo2) : null;
+      const symptoms = editForm.symptoms.trim();
+      const result = scoreTriage({
+        symptoms,
+        temperature,
+        heartRate: heart_rate,
+        spo2,
+        age: patient.age,
+      });
+      const priority = patient.emergency_override ? patient.priority : result.priority;
+      const queue_position =
+        patient.emergency_override || priority === patient.priority
+          ? patient.queue_position
+          : active.filter((p) => p.priority === priority && p.id !== patient.id).length + 1;
+      await updatePatient(patient.id, {
+        temperature,
+        heart_rate,
+        spo2,
+        symptoms,
+        priority,
+        triage_score: patient.emergency_override ? patient.triage_score : result.score,
+        triage_factors: patient.emergency_override
+          ? [...patient.triage_factors.filter((f) => f.kind === "override"), ...result.factors]
+          : result.factors,
+        queue_position,
+      });
+      return { patient, priority };
+    },
+    onSuccess: ({ patient, priority }) => {
+      toast.success(`${patient.full_name} updated`, {
+        description: `Triage re-run — ${priorityMeta[priority].label} priority`,
+      });
+      setEditTarget(null);
+      void queryClient.invalidateQueries({ queryKey: queryKeys.patients });
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
   async function handleScan(tag: string) {
     if (tag === "__scan__") {
       setScanState("scanning");
