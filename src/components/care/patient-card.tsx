@@ -1,9 +1,9 @@
 import { ArrowUp, Clock, Siren } from "lucide-react";
 import type { Patient } from "@/data/types";
-import { priorityMeta } from "@/lib/triage";
+import { priorityMeta, missingAssessment } from "@/lib/triage";
 import { initials, waitMinutes } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { PriorityChip, StatusChip } from "./chips";
+import { AssessmentPendingChip, PriorityChip, StatusChip } from "./chips";
 import { VitalsRow } from "./vitals";
 import { Button } from "@/components/ui/button";
 
