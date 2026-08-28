@@ -11,7 +11,7 @@ import { PageHeader } from "@/components/care/page-header";
 import { MetricCard } from "@/components/care/metric-card";
 import { Panel } from "@/components/care/panel";
 import { PatientCard } from "@/components/care/patient-card";
-import { PriorityChip, StatusChip } from "@/components/care/chips";
+import { AssessmentPendingChip, PriorityChip, StatusChip } from "@/components/care/chips";
 import { TriageBreakdown } from "@/components/care/triage-breakdown";
 import { RfidScanner, type ScanState } from "@/components/care/rfid-scanner";
 import { VitalsRow } from "@/components/care/vitals";
