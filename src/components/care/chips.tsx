@@ -38,3 +38,11 @@ export function StatusChip({ status, className }: { status: PatientStatus; class
   const meta = statusMeta[status];
   return <Chip className={cn(meta.chip, className)}>{meta.label}</Chip>;
 }
+
+export function AssessmentPendingChip({ className }: { className?: string }) {
+  return (
+    <Chip className={cn("border-warning/35 bg-warning-soft text-warning-foreground", className)} dot="bg-warning">
+      Assessment Pending
+    </Chip>
+  );
+}

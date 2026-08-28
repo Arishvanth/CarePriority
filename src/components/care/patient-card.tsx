@@ -1,9 +1,9 @@
 import { ArrowUp, Clock, Siren } from "lucide-react";
 import type { Patient } from "@/data/types";
-import { priorityMeta } from "@/lib/triage";
+import { priorityMeta, missingAssessment } from "@/lib/triage";
 import { initials, waitMinutes } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { PriorityChip, StatusChip } from "./chips";
+import { AssessmentPendingChip, PriorityChip, StatusChip } from "./chips";
 import { VitalsRow } from "./vitals";
 import { Button } from "@/components/ui/button";
 
@@ -18,6 +18,7 @@ interface PatientCardProps {
 export function PatientCard({ patient, onSelect, onEmergency, selected, compact }: PatientCardProps) {
   const meta = priorityMeta[patient.priority];
   const waited = waitMinutes(patient.registered_at);
+  const missing = missingAssessment(patient);
 
   return (
     <article
@@ -70,6 +71,7 @@ export function PatientCard({ patient, onSelect, onEmergency, selected, compact 
       <div className="mt-3 flex flex-wrap items-center gap-2 pl-2">
         <PriorityChip priority={patient.priority} />
         <StatusChip status={patient.status} />
+        {missing.length > 0 && <AssessmentPendingChip />}
         <VitalsRow
           className="ml-auto"
           temperature={patient.temperature}

@@ -11,7 +11,7 @@ import { PageHeader } from "@/components/care/page-header";
 import { MetricCard } from "@/components/care/metric-card";
 import { Panel } from "@/components/care/panel";
 import { PatientCard } from "@/components/care/patient-card";
-import { PriorityChip, StatusChip } from "@/components/care/chips";
+import { AssessmentPendingChip, PriorityChip, StatusChip } from "@/components/care/chips";
 import { TriageBreakdown } from "@/components/care/triage-breakdown";
 import { RfidScanner, type ScanState } from "@/components/care/rfid-scanner";
 import { VitalsRow } from "@/components/care/vitals";
@@ -26,10 +26,10 @@ import {
 } from "@/components/ui/dialog";
 import { usePatients, queryKeys } from "@/hooks/use-care-data";
 import { useSession } from "@/hooks/use-session";
-import { createPatient, findByRfid, promoteToEmergency } from "@/data/patients";
+import { createPatient, findByRfid, promoteToEmergency, updatePatient } from "@/data/patients";
 import { createAlert } from "@/data/alerts";
 import type { Patient } from "@/data/types";
-import { scoreTriage, priorityMeta, type Priority } from "@/lib/triage";
+import { scoreTriage, priorityMeta, missingAssessment, type Priority } from "@/lib/triage";
 import { nextPatientCode, randomRfid, waitMinutes } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/app/reception")({
@@ -68,7 +68,19 @@ function ReceptionPage() {
   const [emergencyTarget, setEmergencyTarget] = useState<Patient | null>(null);
   const [emergencyReason, setEmergencyReason] = useState("");
   const [emergencySearch, setEmergencySearch] = useState("");
+  const [editTarget, setEditTarget] = useState<Patient | null>(null);
+  const [editForm, setEditForm] = useState({ temperature: "", heart_rate: "", spo2: "", symptoms: "" });
   const { user } = useSession();
+
+  function openAssessment(patient: Patient) {
+    setEditTarget(patient);
+    setEditForm({
+      temperature: patient.temperature === null ? "" : String(patient.temperature),
+      heart_rate: patient.heart_rate === null ? "" : String(patient.heart_rate),
+      spo2: patient.spo2 === null ? "" : String(patient.spo2),
+      symptoms: patient.symptoms ?? "",
+    });
+  }
 
   const active = patients.filter((p) => p.status !== "completed");
   const waiting = patients.filter((p) => p.status === "waiting");
@@ -199,6 +211,48 @@ function ReceptionPage() {
       void queryClient.invalidateQueries({ queryKey: queryKeys.alerts });
     },
 
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const saveAssessment = useMutation({
+    mutationFn: async (patient: Patient) => {
+      const temperature = editForm.temperature.trim() ? Number(editForm.temperature) : null;
+      const heart_rate = editForm.heart_rate.trim() ? Number(editForm.heart_rate) : null;
+      const spo2 = editForm.spo2.trim() ? Number(editForm.spo2) : null;
+      const symptoms = editForm.symptoms.trim();
+      const result = scoreTriage({
+        symptoms,
+        temperature,
+        heartRate: heart_rate,
+        spo2,
+        age: patient.age,
+      });
+      const priority = patient.emergency_override ? patient.priority : result.priority;
+      const queue_position =
+        patient.emergency_override || priority === patient.priority
+          ? patient.queue_position
+          : active.filter((p) => p.priority === priority && p.id !== patient.id).length + 1;
+      await updatePatient(patient.id, {
+        temperature,
+        heart_rate,
+        spo2,
+        symptoms,
+        priority,
+        triage_score: patient.emergency_override ? patient.triage_score : result.score,
+        triage_factors: patient.emergency_override
+          ? [...patient.triage_factors.filter((f) => f.kind === "override"), ...result.factors]
+          : result.factors,
+        queue_position,
+      });
+      return { patient, priority };
+    },
+    onSuccess: ({ patient, priority }) => {
+      toast.success(`${patient.full_name} updated`, {
+        description: `Triage re-run — ${priorityMeta[priority].label} priority`,
+      });
+      setEditTarget(null);
+      void queryClient.invalidateQueries({ queryKey: queryKeys.patients });
+    },
     onError: (err: Error) => toast.error(err.message),
   });
 
@@ -398,6 +452,10 @@ function ReceptionPage() {
                 />
               </div>
 
+              <p className="-mb-1 text-xs text-muted-foreground">
+                Vitals are optional at registration — leave blank if not yet measured. The patient will be flagged
+                “Assessment Pending” until they are recorded.
+              </p>
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="grid gap-1.5">
                   <Label htmlFor="temperature">Temp °C</Label>
@@ -471,7 +529,7 @@ function ReceptionPage() {
                 <EmptyState icon={Users} title="Lane clear" description="No patients in this lane right now." />
               ) : (
                 lanes[key].map((patient) => (
-                  <PatientCard key={patient.id} patient={patient} onEmergency={(p) => {
+                  <PatientCard key={patient.id} patient={patient} onSelect={openAssessment} onEmergency={(p) => {
                       setEmergencyTarget(p);
                       setEmergencyReason("");
                       setEmergencySearch("");
@@ -507,6 +565,8 @@ function ReceptionPage() {
                   <th scope="col">Score</th>
                   <th scope="col">Priority</th>
                   <th scope="col">Status</th>
+                  <th scope="col">Assessment</th>
+                  <th scope="col"><span className="sr-only">Actions</span></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -529,6 +589,18 @@ function ReceptionPage() {
                     </td>
                     <td>
                       <StatusChip status={p.status} />
+                    </td>
+                    <td>
+                      {missingAssessment(p).length > 0 ? (
+                        <AssessmentPendingChip />
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Complete</span>
+                      )}
+                    </td>
+                    <td className="text-right">
+                      <Button size="sm" variant="outline" onClick={() => openAssessment(p)}>
+                        Update
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -627,6 +699,84 @@ function ReceptionPage() {
             >
               {escalate.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Siren className="h-4 w-4" />}
               Confirm emergency override
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!editTarget} onOpenChange={(open) => !open && setEditTarget(null)}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Update assessment</DialogTitle>
+            <DialogDescription>
+              {editTarget
+                ? `${editTarget.full_name} · ${editTarget.patient_code}. Saving re-runs triage and repositions the patient in the queue.`
+                : ""}
+            </DialogDescription>
+          </DialogHeader>
+
+          {editTarget && missingAssessment({ ...editTarget }).length > 0 && (
+            <p className="rounded-lg border border-warning/35 bg-warning-soft p-2.5 text-xs text-foreground">
+              Assessment Pending — missing {missingAssessment({ ...editTarget }).join(", ")}.
+            </p>
+          )}
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-1.5">
+              <Label htmlFor="edit-temperature">Temp °C</Label>
+              <Input
+                id="edit-temperature"
+                type="number"
+                step="0.1"
+                value={editForm.temperature}
+                onChange={(e) => setEditForm({ ...editForm, temperature: e.target.value })}
+                placeholder="Not recorded"
+              />
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="edit-heart-rate">HR bpm</Label>
+              <Input
+                id="edit-heart-rate"
+                type="number"
+                value={editForm.heart_rate}
+                onChange={(e) => setEditForm({ ...editForm, heart_rate: e.target.value })}
+                placeholder="Not recorded"
+              />
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="edit-spo2">SpO₂ %</Label>
+              <Input
+                id="edit-spo2"
+                type="number"
+                value={editForm.spo2}
+                onChange={(e) => setEditForm({ ...editForm, spo2: e.target.value })}
+                placeholder="Not recorded"
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-1.5">
+            <Label htmlFor="edit-symptoms">Symptoms / clinical information</Label>
+            <Textarea
+              id="edit-symptoms"
+              rows={3}
+              maxLength={1000}
+              value={editForm.symptoms}
+              onChange={(e) => setEditForm({ ...editForm, symptoms: e.target.value })}
+              placeholder="Describe what the patient reports…"
+            />
+          </div>
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setEditTarget(null)}>
+              Cancel
+            </Button>
+            <Button
+              disabled={saveAssessment.isPending}
+              onClick={() => editTarget && saveAssessment.mutate(editTarget)}
+            >
+              {saveAssessment.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              Save & re-run triage
             </Button>
           </DialogFooter>
         </DialogContent>
