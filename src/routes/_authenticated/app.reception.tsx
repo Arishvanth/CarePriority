@@ -26,10 +26,10 @@ import {
 } from "@/components/ui/dialog";
 import { usePatients, queryKeys } from "@/hooks/use-care-data";
 import { useSession } from "@/hooks/use-session";
-import { createPatient, findByRfid, promoteToEmergency } from "@/data/patients";
+import { createPatient, findByRfid, promoteToEmergency, updatePatient } from "@/data/patients";
 import { createAlert } from "@/data/alerts";
 import type { Patient } from "@/data/types";
-import { scoreTriage, priorityMeta, type Priority } from "@/lib/triage";
+import { scoreTriage, priorityMeta, missingAssessment, type Priority } from "@/lib/triage";
 import { nextPatientCode, randomRfid, waitMinutes } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/app/reception")({
