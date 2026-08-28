@@ -71,6 +71,7 @@ export function PatientCard({ patient, onSelect, onEmergency, selected, compact 
       <div className="mt-3 flex flex-wrap items-center gap-2 pl-2">
         <PriorityChip priority={patient.priority} />
         <StatusChip status={patient.status} />
+        {missing.length > 0 && <AssessmentPendingChip />}
         <VitalsRow
           className="ml-auto"
           temperature={patient.temperature}
