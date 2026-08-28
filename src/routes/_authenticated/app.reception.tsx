@@ -561,6 +561,8 @@ function ReceptionPage() {
                   <th scope="col">Score</th>
                   <th scope="col">Priority</th>
                   <th scope="col">Status</th>
+                  <th scope="col">Assessment</th>
+                  <th scope="col"><span className="sr-only">Actions</span></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
