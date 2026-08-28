@@ -139,3 +139,18 @@ export const statusMeta: Record<PatientStatus, { label: string; chip: string }> 
   "in-consult": { label: "In consult", chip: "bg-primary-light text-primary-hover border-primary/25" },
   completed: { label: "Completed", chip: "bg-success-soft text-success border-success/25" },
 };
+
+/** Clinical information still required before triage can be considered complete. */
+export function missingAssessment(input: {
+  temperature?: number | null;
+  heart_rate?: number | null;
+  spo2?: number | null;
+  symptoms?: string | null;
+}): string[] {
+  const missing: string[] = [];
+  if (input.temperature === null || input.temperature === undefined) missing.push("Temperature");
+  if (input.heart_rate === null || input.heart_rate === undefined) missing.push("Heart rate");
+  if (input.spo2 === null || input.spo2 === undefined) missing.push("SpO₂");
+  if (!input.symptoms || !input.symptoms.trim()) missing.push("Symptoms");
+  return missing;
+}
