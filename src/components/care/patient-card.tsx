@@ -18,6 +18,7 @@ interface PatientCardProps {
 export function PatientCard({ patient, onSelect, onEmergency, selected, compact }: PatientCardProps) {
   const meta = priorityMeta[patient.priority];
   const waited = waitMinutes(patient.registered_at);
+  const missing = missingAssessment(patient);
 
   return (
     <article
