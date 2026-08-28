@@ -452,6 +452,10 @@ function ReceptionPage() {
                 />
               </div>
 
+              <p className="-mb-1 text-xs text-muted-foreground">
+                Vitals are optional at registration — leave blank if not yet measured. The patient will be flagged
+                “Assessment Pending” until they are recorded.
+              </p>
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="grid gap-1.5">
                   <Label htmlFor="temperature">Temp °C</Label>
