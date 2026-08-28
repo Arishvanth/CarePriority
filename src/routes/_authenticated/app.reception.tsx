@@ -704,6 +704,84 @@ function ReceptionPage() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={!!editTarget} onOpenChange={(open) => !open && setEditTarget(null)}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Update assessment</DialogTitle>
+            <DialogDescription>
+              {editTarget
+                ? `${editTarget.full_name} · ${editTarget.patient_code}. Saving re-runs triage and repositions the patient in the queue.`
+                : ""}
+            </DialogDescription>
+          </DialogHeader>
+
+          {editTarget && missingAssessment({ ...editTarget }).length > 0 && (
+            <p className="rounded-lg border border-warning/35 bg-warning-soft p-2.5 text-xs text-foreground">
+              Assessment Pending — missing {missingAssessment({ ...editTarget }).join(", ")}.
+            </p>
+          )}
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-1.5">
+              <Label htmlFor="edit-temperature">Temp °C</Label>
+              <Input
+                id="edit-temperature"
+                type="number"
+                step="0.1"
+                value={editForm.temperature}
+                onChange={(e) => setEditForm({ ...editForm, temperature: e.target.value })}
+                placeholder="Not recorded"
+              />
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="edit-heart-rate">HR bpm</Label>
+              <Input
+                id="edit-heart-rate"
+                type="number"
+                value={editForm.heart_rate}
+                onChange={(e) => setEditForm({ ...editForm, heart_rate: e.target.value })}
+                placeholder="Not recorded"
+              />
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="edit-spo2">SpO₂ %</Label>
+              <Input
+                id="edit-spo2"
+                type="number"
+                value={editForm.spo2}
+                onChange={(e) => setEditForm({ ...editForm, spo2: e.target.value })}
+                placeholder="Not recorded"
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-1.5">
+            <Label htmlFor="edit-symptoms">Symptoms / clinical information</Label>
+            <Textarea
+              id="edit-symptoms"
+              rows={3}
+              maxLength={1000}
+              value={editForm.symptoms}
+              onChange={(e) => setEditForm({ ...editForm, symptoms: e.target.value })}
+              placeholder="Describe what the patient reports…"
+            />
+          </div>
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setEditTarget(null)}>
+              Cancel
+            </Button>
+            <Button
+              disabled={saveAssessment.isPending}
+              onClick={() => editTarget && saveAssessment.mutate(editTarget)}
+            >
+              {saveAssessment.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              Save & re-run triage
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </>
   );
 }
