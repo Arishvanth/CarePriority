@@ -525,7 +525,7 @@ function ReceptionPage() {
                 <EmptyState icon={Users} title="Lane clear" description="No patients in this lane right now." />
               ) : (
                 lanes[key].map((patient) => (
-                  <PatientCard key={patient.id} patient={patient} onEmergency={(p) => {
+                  <PatientCard key={patient.id} patient={patient} onSelect={openAssessment} onEmergency={(p) => {
                       setEmergencyTarget(p);
                       setEmergencyReason("");
                       setEmergencySearch("");
