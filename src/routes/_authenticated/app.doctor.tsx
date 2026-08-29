@@ -56,6 +56,7 @@ function DoctorPage() {
   const [diagnosis, setDiagnosis] = useState("");
   const [outcome, setOutcome] = useState("discharged");
   const [suppressAutoSelect, setSuppressAutoSelect] = useState(false);
+  const [assessTarget, setAssessTarget] = useState<Patient | null>(null);
 
   const queue = useMemo(
     () =>
@@ -241,6 +242,9 @@ function DoctorPage() {
                   <>
                     <PriorityChip priority={selected.priority} />
                     <StatusChip status={selected.status} />
+                    <Button size="sm" variant="outline" onClick={() => setAssessTarget(selected)}>
+                      <ClipboardList className="h-4 w-4" /> Update vitals
+                    </Button>
                   </>
                 }
               >
@@ -386,6 +390,8 @@ function DoctorPage() {
           </Panel>
         </div>
       </div>
+
+      <AssessmentDialog patient={assessTarget} onOpenChange={(open) => !open && setAssessTarget(null)} />
     </>
   );
 }
