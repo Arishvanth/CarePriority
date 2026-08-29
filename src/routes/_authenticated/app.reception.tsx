@@ -1,16 +1,17 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { requireRole } from "@/lib/rbac";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  AlertTriangle, Clock3, Loader2, MapPin, Mic, Search, Siren, Stethoscope, Users, UserPlus,
+  Activity, AlertTriangle, ClipboardList, Clock3, Loader2, MapPin, Mic, PencilLine, Search,
+  Siren, Stethoscope, Users, UserPlus,
 } from "lucide-react";
 
-import { PageHeader } from "@/components/care/page-header";
 import { MetricCard } from "@/components/care/metric-card";
 import { Panel } from "@/components/care/panel";
 import { PatientCard } from "@/components/care/patient-card";
+import { AssessmentDialog } from "@/components/care/assessment-dialog";
 import { AssessmentPendingChip, PriorityChip, StatusChip } from "@/components/care/chips";
 import { TriageBreakdown } from "@/components/care/triage-breakdown";
 import { RfidScanner, type ScanState } from "@/components/care/rfid-scanner";
@@ -24,13 +25,13 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
-import { usePatients, queryKeys } from "@/hooks/use-care-data";
-import { useSession } from "@/hooks/use-session";
-import { createPatient, findByRfid, promoteToEmergency, updatePatient } from "@/data/patients";
+import { useConsultations, usePatients, queryKeys } from "@/hooks/use-care-data";
+import { useProfile, useSession } from "@/hooks/use-session";
+import { createPatient, findByRfid, promoteToEmergency } from "@/data/patients";
 import { createAlert } from "@/data/alerts";
 import type { Patient } from "@/data/types";
 import { scoreTriage, priorityMeta, missingAssessment, type Priority } from "@/lib/triage";
-import { nextPatientCode, randomRfid, waitMinutes } from "@/lib/format";
+import { initials, nextPatientCode, randomRfid, relativeTime, waitMinutes } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/app/reception")({
   beforeLoad: () => requireRole(["receptionist", "nurse", "admin"]),
@@ -56,9 +57,37 @@ const emptyForm = {
   rfid_tag: "",
 };
 
+/** Live clock, hydrated client-side only to avoid SSR mismatch. */
+function LiveClock() {
+  const [now, setNow] = useState<Date | null>(null);
+  useEffect(() => {
+    setNow(new Date());
+    const t = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(t);
+  }, []);
+  if (!now) return <span className="text-sm text-muted-foreground">—</span>;
+  return (
+    <span className="text-right">
+      <span className="block text-sm font-semibold tabular-nums text-foreground">
+        {now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+      </span>
+      <span className="block text-xs text-muted-foreground">
+        {now.toLocaleDateString([], { weekday: "short", day: "numeric", month: "short", year: "numeric" })}
+      </span>
+    </span>
+  );
+}
+
+function SectionLabel({ children }: { children: string }) {
+  return (
+    <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">{children}</p>
+  );
+}
+
 function ReceptionPage() {
   const queryClient = useQueryClient();
   const { data: patients = [], isLoading } = usePatients();
+  const { data: consultations = [] } = useConsultations();
   const [form, setForm] = useState(emptyForm);
   const [search, setSearch] = useState("");
   const [listening, setListening] = useState(false);
@@ -68,23 +97,26 @@ function ReceptionPage() {
   const [emergencyTarget, setEmergencyTarget] = useState<Patient | null>(null);
   const [emergencyReason, setEmergencyReason] = useState("");
   const [emergencySearch, setEmergencySearch] = useState("");
-  const [editTarget, setEditTarget] = useState<Patient | null>(null);
-  const [editForm, setEditForm] = useState({ temperature: "", heart_rate: "", spo2: "", symptoms: "" });
+  const [recordId, setRecordId] = useState<string | null>(null);
+  const [assessTarget, setAssessTarget] = useState<Patient | null>(null);
   const { user } = useSession();
+  const profile = useProfile(user?.id);
 
-  function openAssessment(patient: Patient) {
-    setEditTarget(patient);
-    setEditForm({
-      temperature: patient.temperature === null ? "" : String(patient.temperature),
-      heart_rate: patient.heart_rate === null ? "" : String(patient.heart_rate),
-      spo2: patient.spo2 === null ? "" : String(patient.spo2),
-      symptoms: patient.symptoms ?? "",
-    });
+  function openEmergency(patient?: Patient) {
+    setEmergencyTarget(patient ?? null);
+    setEmergencyReason("");
+    setEmergencySearch("");
+    setEmergencyOpen(true);
   }
 
   const active = patients.filter((p) => p.status !== "completed");
   const waiting = patients.filter((p) => p.status === "waiting");
   const overflow = waiting.length >= OVERFLOW_THRESHOLD;
+
+  const record = useMemo(
+    () => patients.find((p) => p.id === recordId) ?? null,
+    [patients, recordId],
+  );
 
   const lanes = useMemo(() => {
     const grouped: Record<Priority, Patient[]> = { HIGH: [], MODERATE: [], LOW: [] };
@@ -214,48 +246,6 @@ function ReceptionPage() {
     onError: (err: Error) => toast.error(err.message),
   });
 
-  const saveAssessment = useMutation({
-    mutationFn: async (patient: Patient) => {
-      const temperature = editForm.temperature.trim() ? Number(editForm.temperature) : null;
-      const heart_rate = editForm.heart_rate.trim() ? Number(editForm.heart_rate) : null;
-      const spo2 = editForm.spo2.trim() ? Number(editForm.spo2) : null;
-      const symptoms = editForm.symptoms.trim();
-      const result = scoreTriage({
-        symptoms,
-        temperature,
-        heartRate: heart_rate,
-        spo2,
-        age: patient.age,
-      });
-      const priority = patient.emergency_override ? patient.priority : result.priority;
-      const queue_position =
-        patient.emergency_override || priority === patient.priority
-          ? patient.queue_position
-          : active.filter((p) => p.priority === priority && p.id !== patient.id).length + 1;
-      await updatePatient(patient.id, {
-        temperature,
-        heart_rate,
-        spo2,
-        symptoms,
-        priority,
-        triage_score: patient.emergency_override ? patient.triage_score : result.score,
-        triage_factors: patient.emergency_override
-          ? [...patient.triage_factors.filter((f) => f.kind === "override"), ...result.factors]
-          : result.factors,
-        queue_position,
-      });
-      return { patient, priority };
-    },
-    onSuccess: ({ patient, priority }) => {
-      toast.success(`${patient.full_name} updated`, {
-        description: `Triage re-run — ${priorityMeta[priority].label} priority`,
-      });
-      setEditTarget(null);
-      void queryClient.invalidateQueries({ queryKey: queryKeys.patients });
-    },
-    onError: (err: Error) => toast.error(err.message),
-  });
-
   async function handleScan(tag: string) {
     if (tag === "__scan__") {
       setScanState("scanning");
@@ -300,41 +290,39 @@ function ReceptionPage() {
 
   return (
     <>
-      <PageHeader
-        breadcrumbs={[{ label: "Console", to: "/app/reception" }, { label: "Reception" }]}
-        title="Live intake & queue"
-        description="Register patients, capture vitals, and let the triage engine order the queue automatically."
-        actions={
-          <>
-            <div className="relative">
-              <Search
-                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-                aria-hidden="true"
-              />
-              <Input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search name, ID, RFID…"
-                aria-label="Search patients"
-                className="h-9.5 w-full pl-9 sm:w-64"
-              />
+      {/* ── 1. Top bar ─────────────────────────────────────────────── */}
+      <header className="panel mb-6 rounded-2xl px-5 py-4 lg:mb-8">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 sm:flex sm:flex-wrap sm:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary-light text-sm font-semibold text-primary-hover">
+              {initials(profile?.full_name ?? user?.email ?? "R")}
+            </span>
+            <div className="min-w-0">
+              <h1 className="truncate font-display text-lg font-semibold tracking-tight text-foreground sm:text-xl">
+                {profile?.full_name ?? "Reception desk"}
+              </h1>
+              <p className="truncate text-xs text-muted-foreground">
+                {profile?.job_title ?? "Receptionist"}
+                {profile?.department ? ` · ${profile.department}` : ""} · Front desk console
+              </p>
             </div>
-            <Button
-              variant="emergency"
-              onClick={() => {
-                setEmergencyTarget(null);
-                setEmergencyReason("");
-                setEmergencySearch("");
-                setEmergencyOpen(true);
-              }}
-              disabled={waiting.length === 0}
-            >
-              <Siren className="h-4 w-4" /> Emergency
-            </Button>
-          </>
-        }
-      />
+          </div>
+          <div className="flex shrink-0 items-center gap-5">
+            <span className="hidden items-center gap-2 sm:flex" role="status">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-60" />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-success" />
+              </span>
+              <span className="text-xs font-medium text-foreground">Systems operational</span>
+              <span className="text-xs text-muted-foreground">· Realtime live</span>
+            </span>
+            <span className="hidden h-8 w-px bg-border sm:block" aria-hidden="true" />
+            <LiveClock />
+          </div>
+        </div>
+      </header>
 
+      {/* Overflow alert */}
       {overflow && (
         <div
           role="alert"
@@ -355,190 +343,331 @@ function ReceptionPage() {
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="High priority" value={lanes.HIGH.length} icon={Siren} tone="danger" loading={isLoading} />
-        <MetricCard label="Waiting" value={waiting.length} icon={Users} tone="warning" loading={isLoading} />
-        <MetricCard label="Average wait" value={`${avgWait}m`} icon={Clock3} tone="primary" loading={isLoading} />
-        <MetricCard
-          label="In consultation"
-          value={patients.filter((p) => p.status === "in-consult").length}
-          icon={Stethoscope}
-          tone="success"
-          loading={isLoading}
-        />
-      </div>
-
-      <div className="mt-6 grid gap-5 xl:grid-cols-5 lg:mt-8">
+      <div className="grid gap-6 xl:grid-cols-5">
+        {/* ── 2. Patient intake ─────────────────────────────────────── */}
         <div className="space-y-5 xl:col-span-2">
-          <Panel
-            title="Register patient"
-            description="Every field feeds the triage engine in real time."
-          >
-            <form
-              className="grid gap-4"
-              onSubmit={(e) => {
-                e.preventDefault();
-                register.mutate();
-              }}
+          <section aria-labelledby="intake-heading">
+            <SectionLabel>Patient intake</SectionLabel>
+            <Panel
+              title="Register new patient"
+              description="Every field feeds the triage engine in real time."
             >
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div className="grid gap-1.5 sm:col-span-2">
-                  <Label htmlFor="full_name">Full name</Label>
-                  <Input
-                    id="full_name"
-                    required
-                    maxLength={120}
-                    value={form.full_name}
-                    onChange={(e) => setForm({ ...form, full_name: e.target.value })}
-                    placeholder="e.g. Aarav Sharma"
-                  />
+              <form
+                className="grid gap-4"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  register.mutate();
+                }}
+              >
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="grid gap-1.5 sm:col-span-2">
+                    <Label htmlFor="full_name">Full name</Label>
+                    <Input
+                      id="full_name"
+                      required
+                      maxLength={120}
+                      value={form.full_name}
+                      onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+                      placeholder="e.g. Aarav Sharma"
+                    />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <Label htmlFor="age">Age</Label>
+                    <Input
+                      id="age"
+                      type="number"
+                      min={0}
+                      max={120}
+                      required
+                      value={form.age}
+                      onChange={(e) => setForm({ ...form, age: e.target.value })}
+                      placeholder="34"
+                    />
+                  </div>
                 </div>
-                <div className="grid gap-1.5">
-                  <Label htmlFor="age">Age</Label>
-                  <Input
-                    id="age"
-                    type="number"
-                    min={0}
-                    max={120}
-                    required
-                    value={form.age}
-                    onChange={(e) => setForm({ ...form, age: e.target.value })}
-                    placeholder="34"
-                  />
-                </div>
-              </div>
 
-              <fieldset className="grid gap-1.5">
-                <legend className="mb-1.5 text-sm font-medium text-foreground">Gender</legend>
-                <div className="flex gap-2" role="radiogroup">
-                  {[
-                    { value: "F", label: "Female" },
-                    { value: "M", label: "Male" },
-                    { value: "O", label: "Other" },
-                  ].map((option) => (
-                    <button
-                      key={option.value}
-                      type="button"
-                      role="radio"
-                      aria-checked={form.gender === option.value}
-                      onClick={() => setForm({ ...form, gender: option.value })}
-                      className={
-                        form.gender === option.value
-                          ? "flex-1 rounded-lg border border-primary bg-primary-light py-2 text-sm font-medium text-primary-hover"
-                          : "flex-1 rounded-lg border border-border bg-surface py-2 text-sm text-muted-foreground transition-colors hover:border-primary/35"
-                      }
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              </fieldset>
+                <fieldset className="grid gap-1.5">
+                  <legend className="mb-1.5 text-sm font-medium text-foreground">Gender</legend>
+                  <div className="flex gap-2" role="radiogroup">
+                    {[
+                      { value: "F", label: "Female" },
+                      { value: "M", label: "Male" },
+                      { value: "O", label: "Other" },
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        role="radio"
+                        aria-checked={form.gender === option.value}
+                        onClick={() => setForm({ ...form, gender: option.value })}
+                        className={
+                          form.gender === option.value
+                            ? "flex-1 rounded-lg border border-primary bg-primary-light py-2 text-sm font-medium text-primary-hover"
+                            : "flex-1 rounded-lg border border-border bg-surface py-2 text-sm text-muted-foreground transition-colors hover:border-primary/35"
+                        }
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </fieldset>
 
-              <div className="grid gap-1.5">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="symptoms">Presenting symptoms</Label>
-                  <Button type="button" size="sm" variant="ghost" onClick={simulateVoiceCapture}>
-                    {listening ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Mic className="h-3.5 w-3.5" />}
-                    {listening ? "Listening…" : "Voice capture"}
-                  </Button>
-                </div>
-                <Textarea
-                  id="symptoms"
-                  rows={3}
-                  maxLength={1000}
-                  value={form.symptoms}
-                  onChange={(e) => setForm({ ...form, symptoms: e.target.value })}
-                  placeholder="Describe what the patient reports…"
-                />
-              </div>
-
-              <p className="-mb-1 text-xs text-muted-foreground">
-                Vitals are optional at registration — leave blank if not yet measured. The patient will be flagged
-                “Assessment Pending” until they are recorded.
-              </p>
-              <div className="grid gap-3 sm:grid-cols-3">
                 <div className="grid gap-1.5">
-                  <Label htmlFor="temperature">Temp °C</Label>
-                  <Input
-                    id="temperature"
-                    type="number"
-                    step="0.1"
-                    value={form.temperature}
-                    onChange={(e) => setForm({ ...form, temperature: e.target.value })}
-                    placeholder="37.0"
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="symptoms">Presenting symptoms</Label>
+                    <Button type="button" size="sm" variant="ghost" onClick={simulateVoiceCapture}>
+                      {listening ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Mic className="h-3.5 w-3.5" />}
+                      {listening ? "Listening…" : "Voice capture"}
+                    </Button>
+                  </div>
+                  <Textarea
+                    id="symptoms"
+                    rows={3}
+                    maxLength={1000}
+                    value={form.symptoms}
+                    onChange={(e) => setForm({ ...form, symptoms: e.target.value })}
+                    placeholder="Describe what the patient reports…"
                   />
                 </div>
-                <div className="grid gap-1.5">
-                  <Label htmlFor="heart_rate">HR bpm</Label>
-                  <Input
-                    id="heart_rate"
-                    type="number"
-                    value={form.heart_rate}
-                    onChange={(e) => setForm({ ...form, heart_rate: e.target.value })}
-                    placeholder="80"
-                  />
-                </div>
-                <div className="grid gap-1.5">
-                  <Label htmlFor="spo2">SpO₂ %</Label>
-                  <Input
-                    id="spo2"
-                    type="number"
-                    value={form.spo2}
-                    onChange={(e) => setForm({ ...form, spo2: e.target.value })}
-                    placeholder="98"
-                  />
-                </div>
-              </div>
 
-              <RfidScanner onScan={handleScan} state={scanState} message={scanMessage} />
-              {form.rfid_tag && (
-                <p className="text-xs text-muted-foreground">
-                  Linked wristband: <span className="font-mono text-foreground">{form.rfid_tag}</span>
+                <p className="-mb-1 text-xs text-muted-foreground">
+                  Vitals are optional at registration — leave blank if not yet measured. The patient will be flagged
+                  “Assessment Pending” until they are recorded.
                 </p>
-              )}
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="grid gap-1.5">
+                    <Label htmlFor="temperature">Temp °C</Label>
+                    <Input
+                      id="temperature"
+                      type="number"
+                      step="0.1"
+                      value={form.temperature}
+                      onChange={(e) => setForm({ ...form, temperature: e.target.value })}
+                      placeholder="37.0"
+                    />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <Label htmlFor="heart_rate">HR bpm</Label>
+                    <Input
+                      id="heart_rate"
+                      type="number"
+                      value={form.heart_rate}
+                      onChange={(e) => setForm({ ...form, heart_rate: e.target.value })}
+                      placeholder="80"
+                    />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <Label htmlFor="spo2">SpO₂ %</Label>
+                    <Input
+                      id="spo2"
+                      type="number"
+                      value={form.spo2}
+                      onChange={(e) => setForm({ ...form, spo2: e.target.value })}
+                      placeholder="98"
+                    />
+                  </div>
+                </div>
 
-              <Button type="submit" size="lg" disabled={register.isPending}>
-                {register.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
-                Add to queue
-              </Button>
-            </form>
-          </Panel>
+                <RfidScanner onScan={handleScan} state={scanState} message={scanMessage} />
+                {form.rfid_tag && (
+                  <p className="text-xs text-muted-foreground">
+                    Linked wristband: <span className="font-mono text-foreground">{form.rfid_tag}</span>
+                  </p>
+                )}
+
+                <Button type="submit" size="lg" disabled={register.isPending}>
+                  {register.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
+                  Add to queue
+                </Button>
+              </form>
+            </Panel>
+          </section>
 
           <Panel title="Triage breakdown" description="Live preview of the score this registration will receive.">
             <TriageBreakdown score={preview.score} priority={preview.priority} factors={preview.factors} />
           </Panel>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3 xl:col-span-3 xl:content-start">
-          {(["HIGH", "MODERATE", "LOW"] as Priority[]).map((key) => (
-            <Panel
-              key={key}
-              className="h-fit"
-              title={`${priorityMeta[key].label} priority`}
-              description={priorityMeta[key].description}
-              actions={
-                <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium tabular-nums text-muted-foreground">
-                  {lanes[key].length}
-                </span>
-              }
-              bodyClassName="space-y-3"
-            >
-              {isLoading ? (
-                <CardsSkeleton count={2} />
-              ) : lanes[key].length === 0 ? (
-                <EmptyState icon={Users} title="Lane clear" description="No patients in this lane right now." />
-              ) : (
-                lanes[key].map((patient) => (
-                  <PatientCard key={patient.id} patient={patient} onSelect={openAssessment} onEmergency={(p) => {
-                      setEmergencyTarget(p);
-                      setEmergencyReason("");
-                      setEmergencySearch("");
-                      setEmergencyOpen(true);
-                    }} compact />
-                ))
-              )}
-            </Panel>
-          ))}
+        {/* ── 3 & 4. Live queue + emergency ─────────────────────────── */}
+        <div className="space-y-5 xl:col-span-3">
+          <section aria-labelledby="queue-heading">
+            <div className="mb-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+              <SectionLabel>Live queue</SectionLabel>
+              <div className="relative -mt-3">
+                <Search
+                  className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                  aria-hidden="true"
+                />
+                <Input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search name, ID, RFID…"
+                  aria-label="Search patients"
+                  className="h-9 w-full pl-9 sm:w-60"
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <MetricCard label="High priority" value={lanes.HIGH.length} icon={Siren} tone="danger" loading={isLoading} />
+              <MetricCard label="Waiting" value={waiting.length} icon={Users} tone="warning" loading={isLoading} />
+              <MetricCard label="Average wait" value={`${avgWait}m`} icon={Clock3} tone="primary" loading={isLoading} />
+              <MetricCard
+                label="In consultation"
+                value={patients.filter((p) => p.status === "in-consult").length}
+                icon={Stethoscope}
+                tone="success"
+                loading={isLoading}
+              />
+            </div>
+
+            {/* Emergency — deliberately separated from normal queue actions */}
+            <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-danger/30 bg-danger-soft/60 p-4 sm:flex-row sm:items-center">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-surface text-danger shadow-xs">
+                <Siren className="h-5 w-5" aria-hidden="true" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-foreground">Emergency override</p>
+                <p className="text-xs text-muted-foreground">
+                  Move any waiting patient to position #1 and alert the on-duty doctor immediately.
+                </p>
+              </div>
+              <Button
+                variant="emergency"
+                className="shrink-0"
+                onClick={() => openEmergency()}
+                disabled={waiting.length === 0}
+              >
+                <Siren className="h-4 w-4" /> Emergency override
+              </Button>
+            </div>
+
+            <div className="mt-4 grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+              {(["HIGH", "MODERATE", "LOW"] as Priority[]).map((key) => (
+                <Panel
+                  key={key}
+                  className="h-fit"
+                  title={`${priorityMeta[key].label} priority`}
+                  description={priorityMeta[key].description}
+                  actions={
+                    <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium tabular-nums text-muted-foreground">
+                      {lanes[key].length}
+                    </span>
+                  }
+                  bodyClassName="space-y-3"
+                >
+                  {isLoading ? (
+                    <CardsSkeleton count={2} />
+                  ) : lanes[key].length === 0 ? (
+                    <EmptyState icon={Users} title="Lane clear" description="No patients in this lane right now." />
+                  ) : (
+                    lanes[key].map((patient) => (
+                      <PatientCard
+                        key={patient.id}
+                        patient={patient}
+                        onSelect={(p) => setRecordId(p.id)}
+                        onEmergency={(p) => openEmergency(p)}
+                        selected={record?.id === patient.id}
+                        compact
+                      />
+                    ))
+                  )}
+                </Panel>
+              ))}
+            </div>
+          </section>
+
+          <div className="grid gap-5 lg:grid-cols-2">
+            {/* ── 5. Patient record ─────────────────────────────────── */}
+            <section aria-labelledby="record-heading">
+              <SectionLabel>Patient record</SectionLabel>
+              <Panel
+                title={record ? record.full_name : "No patient selected"}
+                description={record ? `${record.patient_code} · ${record.age}${record.gender}` : "Select a patient from the queue or the table below."}
+                actions={
+                  record ? (
+                    <Button size="sm" variant="outline" onClick={() => setAssessTarget(record)}>
+                      <PencilLine className="h-3.5 w-3.5" /> Update assessment
+                    </Button>
+                  ) : undefined
+                }
+              >
+                {!record ? (
+                  <EmptyState
+                    icon={Activity}
+                    title="No record open"
+                    description="Click any patient card to review their clinical information here."
+                  />
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <PriorityChip priority={record.priority} />
+                      <StatusChip status={record.status} />
+                      {record.queue_position > 0 && (
+                        <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium tabular-nums text-muted-foreground">
+                          Queue #{record.queue_position}
+                        </span>
+                      )}
+                      {missingAssessment(record).length > 0 && <AssessmentPendingChip />}
+                      <span className="ml-auto font-display text-lg font-semibold tabular-nums text-foreground">
+                        {record.triage_score}
+                        <span className="ml-1 text-[10px] font-normal uppercase tracking-wide text-muted-foreground">
+                          score
+                        </span>
+                      </span>
+                    </div>
+                    <VitalsRow temperature={record.temperature} heartRate={record.heart_rate} spo2={record.spo2} />
+                    {record.symptoms ? (
+                      <p className="rounded-lg bg-muted/50 p-3 text-xs leading-relaxed text-muted-foreground">
+                        {record.symptoms}
+                      </p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">No clinical information recorded yet.</p>
+                    )}
+                    <TriageBreakdown
+                      score={record.triage_score}
+                      priority={record.priority}
+                      factors={record.triage_factors}
+                    />
+                  </div>
+                )}
+              </Panel>
+            </section>
+
+            {/* ── 6. Recent consultations ───────────────────────────── */}
+            <section aria-labelledby="consultations-heading">
+              <SectionLabel>Recent consultations</SectionLabel>
+              <Panel title="Recent consultations" description="Latest completed records across the clinic." flush>
+                {consultations.length === 0 ? (
+                  <EmptyState
+                    icon={ClipboardList}
+                    title="No consultations yet"
+                    description="Completed visits will be listed here."
+                  />
+                ) : (
+                  <ul className="divide-y divide-border">
+                    {consultations.slice(0, 6).map((c) => {
+                      const patient = patients.find((p) => p.id === c.patient_id);
+                      return (
+                        <li key={c.id} className="flex flex-wrap items-center gap-3 px-5 py-3.5">
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium text-foreground">
+                              {patient?.full_name ?? "Unknown patient"}
+                            </p>
+                            <p className="truncate text-xs text-muted-foreground">
+                              {c.diagnosis || "Diagnosis pending"}
+                            </p>
+                          </div>
+                          <span className="text-xs capitalize text-muted-foreground">{c.outcome || "—"}</span>
+                          <span className="text-xs text-muted-foreground">{relativeTime(c.started_at)}</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </Panel>
+            </section>
+          </div>
         </div>
       </div>
 
@@ -571,7 +700,11 @@ function ReceptionPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {filtered.map((p) => (
-                  <tr key={p.id} className="transition-colors hover:bg-muted/50 [&>td]:px-5 [&>td]:py-3">
+                  <tr
+                    key={p.id}
+                    className="cursor-pointer transition-colors hover:bg-muted/50 [&>td]:px-5 [&>td]:py-3"
+                    onClick={() => setRecordId(p.id)}
+                  >
                     <td>
                       <div className="font-medium text-foreground">{p.full_name}</div>
                       <div className="text-xs text-muted-foreground">{p.patient_code}</div>
@@ -598,7 +731,14 @@ function ReceptionPage() {
                       )}
                     </td>
                     <td className="text-right">
-                      <Button size="sm" variant="outline" onClick={() => openAssessment(p)}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setAssessTarget(p);
+                        }}
+                      >
                         Update
                       </Button>
                     </td>
@@ -704,84 +844,7 @@ function ReceptionPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!editTarget} onOpenChange={(open) => !open && setEditTarget(null)}>
-        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Update assessment</DialogTitle>
-            <DialogDescription>
-              {editTarget
-                ? `${editTarget.full_name} · ${editTarget.patient_code}. Saving re-runs triage and repositions the patient in the queue.`
-                : ""}
-            </DialogDescription>
-          </DialogHeader>
-
-          {editTarget && missingAssessment({ ...editTarget }).length > 0 && (
-            <p className="rounded-lg border border-warning/35 bg-warning-soft p-2.5 text-xs text-foreground">
-              Assessment Pending — missing {missingAssessment({ ...editTarget }).join(", ")}.
-            </p>
-          )}
-
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div className="grid gap-1.5">
-              <Label htmlFor="edit-temperature">Temp °C</Label>
-              <Input
-                id="edit-temperature"
-                type="number"
-                step="0.1"
-                value={editForm.temperature}
-                onChange={(e) => setEditForm({ ...editForm, temperature: e.target.value })}
-                placeholder="Not recorded"
-              />
-            </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="edit-heart-rate">HR bpm</Label>
-              <Input
-                id="edit-heart-rate"
-                type="number"
-                value={editForm.heart_rate}
-                onChange={(e) => setEditForm({ ...editForm, heart_rate: e.target.value })}
-                placeholder="Not recorded"
-              />
-            </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="edit-spo2">SpO₂ %</Label>
-              <Input
-                id="edit-spo2"
-                type="number"
-                value={editForm.spo2}
-                onChange={(e) => setEditForm({ ...editForm, spo2: e.target.value })}
-                placeholder="Not recorded"
-              />
-            </div>
-          </div>
-
-          <div className="grid gap-1.5">
-            <Label htmlFor="edit-symptoms">Symptoms / clinical information</Label>
-            <Textarea
-              id="edit-symptoms"
-              rows={3}
-              maxLength={1000}
-              value={editForm.symptoms}
-              onChange={(e) => setEditForm({ ...editForm, symptoms: e.target.value })}
-              placeholder="Describe what the patient reports…"
-            />
-          </div>
-
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setEditTarget(null)}>
-              Cancel
-            </Button>
-            <Button
-              disabled={saveAssessment.isPending}
-              onClick={() => editTarget && saveAssessment.mutate(editTarget)}
-            >
-              {saveAssessment.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-              Save & re-run triage
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
+      <AssessmentDialog patient={assessTarget} onOpenChange={(open) => !open && setAssessTarget(null)} />
     </>
   );
 }
