@@ -17,6 +17,7 @@ import { RfidScanner, type ScanState } from "@/components/care/rfid-scanner";
 import { VitalsRow } from "@/components/care/vitals";
 import { EmptyState } from "@/components/care/empty-state";
 import { CardsSkeleton } from "@/components/care/loading";
+import { AssessmentDialog } from "@/components/care/assessment-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
