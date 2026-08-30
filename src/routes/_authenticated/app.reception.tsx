@@ -508,7 +508,7 @@ function ReceptionPage() {
               </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-4">
               <MetricCard label="High priority" value={lanes.HIGH.length} icon={Siren} tone="danger" loading={isLoading} />
               <MetricCard label="Waiting" value={waiting.length} icon={Users} tone="warning" loading={isLoading} />
               <MetricCard label="Average wait" value={`${avgWait}m`} icon={Clock3} tone="primary" loading={isLoading} />
