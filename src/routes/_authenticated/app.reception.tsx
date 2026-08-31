@@ -549,12 +549,15 @@ function ReceptionPage() {
                   className="flex h-full flex-col"
                   title={`${priorityMeta[key].label} priority`}
                   description={priorityMeta[key].description}
+                  headerClassName="flex-nowrap items-start"
+                  descriptionClassName="line-clamp-2 min-h-[2.5rem]"
                   actions={
                     <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium tabular-nums text-muted-foreground">
                       {lanes[key].length}
                     </span>
                   }
                   bodyClassName="flex flex-1 flex-col space-y-3"
+
                 >
                   {isLoading ? (
                     <CardsSkeleton count={2} />
