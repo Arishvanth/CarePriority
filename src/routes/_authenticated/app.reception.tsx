@@ -542,11 +542,11 @@ function ReceptionPage() {
               </Button>
             </div>
 
-            <div className="mt-4 grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+            <div className="mt-4 grid gap-4 md:grid-cols-2 2xl:grid-cols-3 items-stretch">
               {(["HIGH", "MODERATE", "LOW"] as Priority[]).map((key) => (
                 <Panel
                   key={key}
-                  className="h-fit"
+                  className="flex h-full flex-col"
                   title={`${priorityMeta[key].label} priority`}
                   description={priorityMeta[key].description}
                   actions={
@@ -554,12 +554,17 @@ function ReceptionPage() {
                       {lanes[key].length}
                     </span>
                   }
-                  bodyClassName="space-y-3"
+                  bodyClassName="flex flex-1 flex-col space-y-3"
                 >
                   {isLoading ? (
                     <CardsSkeleton count={2} />
                   ) : lanes[key].length === 0 ? (
-                    <EmptyState icon={Users} title="Lane clear" description="No patients in this lane right now." />
+                    <EmptyState
+                      icon={Users}
+                      title="Lane clear"
+                      description="No patients in this lane right now."
+                      className="flex-1"
+                    />
                   ) : (
                     lanes[key].map((patient) => (
                       <PatientCard
