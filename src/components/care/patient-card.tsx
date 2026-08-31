@@ -112,7 +112,7 @@ export function PatientCard({ patient, onSelect, onEmergency, selected, compact 
       </div>
 
       {/* Status row */}
-      <div className="mt-3 flex flex-wrap items-center gap-1.5">
+      <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
         <PriorityChip priority={patient.priority} />
         <StatusChip status={patient.status} />
         {patient.queue_position > 0 && (
@@ -124,7 +124,7 @@ export function PatientCard({ patient, onSelect, onEmergency, selected, compact 
       </div>
 
       {/* Vitals */}
-      <div className="mt-3 grid grid-cols-3 gap-2">
+      <div className="mt-2.5 grid grid-cols-3 gap-1.5">
         <Vital
           icon={Thermometer}
           label="Temp"
@@ -150,12 +150,12 @@ export function PatientCard({ patient, onSelect, onEmergency, selected, compact 
       )}
 
       {canEscalate && (
-        <div className="mt-3 border-t border-border/70 pt-2">
+        <div className="mt-2.5 border-t border-border/70 pt-1.5">
           <Button
             type="button"
             size="sm"
             variant="ghost"
-            className="h-7 text-xs text-danger hover:bg-danger-soft hover:text-danger"
+            className="h-7 px-2 text-xs text-danger hover:bg-danger-soft hover:text-danger"
             onClick={(e) => {
               e.stopPropagation();
               onEmergency?.(patient);
