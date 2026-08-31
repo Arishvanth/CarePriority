@@ -711,7 +711,7 @@ function ReceptionPage() {
                   <tr
                     key={p.id}
                     className="cursor-pointer transition-colors hover:bg-muted/50 [&>td]:px-5 [&>td]:py-3"
-                    onClick={() => setRecordId(p.id)}
+                    onClick={() => setRecordId((cur) => (cur === p.id ? null : p.id))}
                   >
                     <td>
                       <div className="font-medium text-foreground">{p.full_name}</div>
