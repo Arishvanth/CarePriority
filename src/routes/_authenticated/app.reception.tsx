@@ -573,7 +573,7 @@ function ReceptionPage() {
                       <PatientCard
                         key={patient.id}
                         patient={patient}
-                        onSelect={(p) => setRecordId(p.id)}
+                        onSelect={(p) => setRecordId((cur) => (cur === p.id ? null : p.id))}
                         onEmergency={(p) => openEmergency(p)}
                         selected={record?.id === patient.id}
                         compact
