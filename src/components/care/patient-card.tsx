@@ -26,11 +26,16 @@ function Vital({
   warn?: boolean;
 }) {
   return (
-    <div className="flex min-w-0 flex-col gap-0.5 rounded-lg border border-border/70 bg-muted/40 px-2 py-1.5">
+    <div className="flex min-w-0 flex-col gap-0.5 rounded-lg border border-border/70 bg-muted/40 px-1.5 py-1">
       <span className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground">
-        <Icon className="h-3 w-3" aria-hidden="true" /> {label}
+        <Icon className="h-3 w-3 shrink-0" aria-hidden="true" /> {label}
       </span>
-      <span className={cn("truncate text-sm font-medium tabular-nums", warn ? "text-danger" : "text-foreground")}>
+      <span
+        className={cn(
+          "whitespace-nowrap text-[13px] font-medium leading-tight tabular-nums",
+          warn ? "text-danger" : "text-foreground",
+        )}
+      >
         {value}
       </span>
     </div>
