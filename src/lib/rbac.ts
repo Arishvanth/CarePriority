@@ -24,7 +24,7 @@ export const ROLE_LABEL: Record<AppRole, string> = {
 export const ROUTE_ACCESS: Record<string, AppRole[]> = {
   "/app/reception": ["receptionist", "nurse", "admin"],
   "/app/doctor": ["doctor", "nurse", "admin"],
-  "/app/analytics": ["admin", "doctor", "nurse", "receptionist"],
+  "/app/analytics": ["admin", "doctor"],
   "/app/admin": ["admin"],
   "/app/notifications": ["admin", "doctor", "nurse", "receptionist"],
   "/app/settings": ["admin", "doctor", "nurse", "receptionist"],

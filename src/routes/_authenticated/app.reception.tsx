@@ -353,13 +353,13 @@ function ReceptionPage() {
               description="Every field feeds the triage engine in real time."
             >
               <form
-                className="grid gap-4"
+                className="grid gap-2.5"
                 onSubmit={(e) => {
                   e.preventDefault();
                   register.mutate();
                 }}
               >
-                <div className="grid gap-3 sm:grid-cols-3">
+                <div className="grid gap-2.5 sm:grid-cols-3">
                   <div className="grid gap-1.5 sm:col-span-2">
                     <Label htmlFor="full_name">Full name</Label>
                     <Input
@@ -386,8 +386,8 @@ function ReceptionPage() {
                   </div>
                 </div>
 
-                <fieldset className="grid gap-1.5">
-                  <legend className="mb-1.5 text-sm font-medium text-foreground">Gender</legend>
+                <fieldset className="grid gap-1">
+                  <legend className="mb-1 text-sm font-medium text-foreground">Gender</legend>
                   <div className="flex gap-2" role="radiogroup">
                     {[
                       { value: "F", label: "Female" },
@@ -422,7 +422,7 @@ function ReceptionPage() {
                   </div>
                   <Textarea
                     id="symptoms"
-                    rows={3}
+                    rows={2}
                     maxLength={1000}
                     value={form.symptoms}
                     onChange={(e) => setForm({ ...form, symptoms: e.target.value })}
@@ -431,10 +431,9 @@ function ReceptionPage() {
                 </div>
 
                 <p className="-mb-1 text-xs text-muted-foreground">
-                  Vitals are optional at registration — leave blank if not yet measured. The patient will be flagged
-                  “Assessment Pending” until they are recorded.
+                  Vitals optional — blank vitals flag the patient “Assessment Pending”.
                 </p>
-                <div className="grid gap-3 sm:grid-cols-3">
+                <div className="grid gap-2.5 sm:grid-cols-3">
                   <div className="grid gap-1.5">
                     <Label htmlFor="temperature">Temp °C</Label>
                     <Input

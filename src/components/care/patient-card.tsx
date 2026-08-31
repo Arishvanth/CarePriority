@@ -26,11 +26,16 @@ function Vital({
   warn?: boolean;
 }) {
   return (
-    <div className="flex min-w-0 flex-col gap-0.5 rounded-lg border border-border/70 bg-muted/40 px-2 py-1.5">
+    <div className="flex min-w-0 flex-col gap-0.5 rounded-lg border border-border/70 bg-muted/40 px-1.5 py-1">
       <span className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground">
-        <Icon className="h-3 w-3" aria-hidden="true" /> {label}
+        <Icon className="h-3 w-3 shrink-0" aria-hidden="true" /> {label}
       </span>
-      <span className={cn("truncate text-sm font-medium tabular-nums", warn ? "text-danger" : "text-foreground")}>
+      <span
+        className={cn(
+          "whitespace-nowrap text-[13px] font-medium leading-tight tabular-nums",
+          warn ? "text-danger" : "text-foreground",
+        )}
+      >
         {value}
       </span>
     </div>
@@ -62,7 +67,7 @@ export function PatientCard({ patient, onSelect, onEmergency, selected, compact 
       }
       aria-label={onSelect ? `Open record for ${patient.full_name}` : undefined}
       className={cn(
-        "group relative overflow-hidden rounded-xl border bg-surface p-4 pl-5 text-left transition-all duration-200",
+        "group relative overflow-hidden rounded-xl border bg-surface p-3 pl-4 text-left transition-all duration-200",
         onSelect && "cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
         selected ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-primary/35 hover:shadow-soft",
       )}
@@ -70,8 +75,8 @@ export function PatientCard({ patient, onSelect, onEmergency, selected, compact 
       <span className={cn("absolute inset-y-0 left-0 w-1", meta.bar)} aria-hidden="true" />
 
       {/* Identity */}
-      <div className="flex items-start gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-foreground">
+      <div className="flex items-start gap-2.5">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-semibold text-foreground">
           {initials(patient.full_name)}
         </span>
         <div className="min-w-0 flex-1">
@@ -107,7 +112,7 @@ export function PatientCard({ patient, onSelect, onEmergency, selected, compact 
       </div>
 
       {/* Status row */}
-      <div className="mt-3 flex flex-wrap items-center gap-1.5">
+      <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
         <PriorityChip priority={patient.priority} />
         <StatusChip status={patient.status} />
         {patient.queue_position > 0 && (
@@ -119,7 +124,7 @@ export function PatientCard({ patient, onSelect, onEmergency, selected, compact 
       </div>
 
       {/* Vitals */}
-      <div className="mt-3 grid grid-cols-3 gap-2">
+      <div className="mt-2.5 grid grid-cols-3 gap-1.5">
         <Vital
           icon={Thermometer}
           label="Temp"
@@ -145,12 +150,12 @@ export function PatientCard({ patient, onSelect, onEmergency, selected, compact 
       )}
 
       {canEscalate && (
-        <div className="mt-3 border-t border-border/70 pt-2">
+        <div className="mt-2.5 border-t border-border/70 pt-1.5">
           <Button
             type="button"
             size="sm"
             variant="ghost"
-            className="h-7 text-xs text-danger hover:bg-danger-soft hover:text-danger"
+            className="h-7 px-2 text-xs text-danger hover:bg-danger-soft hover:text-danger"
             onClick={(e) => {
               e.stopPropagation();
               onEmergency?.(patient);
