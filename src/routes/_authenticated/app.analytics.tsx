@@ -12,8 +12,10 @@ import { Panel } from "@/components/care/panel";
 import { usePatients, useConsultations } from "@/hooks/use-care-data";
 import { waitMinutes } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { requireRole } from "@/lib/rbac";
 
 export const Route = createFileRoute("/_authenticated/app/analytics")({
+  beforeLoad: () => requireRole(["admin", "doctor"]),
   head: () => ({
     meta: [
       { title: "Analytics — CarePriority" },
