@@ -343,9 +343,9 @@ function ReceptionPage() {
         </div>
       )}
 
-      <div className="grid gap-6 xl:grid-cols-5">
+      <div className="grid gap-5 xl:grid-cols-5">
         {/* ── 2. Patient intake ─────────────────────────────────────── */}
-        <div className="space-y-5 xl:col-span-2">
+        <div className="space-y-4 xl:col-span-2">
           <section aria-labelledby="intake-heading">
             <SectionLabel>Patient intake</SectionLabel>
             <Panel
@@ -474,7 +474,7 @@ function ReceptionPage() {
                   </p>
                 )}
 
-                <Button type="submit" size="lg" disabled={register.isPending}>
+                <Button type="submit" disabled={register.isPending}>
                   {register.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
                   Add to queue
                 </Button>
@@ -541,7 +541,7 @@ function ReceptionPage() {
               </Button>
             </div>
 
-            <div className="mt-4 grid gap-4 md:grid-cols-2 2xl:grid-cols-3 items-stretch">
+            <div className="mt-4 grid items-stretch gap-3 md:grid-cols-2 2xl:grid-cols-3">
               {(["HIGH", "MODERATE", "LOW"] as Priority[]).map((key) => (
                 <Panel
                   key={key}
@@ -555,8 +555,7 @@ function ReceptionPage() {
                       {lanes[key].length}
                     </span>
                   }
-                  bodyClassName="flex flex-1 flex-col space-y-3"
-
+                  bodyClassName="flex flex-1 flex-col space-y-2.5"
                 >
                   {isLoading ? (
                     <CardsSkeleton count={2} />
