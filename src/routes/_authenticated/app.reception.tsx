@@ -343,9 +343,9 @@ function ReceptionPage() {
         </div>
       )}
 
-      <div className="grid gap-6 xl:grid-cols-5">
+      <div className="grid gap-5 xl:grid-cols-5">
         {/* ── 2. Patient intake ─────────────────────────────────────── */}
-        <div className="space-y-5 xl:col-span-2">
+        <div className="space-y-4 xl:col-span-2">
           <section aria-labelledby="intake-heading">
             <SectionLabel>Patient intake</SectionLabel>
             <Panel
@@ -474,7 +474,7 @@ function ReceptionPage() {
                   </p>
                 )}
 
-                <Button type="submit" size="lg" disabled={register.isPending}>
+                <Button type="submit" disabled={register.isPending}>
                   {register.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
                   Add to queue
                 </Button>
