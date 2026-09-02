@@ -482,9 +482,6 @@ function ReceptionPage() {
             </Panel>
           </section>
 
-          <Panel title="Triage breakdown" description="Live preview of the score this registration will receive.">
-            <TriageBreakdown score={preview.score} priority={preview.priority} factors={preview.factors} />
-          </Panel>
         </div>
 
         {/* ── 3 & 4. Live queue + emergency ─────────────────────────── */}
@@ -583,98 +580,118 @@ function ReceptionPage() {
             </div>
           </section>
 
-          <div className="grid gap-5 lg:grid-cols-2">
-            {/* ── 5. Patient record ─────────────────────────────────── */}
-            <section aria-labelledby="record-heading">
-              <SectionLabel>Patient record</SectionLabel>
-              <Panel
-                title={record ? record.full_name : "No patient selected"}
-                description={record ? `${record.patient_code} · ${record.age}${record.gender}` : "Select a patient from the queue or the table below."}
-                actions={
-                  record ? (
-                    <Button size="sm" variant="outline" onClick={() => setAssessTarget(record)}>
-                      <PencilLine className="h-3.5 w-3.5" /> Update assessment
-                    </Button>
-                  ) : undefined
-                }
-              >
-                {!record ? (
-                  <EmptyState
-                    icon={Activity}
-                    title="No record open"
-                    description="Click any patient card to review their clinical information here."
-                  />
-                ) : (
-                  <div className="space-y-4">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <PriorityChip priority={record.priority} />
-                      <StatusChip status={record.status} />
-                      {record.queue_position > 0 && (
-                        <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium tabular-nums text-muted-foreground">
-                          Queue #{record.queue_position}
-                        </span>
-                      )}
-                      {missingAssessment(record).length > 0 && <AssessmentPendingChip />}
-                      <span className="ml-auto font-display text-lg font-semibold tabular-nums text-foreground">
-                        {record.triage_score}
-                        <span className="ml-1 text-[10px] font-normal uppercase tracking-wide text-muted-foreground">
-                          score
-                        </span>
-                      </span>
-                    </div>
-                    <VitalsRow temperature={record.temperature} heartRate={record.heart_rate} spo2={record.spo2} />
-                    {record.symptoms ? (
-                      <p className="rounded-lg bg-muted/50 p-3 text-xs leading-relaxed text-muted-foreground">
-                        {record.symptoms}
-                      </p>
-                    ) : (
-                      <p className="text-xs text-muted-foreground">No clinical information recorded yet.</p>
-                    )}
-                    <TriageBreakdown
-                      score={record.triage_score}
-                      priority={record.priority}
-                      factors={record.triage_factors}
-                    />
-                  </div>
-                )}
-              </Panel>
-            </section>
-
-            {/* ── 6. Recent consultations ───────────────────────────── */}
-            <section aria-labelledby="consultations-heading">
-              <SectionLabel>Recent consultations</SectionLabel>
-              <Panel title="Recent consultations" description="Latest completed records across the clinic." flush>
-                {consultations.length === 0 ? (
-                  <EmptyState
-                    icon={ClipboardList}
-                    title="No consultations yet"
-                    description="Completed visits will be listed here."
-                  />
-                ) : (
-                  <ul className="divide-y divide-border">
-                    {consultations.slice(0, 6).map((c) => {
-                      const patient = patients.find((p) => p.id === c.patient_id);
-                      return (
-                        <li key={c.id} className="flex flex-wrap items-center gap-3 px-5 py-3.5">
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-medium text-foreground">
-                              {patient?.full_name ?? "Unknown patient"}
-                            </p>
-                            <p className="truncate text-xs text-muted-foreground">
-                              {c.diagnosis || "Diagnosis pending"}
-                            </p>
-                          </div>
-                          <span className="text-xs capitalize text-muted-foreground">{c.outcome || "—"}</span>
-                          <span className="text-xs text-muted-foreground">{relativeTime(c.started_at)}</span>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </Panel>
-            </section>
-          </div>
         </div>
+      </div>
+
+      <div className="grid gap-5 items-stretch lg:grid-cols-3">
+        {/* ── Triage breakdown preview ─────────────────────────────── */}
+        <section className="flex h-full flex-col">
+          <SectionLabel>Triage breakdown</SectionLabel>
+          <Panel
+            title="Triage breakdown"
+            description="Live preview of the score this registration will receive."
+            className="flex flex-1 flex-col"
+          >
+            <TriageBreakdown score={preview.score} priority={preview.priority} factors={preview.factors} />
+          </Panel>
+        </section>
+
+        {/* ── 5. Patient record ─────────────────────────────────── */}
+        <section className="flex h-full flex-col" aria-labelledby="record-heading">
+          <SectionLabel>Patient record</SectionLabel>
+          <Panel
+            title={record ? record.full_name : "No patient selected"}
+            description={record ? `${record.patient_code} · ${record.age}${record.gender}` : "Select a patient from the queue or the table below."}
+            actions={
+              record ? (
+                <Button size="sm" variant="outline" onClick={() => setAssessTarget(record)}>
+                  <PencilLine className="h-3.5 w-3.5" /> Update assessment
+                </Button>
+              ) : undefined
+            }
+            className="flex flex-1 flex-col"
+            bodyClassName="flex-1"
+          >
+            {!record ? (
+              <EmptyState
+                icon={Activity}
+                title="No record open"
+                description="Click any patient card to review their clinical information here."
+              />
+            ) : (
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <PriorityChip priority={record.priority} />
+                  <StatusChip status={record.status} />
+                  {record.queue_position > 0 && (
+                    <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium tabular-nums text-muted-foreground">
+                      Queue #{record.queue_position}
+                    </span>
+                  )}
+                  {missingAssessment(record).length > 0 && <AssessmentPendingChip />}
+                  <span className="ml-auto font-display text-lg font-semibold tabular-nums text-foreground">
+                    {record.triage_score}
+                    <span className="ml-1 text-[10px] font-normal uppercase tracking-wide text-muted-foreground">
+                      score
+                    </span>
+                  </span>
+                </div>
+                <VitalsRow temperature={record.temperature} heartRate={record.heart_rate} spo2={record.spo2} />
+                {record.symptoms ? (
+                  <p className="rounded-lg bg-muted/50 p-3 text-xs leading-relaxed text-muted-foreground">
+                    {record.symptoms}
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">No clinical information recorded yet.</p>
+                )}
+                <TriageBreakdown
+                  score={record.triage_score}
+                  priority={record.priority}
+                  factors={record.triage_factors}
+                />
+              </div>
+            )}
+          </Panel>
+        </section>
+
+        {/* ── 6. Recent consultations ───────────────────────────── */}
+        <section className="flex h-full flex-col" aria-labelledby="consultations-heading">
+          <SectionLabel>Recent consultations</SectionLabel>
+          <Panel
+            title="Recent consultations"
+            description="Latest completed records across the clinic."
+            flush
+            className="flex flex-1 flex-col"
+          >
+            {consultations.length === 0 ? (
+              <EmptyState
+                icon={ClipboardList}
+                title="No consultations yet"
+                description="Completed visits will be listed here."
+              />
+            ) : (
+              <ul className="divide-y divide-border">
+                {consultations.slice(0, 6).map((c) => {
+                  const patient = patients.find((p) => p.id === c.patient_id);
+                  return (
+                    <li key={c.id} className="flex flex-wrap items-center gap-3 px-5 py-3.5">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-foreground">
+                          {patient?.full_name ?? "Unknown patient"}
+                        </p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {c.diagnosis || "Diagnosis pending"}
+                        </p>
+                      </div>
+                      <span className="text-xs capitalize text-muted-foreground">{c.outcome || "—"}</span>
+                      <span className="text-xs text-muted-foreground">{relativeTime(c.started_at)}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </Panel>
+        </section>
       </div>
 
       <Panel
