@@ -482,9 +482,6 @@ function ReceptionPage() {
             </Panel>
           </section>
 
-          <Panel title="Triage breakdown" description="Live preview of the score this registration will receive.">
-            <TriageBreakdown score={preview.score} priority={preview.priority} factors={preview.factors} />
-          </Panel>
         </div>
 
         {/* ── 3 & 4. Live queue + emergency ─────────────────────────── */}
