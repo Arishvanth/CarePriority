@@ -133,7 +133,7 @@ export function AssessmentDialog({ patient, onOpenChange }: AssessmentDialogProp
           />
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="gap-2 sm:gap-0">
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
