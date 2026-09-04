@@ -707,8 +707,8 @@ function ReceptionPage() {
         ) : filtered.length === 0 ? (
           <EmptyState icon={Search} title="No matching patients" description="Try a different name, ID or wristband tag." />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="w-full max-w-full overflow-x-auto">
+            <table className="w-full min-w-[720px] text-sm">
               <caption className="sr-only">Registered patients with triage results</caption>
               <thead>
                 <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground [&>th]:px-5 [&>th]:py-3 [&>th]:font-medium">
@@ -785,7 +785,7 @@ function ReceptionPage() {
           }
         }}
       >
-        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+        <DialogContent className="max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] overflow-y-auto overflow-x-hidden rounded-xl p-4 sm:max-w-lg sm:p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-danger-soft text-danger">
