@@ -71,7 +71,7 @@ export function AssessmentDialog({ patient, onOpenChange }: AssessmentDialogProp
 
   return (
     <Dialog open={!!patient} onOpenChange={(open) => !open && onOpenChange(false)}>
-      <DialogContent className="max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] overflow-y-auto overflow-x-hidden rounded-xl p-4 sm:max-w-md sm:p-6">
+      <DialogContent className="max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] [&>*]:min-w-0 overflow-y-auto overflow-x-hidden rounded-xl p-4 sm:max-w-md sm:p-6">
         <DialogHeader>
           <DialogTitle>Update assessment</DialogTitle>
           <DialogDescription>

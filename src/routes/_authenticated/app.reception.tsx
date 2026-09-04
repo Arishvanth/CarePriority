@@ -784,7 +784,7 @@ function ReceptionPage() {
           }
         }}
       >
-        <DialogContent className="max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] overflow-y-auto overflow-x-hidden rounded-xl p-4 sm:max-w-lg sm:p-6">
+        <DialogContent className="max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] [&>*]:min-w-0 overflow-y-auto overflow-x-hidden rounded-xl p-4 sm:max-w-lg sm:p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-danger-soft text-danger">
