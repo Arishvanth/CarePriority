@@ -708,8 +708,7 @@ function ReceptionPage() {
           <EmptyState icon={Search} title="No matching patients" description="Try a different name, ID or wristband tag." />
         ) : (
           <div className="w-full max-w-full overflow-x-auto">
-            <table className="w-full min-w-[720px] text-sm">
-              <caption className="sr-only">Registered patients with triage results</caption>
+            <table className="w-full min-w-[720px] text-sm" aria-label="Registered patients with triage results">
               <thead>
                 <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground [&>th]:px-5 [&>th]:py-3 [&>th]:font-medium">
                   <th scope="col">Patient</th>
