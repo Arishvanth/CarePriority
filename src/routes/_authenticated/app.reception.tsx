@@ -487,9 +487,9 @@ function ReceptionPage() {
         {/* ── 3 & 4. Live queue + emergency ─────────────────────────── */}
         <div className="space-y-5 xl:col-span-3">
           <section aria-labelledby="queue-heading">
-            <div className="mb-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+            <div className="mb-3 flex flex-col gap-2 sm:grid sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-3">
               <SectionLabel>Live queue</SectionLabel>
-              <div className="relative -mt-3">
+              <div className="relative w-full sm:-mt-3 sm:w-auto">
                 <Search
                   className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
                   aria-hidden="true"
@@ -504,7 +504,8 @@ function ReceptionPage() {
               </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 2xl:grid-cols-4">
+
               <MetricCard label="High priority" value={lanes.HIGH.length} icon={Siren} tone="danger" loading={isLoading} />
               <MetricCard label="Waiting" value={waiting.length} icon={Users} tone="warning" loading={isLoading} />
               <MetricCard label="Average wait" value={`${avgWait}m`} icon={Clock3} tone="primary" loading={isLoading} />
@@ -530,13 +531,14 @@ function ReceptionPage() {
               </div>
               <Button
                 variant="emergency"
-                className="shrink-0"
+                className="w-full shrink-0 sm:w-auto"
                 onClick={() => openEmergency()}
                 disabled={waiting.length === 0}
               >
                 <Siren className="h-4 w-4" /> Emergency override
               </Button>
             </div>
+
 
             <div className="mt-4 grid items-stretch gap-3 md:grid-cols-2 2xl:grid-cols-3">
               {(["HIGH", "MODERATE", "LOW"] as Priority[]).map((key) => (
@@ -705,9 +707,8 @@ function ReceptionPage() {
         ) : filtered.length === 0 ? (
           <EmptyState icon={Search} title="No matching patients" description="Try a different name, ID or wristband tag." />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <caption className="sr-only">Registered patients with triage results</caption>
+          <div className="relative w-full max-w-full overflow-x-auto">
+            <table className="w-full min-w-[720px] text-sm" aria-label="Registered patients with triage results">
               <thead>
                 <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground [&>th]:px-5 [&>th]:py-3 [&>th]:font-medium">
                   <th scope="col">Patient</th>
@@ -783,7 +784,7 @@ function ReceptionPage() {
           }
         }}
       >
-        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+        <DialogContent className="max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] [&>*]:min-w-0 overflow-y-auto overflow-x-hidden rounded-xl p-4 sm:max-w-lg sm:p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-danger-soft text-danger">
