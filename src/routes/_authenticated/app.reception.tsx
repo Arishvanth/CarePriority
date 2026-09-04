@@ -487,9 +487,9 @@ function ReceptionPage() {
         {/* ── 3 & 4. Live queue + emergency ─────────────────────────── */}
         <div className="space-y-5 xl:col-span-3">
           <section aria-labelledby="queue-heading">
-            <div className="mb-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+            <div className="mb-3 flex flex-col gap-2 sm:grid sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-3">
               <SectionLabel>Live queue</SectionLabel>
-              <div className="relative -mt-3">
+              <div className="relative w-full sm:-mt-3 sm:w-auto">
                 <Search
                   className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
                   aria-hidden="true"
@@ -504,7 +504,8 @@ function ReceptionPage() {
               </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 2xl:grid-cols-4">
+
               <MetricCard label="High priority" value={lanes.HIGH.length} icon={Siren} tone="danger" loading={isLoading} />
               <MetricCard label="Waiting" value={waiting.length} icon={Users} tone="warning" loading={isLoading} />
               <MetricCard label="Average wait" value={`${avgWait}m`} icon={Clock3} tone="primary" loading={isLoading} />
