@@ -531,13 +531,14 @@ function ReceptionPage() {
               </div>
               <Button
                 variant="emergency"
-                className="shrink-0"
+                className="w-full shrink-0 sm:w-auto"
                 onClick={() => openEmergency()}
                 disabled={waiting.length === 0}
               >
                 <Siren className="h-4 w-4" /> Emergency override
               </Button>
             </div>
+
 
             <div className="mt-4 grid items-stretch gap-3 md:grid-cols-2 2xl:grid-cols-3">
               {(["HIGH", "MODERATE", "LOW"] as Priority[]).map((key) => (
