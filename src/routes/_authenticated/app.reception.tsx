@@ -707,7 +707,7 @@ function ReceptionPage() {
         ) : filtered.length === 0 ? (
           <EmptyState icon={Search} title="No matching patients" description="Try a different name, ID or wristband tag." />
         ) : (
-          <div className="w-full max-w-full overflow-x-auto">
+          <div className="relative w-full max-w-full overflow-x-auto">
             <table className="w-full min-w-[720px] text-sm" aria-label="Registered patients with triage results">
               <thead>
                 <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground [&>th]:px-5 [&>th]:py-3 [&>th]:font-medium">
