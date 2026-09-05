@@ -415,6 +415,36 @@ function DoctorPage() {
       </div>
 
       <AssessmentDialog patient={assessTarget} onOpenChange={(open) => !open && setAssessTarget(null)} />
+
+      <AlertDialog open={!!confirmTarget} onOpenChange={(open) => !open && setConfirmTarget(null)}>
+        <AlertDialogContent className="w-[calc(100vw-2rem)] max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm consultation outcome</AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmTarget?.full_name} · {confirmTarget?.patient_code} will be recorded as{" "}
+              <strong className="text-foreground">
+                {OUTCOMES.find((o) => o.value === outcome)?.label ?? "—"}
+              </strong>
+              . {outcome === "observation"
+                ? "The patient stays under observation and leaves the waiting queue."
+                : "The patient leaves the waiting queue; the consultation stays in history."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={finish.isPending}>Go back</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={finish.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                if (confirmTarget) finish.mutate(confirmTarget);
+              }}
+            >
+              {finish.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              Confirm & complete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
