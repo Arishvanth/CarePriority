@@ -110,10 +110,11 @@ function DoctorPage() {
   const finish = useMutation({
     mutationFn: async (patient: Patient) => {
       if (!diagnosis.trim()) throw new Error("Record a diagnosis before completing.");
+      if (!outcome) throw new Error("Select an outcome before completing.");
       if (activeConsultId) {
         await completeConsultation(activeConsultId, { notes: notes.trim(), diagnosis: diagnosis.trim(), outcome });
       }
-      await updatePatient(patient.id, { status: "completed" });
+      await updatePatient(patient.id, { status: outcome === "observation" ? "observation" : "completed" });
       if (outcome === "referred") {
         await createAlert({
           kind: "referral",
