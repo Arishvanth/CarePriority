@@ -308,7 +308,15 @@ function DoctorPage() {
                   className="grid gap-4"
                   onSubmit={(e) => {
                     e.preventDefault();
-                    finish.mutate(selected);
+                    if (!diagnosis.trim()) {
+                      toast.error("Record a diagnosis before completing.");
+                      return;
+                    }
+                    if (!outcome) {
+                      toast.error("Select an outcome before completing.");
+                      return;
+                    }
+                    setConfirmTarget(selected);
                   }}
                 >
                   <div className="grid gap-1.5">
