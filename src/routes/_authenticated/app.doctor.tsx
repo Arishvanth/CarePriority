@@ -30,6 +30,14 @@ import { createAlert } from "@/data/alerts";
 import type { Patient } from "@/data/types";
 import { waitMinutes, relativeTime } from "@/lib/format";
 
+type Outcome = "discharged" | "observation" | "referred";
+
+const OUTCOMES: { value: Outcome; label: string; hint: string }[] = [
+  { value: "discharged", label: "Discharged", hint: "Patient leaves the clinic; record kept in history." },
+  { value: "observation", label: "Observation", hint: "Patient stays under observation for monitoring." },
+  { value: "referred", label: "Referred", hint: "Patient referred onward; kept as a referral record." },
+];
+
 export const Route = createFileRoute("/_authenticated/app/doctor")({
   beforeLoad: () => requireRole(["doctor", "nurse", "admin"]),
   head: () => ({
