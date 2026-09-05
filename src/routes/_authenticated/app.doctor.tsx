@@ -131,7 +131,8 @@ function DoctorPage() {
       setActiveConsultId(null);
       setNotes("");
       setDiagnosis("");
-      setOutcome("discharged");
+      setOutcome(null);
+      setConfirmTarget(null);
       setSuppressAutoSelect(true);
       setSelectedId(null);
       void queryClient.invalidateQueries({ queryKey: queryKeys.patients });
