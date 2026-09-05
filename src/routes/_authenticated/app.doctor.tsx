@@ -54,7 +54,8 @@ function DoctorPage() {
   const [activeConsultId, setActiveConsultId] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
   const [diagnosis, setDiagnosis] = useState("");
-  const [outcome, setOutcome] = useState("discharged");
+  const [outcome, setOutcome] = useState<Outcome | null>(null);
+  const [confirmTarget, setConfirmTarget] = useState<Patient | null>(null);
   const [suppressAutoSelect, setSuppressAutoSelect] = useState(false);
   const [assessTarget, setAssessTarget] = useState<Patient | null>(null);
 
