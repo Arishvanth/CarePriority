@@ -341,13 +341,11 @@ function DoctorPage() {
                     />
                   </div>
                   <fieldset>
-                    <legend className="mb-1.5 text-sm font-medium text-foreground">Outcome</legend>
-                    <div className="flex flex-wrap gap-2" role="radiogroup">
-                      {[
-                        { value: "discharged", label: "Discharged" },
-                        { value: "observation", label: "Observation" },
-                        { value: "referred", label: "Referred" },
-                      ].map((option) => (
+                    <legend className="mb-1.5 text-sm font-medium text-foreground">
+                      Outcome <span className="text-destructive">*</span>
+                    </legend>
+                    <div className="grid gap-2 sm:grid-cols-3" role="radiogroup" aria-label="Consultation outcome">
+                      {OUTCOMES.map((option) => (
                         <button
                           key={option.value}
                           type="button"
@@ -356,14 +354,20 @@ function DoctorPage() {
                           onClick={() => setOutcome(option.value)}
                           className={
                             outcome === option.value
-                              ? "rounded-lg border border-primary bg-primary-light px-3.5 py-2 text-sm font-medium text-primary-hover"
-                              : "rounded-lg border border-border bg-surface px-3.5 py-2 text-sm text-muted-foreground transition-colors hover:border-primary/35"
+                              ? "rounded-lg border border-primary bg-primary-light px-3.5 py-2 text-left text-sm font-medium text-primary-hover"
+                              : "rounded-lg border border-border bg-surface px-3.5 py-2 text-left text-sm text-muted-foreground transition-colors hover:border-primary/35"
                           }
                         >
-                          {option.label}
+                          <span className="block">{option.label}</span>
+                          <span className="mt-0.5 block text-xs font-normal opacity-80">{option.hint}</span>
                         </button>
                       ))}
                     </div>
+                    {!outcome && (
+                      <p className="mt-1.5 text-xs text-muted-foreground">
+                        Select an outcome to complete this consultation.
+                      </p>
+                    )}
                   </fieldset>
                   <div className="flex flex-wrap gap-2">
                     {selected.status === "waiting" && (
