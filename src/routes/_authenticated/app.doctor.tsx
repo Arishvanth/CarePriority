@@ -376,9 +376,9 @@ function DoctorPage() {
                         <PlayCircle className="h-4 w-4" /> Start consultation
                       </Button>
                     )}
-                    <Button type="submit" disabled={finish.isPending}>
+                    <Button type="submit" disabled={finish.isPending || !outcome || !diagnosis.trim()}>
                       {finish.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                      Complete & release
+                      Complete consultation
                     </Button>
                   </div>
                 </form>
