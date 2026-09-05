@@ -63,30 +63,36 @@ export type Database = {
           diagnosis: string
           doctor_id: string | null
           ended_at: string | null
+          final_outcome: string
           id: string
           notes: string
           outcome: string
           patient_id: string
+          referral_note: string
           started_at: string
         }
         Insert: {
           diagnosis?: string
           doctor_id?: string | null
           ended_at?: string | null
+          final_outcome?: string
           id?: string
           notes?: string
           outcome?: string
           patient_id: string
+          referral_note?: string
           started_at?: string
         }
         Update: {
           diagnosis?: string
           doctor_id?: string | null
           ended_at?: string | null
+          final_outcome?: string
           id?: string
           notes?: string
           outcome?: string
           patient_id?: string
+          referral_note?: string
           started_at?: string
         }
         Relationships: [
@@ -99,20 +105,91 @@ export type Database = {
           },
         ]
       }
+      observation_events: {
+        Row: {
+          author_id: string | null
+          author_name: string
+          bed_number: string | null
+          condition: string
+          consultation_id: string | null
+          created_at: string
+          heart_rate: number | null
+          id: string
+          kind: string
+          notes: string
+          patient_id: string
+          room_number: string | null
+          spo2: number | null
+          temperature: number | null
+        }
+        Insert: {
+          author_id?: string | null
+          author_name?: string
+          bed_number?: string | null
+          condition?: string
+          consultation_id?: string | null
+          created_at?: string
+          heart_rate?: number | null
+          id?: string
+          kind?: string
+          notes?: string
+          patient_id: string
+          room_number?: string | null
+          spo2?: number | null
+          temperature?: number | null
+        }
+        Update: {
+          author_id?: string | null
+          author_name?: string
+          bed_number?: string | null
+          condition?: string
+          consultation_id?: string | null
+          created_at?: string
+          heart_rate?: number | null
+          id?: string
+          kind?: string
+          notes?: string
+          patient_id?: string
+          room_number?: string | null
+          spo2?: number | null
+          temperature?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "observation_events_consultation_id_fkey"
+            columns: ["consultation_id"]
+            isOneToOne: false
+            referencedRelation: "consultations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "observation_events_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patients: {
         Row: {
           age: number
+          bed_number: string | null
+          condition: string
           emergency_override: boolean
           full_name: string
           gender: string
           heart_rate: number | null
           id: string
           medical_history: string[]
+          observation_doctor_id: string | null
+          observation_started_at: string | null
           patient_code: string
           priority: Database["public"]["Enums"]["triage_priority"]
           queue_position: number
           registered_at: string
           rfid_tag: string | null
+          room_number: string | null
           spo2: number | null
           status: Database["public"]["Enums"]["patient_status"]
           symptoms: string
@@ -123,17 +200,22 @@ export type Database = {
         }
         Insert: {
           age: number
+          bed_number?: string | null
+          condition?: string
           emergency_override?: boolean
           full_name: string
           gender?: string
           heart_rate?: number | null
           id?: string
           medical_history?: string[]
+          observation_doctor_id?: string | null
+          observation_started_at?: string | null
           patient_code: string
           priority?: Database["public"]["Enums"]["triage_priority"]
           queue_position?: number
           registered_at?: string
           rfid_tag?: string | null
+          room_number?: string | null
           spo2?: number | null
           status?: Database["public"]["Enums"]["patient_status"]
           symptoms?: string
@@ -144,17 +226,22 @@ export type Database = {
         }
         Update: {
           age?: number
+          bed_number?: string | null
+          condition?: string
           emergency_override?: boolean
           full_name?: string
           gender?: string
           heart_rate?: number | null
           id?: string
           medical_history?: string[]
+          observation_doctor_id?: string | null
+          observation_started_at?: string | null
           patient_code?: string
           priority?: Database["public"]["Enums"]["triage_priority"]
           queue_position?: number
           registered_at?: string
           rfid_tag?: string | null
+          room_number?: string | null
           spo2?: number | null
           status?: Database["public"]["Enums"]["patient_status"]
           symptoms?: string

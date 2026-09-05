@@ -18,6 +18,11 @@ export interface Patient {
   status: PatientStatus;
   emergency_override: boolean;
   medical_history: string[];
+  room_number: string | null;
+  bed_number: string | null;
+  condition: string;
+  observation_started_at: string | null;
+  observation_doctor_id: string | null;
   registered_at: string;
   updated_at: string;
 }
@@ -41,6 +46,8 @@ export interface Consultation {
   notes: string;
   diagnosis: string;
   outcome: string;
+  final_outcome: string;
+  referral_note: string;
   started_at: string;
   ended_at: string | null;
 }

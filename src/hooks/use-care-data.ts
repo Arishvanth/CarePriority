@@ -4,11 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchPatients } from "@/data/patients";
 import { fetchAlerts } from "@/data/alerts";
 import { fetchConsultations } from "@/data/consultations";
+import { fetchObservationEvents } from "@/data/observations";
 
 export const queryKeys = {
   patients: ["patients"] as const,
   alerts: ["alerts"] as const,
   consultations: ["consultations"] as const,
+  observations: ["observation-events"] as const,
 };
 
 /** Subscribes once to live table changes and refreshes the matching cache. */
@@ -42,4 +44,12 @@ export function useAlerts() {
 
 export function useConsultations() {
   return useQuery({ queryKey: queryKeys.consultations, queryFn: fetchConsultations, staleTime: 30_000 });
+}
+
+export function useObservationEvents() {
+  return useQuery({
+    queryKey: queryKeys.observations,
+    queryFn: fetchObservationEvents,
+    staleTime: 10_000,
+  });
 }

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, Outlet, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
   BarChart3, Bell, LayoutDashboard, LogOut, Menu, Settings, ShieldCheck,
-  Stethoscope, UserRound, X, CircleCheck,
+  Stethoscope, UserRound, X, CircleCheck, Activity, History,
 } from "lucide-react";
 import { Logo } from "./logo";
 import { cn } from "@/lib/utils";
@@ -17,6 +17,8 @@ import { Button } from "@/components/ui/button";
 const primaryNav = [
   { to: "/app/reception", label: "Reception", icon: LayoutDashboard },
   { to: "/app/doctor", label: "Doctor", icon: Stethoscope },
+  { to: "/app/observation", label: "Observation", icon: Activity },
+  { to: "/app/history", label: "Patient History", icon: History },
   { to: "/app/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/app/admin", label: "Administration", icon: ShieldCheck },
 ] as const;
