@@ -6,7 +6,7 @@
  */
 
 export type Priority = "HIGH" | "MODERATE" | "LOW";
-export type PatientStatus = "waiting" | "in-consult" | "completed";
+export type PatientStatus = "waiting" | "in-consult" | "completed" | "observation";
 
 export interface TriageFactor {
   label: string;
@@ -138,6 +138,7 @@ export const statusMeta: Record<PatientStatus, { label: string; chip: string }> 
   waiting: { label: "Waiting", chip: "bg-muted text-muted-foreground border-border" },
   "in-consult": { label: "In consult", chip: "bg-primary-light text-primary-hover border-primary/25" },
   completed: { label: "Completed", chip: "bg-success-soft text-success border-success/25" },
+  observation: { label: "Observation", chip: "bg-warning-soft text-warning border-warning/25" },
 };
 
 /** Clinical information still required before triage can be considered complete. */

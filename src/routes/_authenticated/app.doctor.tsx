@@ -19,6 +19,10 @@ import { EmptyState } from "@/components/care/empty-state";
 import { CardsSkeleton } from "@/components/care/loading";
 import { AssessmentDialog } from "@/components/care/assessment-dialog";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,6 +33,14 @@ import { startConsultation, completeConsultation } from "@/data/consultations";
 import { createAlert } from "@/data/alerts";
 import type { Patient } from "@/data/types";
 import { waitMinutes, relativeTime } from "@/lib/format";
+
+type Outcome = "discharged" | "observation" | "referred";
+
+const OUTCOMES: { value: Outcome; label: string; hint: string }[] = [
+  { value: "discharged", label: "Discharged", hint: "Patient leaves the clinic; record kept in history." },
+  { value: "observation", label: "Observation", hint: "Patient stays under observation for monitoring." },
+  { value: "referred", label: "Referred", hint: "Patient referred onward; kept as a referral record." },
+];
 
 export const Route = createFileRoute("/_authenticated/app/doctor")({
   beforeLoad: () => requireRole(["doctor", "nurse", "admin"]),
@@ -54,7 +66,8 @@ function DoctorPage() {
   const [activeConsultId, setActiveConsultId] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
   const [diagnosis, setDiagnosis] = useState("");
-  const [outcome, setOutcome] = useState("discharged");
+  const [outcome, setOutcome] = useState<Outcome | null>(null);
+  const [confirmTarget, setConfirmTarget] = useState<Patient | null>(null);
   const [suppressAutoSelect, setSuppressAutoSelect] = useState(false);
   const [assessTarget, setAssessTarget] = useState<Patient | null>(null);
 
@@ -101,10 +114,11 @@ function DoctorPage() {
   const finish = useMutation({
     mutationFn: async (patient: Patient) => {
       if (!diagnosis.trim()) throw new Error("Record a diagnosis before completing.");
+      if (!outcome) throw new Error("Select an outcome before completing.");
       if (activeConsultId) {
         await completeConsultation(activeConsultId, { notes: notes.trim(), diagnosis: diagnosis.trim(), outcome });
       }
-      await updatePatient(patient.id, { status: "completed" });
+      await updatePatient(patient.id, { status: outcome === "observation" ? "observation" : "completed" });
       if (outcome === "referred") {
         await createAlert({
           kind: "referral",
@@ -121,7 +135,8 @@ function DoctorPage() {
       setActiveConsultId(null);
       setNotes("");
       setDiagnosis("");
-      setOutcome("discharged");
+      setOutcome(null);
+      setConfirmTarget(null);
       setSuppressAutoSelect(true);
       setSelectedId(null);
       void queryClient.invalidateQueries({ queryKey: queryKeys.patients });
@@ -298,7 +313,15 @@ function DoctorPage() {
                   className="grid gap-4"
                   onSubmit={(e) => {
                     e.preventDefault();
-                    finish.mutate(selected);
+                    if (!diagnosis.trim()) {
+                      toast.error("Record a diagnosis before completing.");
+                      return;
+                    }
+                    if (!outcome) {
+                      toast.error("Select an outcome before completing.");
+                      return;
+                    }
+                    setConfirmTarget(selected);
                   }}
                 >
                   <div className="grid gap-1.5">
@@ -323,13 +346,11 @@ function DoctorPage() {
                     />
                   </div>
                   <fieldset>
-                    <legend className="mb-1.5 text-sm font-medium text-foreground">Outcome</legend>
-                    <div className="flex flex-wrap gap-2" role="radiogroup">
-                      {[
-                        { value: "discharged", label: "Discharged" },
-                        { value: "observation", label: "Observation" },
-                        { value: "referred", label: "Referred" },
-                      ].map((option) => (
+                    <legend className="mb-1.5 text-sm font-medium text-foreground">
+                      Outcome <span className="text-destructive">*</span>
+                    </legend>
+                    <div className="grid gap-2 sm:grid-cols-3" role="radiogroup" aria-label="Consultation outcome">
+                      {OUTCOMES.map((option) => (
                         <button
                           key={option.value}
                           type="button"
@@ -338,14 +359,20 @@ function DoctorPage() {
                           onClick={() => setOutcome(option.value)}
                           className={
                             outcome === option.value
-                              ? "rounded-lg border border-primary bg-primary-light px-3.5 py-2 text-sm font-medium text-primary-hover"
-                              : "rounded-lg border border-border bg-surface px-3.5 py-2 text-sm text-muted-foreground transition-colors hover:border-primary/35"
+                              ? "rounded-lg border border-primary bg-primary-light px-3.5 py-2 text-left text-sm font-medium text-primary-hover"
+                              : "rounded-lg border border-border bg-surface px-3.5 py-2 text-left text-sm text-muted-foreground transition-colors hover:border-primary/35"
                           }
                         >
-                          {option.label}
+                          <span className="block">{option.label}</span>
+                          <span className="mt-0.5 block text-xs font-normal opacity-80">{option.hint}</span>
                         </button>
                       ))}
                     </div>
+                    {!outcome && (
+                      <p className="mt-1.5 text-xs text-muted-foreground">
+                        Select an outcome to complete this consultation.
+                      </p>
+                    )}
                   </fieldset>
                   <div className="flex flex-wrap gap-2">
                     {selected.status === "waiting" && (
@@ -353,9 +380,9 @@ function DoctorPage() {
                         <PlayCircle className="h-4 w-4" /> Start consultation
                       </Button>
                     )}
-                    <Button type="submit" disabled={finish.isPending}>
+                    <Button type="submit" disabled={finish.isPending || !outcome || !diagnosis.trim()}>
                       {finish.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                      Complete & release
+                      Complete consultation
                     </Button>
                   </div>
                 </form>
@@ -392,6 +419,36 @@ function DoctorPage() {
       </div>
 
       <AssessmentDialog patient={assessTarget} onOpenChange={(open) => !open && setAssessTarget(null)} />
+
+      <AlertDialog open={!!confirmTarget} onOpenChange={(open) => !open && setConfirmTarget(null)}>
+        <AlertDialogContent className="w-[calc(100vw-2rem)] max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm consultation outcome</AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmTarget?.full_name} · {confirmTarget?.patient_code} will be recorded as{" "}
+              <strong className="text-foreground">
+                {OUTCOMES.find((o) => o.value === outcome)?.label ?? "—"}
+              </strong>
+              . {outcome === "observation"
+                ? "The patient stays under observation and leaves the waiting queue."
+                : "The patient leaves the waiting queue; the consultation stays in history."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={finish.isPending}>Go back</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={finish.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                if (confirmTarget) finish.mutate(confirmTarget);
+              }}
+            >
+              {finish.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              Confirm & complete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
