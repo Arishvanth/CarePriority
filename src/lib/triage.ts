@@ -6,7 +6,7 @@
  */
 
 export type Priority = "HIGH" | "MODERATE" | "LOW";
-export type PatientStatus = "waiting" | "in-consult" | "completed";
+export type PatientStatus = "waiting" | "in-consult" | "completed" | "observation";
 
 export interface TriageFactor {
   label: string;
