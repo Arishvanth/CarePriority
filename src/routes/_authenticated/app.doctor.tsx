@@ -30,6 +30,7 @@ import { usePatients, useConsultations, queryKeys } from "@/hooks/use-care-data"
 import { useSession } from "@/hooks/use-session";
 import { findByRfid, updatePatient } from "@/data/patients";
 import { startConsultation, completeConsultation } from "@/data/consultations";
+import { addObservationEvent } from "@/data/observations";
 import { createAlert } from "@/data/alerts";
 import type { Patient } from "@/data/types";
 import { waitMinutes, relativeTime } from "@/lib/format";
@@ -118,7 +119,31 @@ function DoctorPage() {
       if (activeConsultId) {
         await completeConsultation(activeConsultId, { notes: notes.trim(), diagnosis: diagnosis.trim(), outcome });
       }
-      await updatePatient(patient.id, { status: outcome === "observation" ? "observation" : "completed" });
+      if (outcome === "observation") {
+        const startedAt = new Date().toISOString();
+        await updatePatient(patient.id, {
+          status: "observation",
+          condition: diagnosis.trim(),
+          observation_started_at: startedAt,
+          observation_doctor_id: user?.id ?? null,
+        });
+        await addObservationEvent({
+          patient_id: patient.id,
+          consultation_id: activeConsultId,
+          author_id: user?.id ?? null,
+          author_name: profile?.full_name || user?.email || "Doctor",
+          kind: "admitted",
+          condition: diagnosis.trim(),
+          room_number: patient.room_number,
+          bed_number: patient.bed_number,
+          temperature: patient.temperature,
+          heart_rate: patient.heart_rate,
+          spo2: patient.spo2,
+          notes: notes.trim(),
+        });
+      } else {
+        await updatePatient(patient.id, { status: "completed" });
+      }
       if (outcome === "referred") {
         await createAlert({
           kind: "referral",
