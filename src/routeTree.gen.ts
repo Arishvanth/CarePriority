@@ -17,7 +17,9 @@ import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
 import { Route as AuthenticatedAppReceptionRouteImport } from './routes/_authenticated/app.reception'
 import { Route as AuthenticatedAppProfileRouteImport } from './routes/_authenticated/app.profile'
+import { Route as AuthenticatedAppObservationRouteImport } from './routes/_authenticated/app.observation'
 import { Route as AuthenticatedAppNotificationsRouteImport } from './routes/_authenticated/app.notifications'
+import { Route as AuthenticatedAppHistoryRouteImport } from './routes/_authenticated/app.history'
 import { Route as AuthenticatedAppDoctorRouteImport } from './routes/_authenticated/app.doctor'
 import { Route as AuthenticatedAppAnalyticsRouteImport } from './routes/_authenticated/app.analytics'
 import { Route as AuthenticatedAppAdminRouteImport } from './routes/_authenticated/app.admin'
@@ -63,12 +65,23 @@ const AuthenticatedAppProfileRoute = AuthenticatedAppProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppObservationRoute =
+  AuthenticatedAppObservationRouteImport.update({
+    id: '/observation',
+    path: '/observation',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppNotificationsRoute =
   AuthenticatedAppNotificationsRouteImport.update({
     id: '/notifications',
     path: '/notifications',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppHistoryRoute = AuthenticatedAppHistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 const AuthenticatedAppDoctorRoute = AuthenticatedAppDoctorRouteImport.update({
   id: '/doctor',
   path: '/doctor',
@@ -93,7 +106,9 @@ export interface FileRoutesByFullPath {
   '/app/admin': typeof AuthenticatedAppAdminRoute
   '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/app/doctor': typeof AuthenticatedAppDoctorRoute
+  '/app/history': typeof AuthenticatedAppHistoryRoute
   '/app/notifications': typeof AuthenticatedAppNotificationsRoute
+  '/app/observation': typeof AuthenticatedAppObservationRoute
   '/app/profile': typeof AuthenticatedAppProfileRoute
   '/app/reception': typeof AuthenticatedAppReceptionRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
@@ -105,7 +120,9 @@ export interface FileRoutesByTo {
   '/app/admin': typeof AuthenticatedAppAdminRoute
   '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/app/doctor': typeof AuthenticatedAppDoctorRoute
+  '/app/history': typeof AuthenticatedAppHistoryRoute
   '/app/notifications': typeof AuthenticatedAppNotificationsRoute
+  '/app/observation': typeof AuthenticatedAppObservationRoute
   '/app/profile': typeof AuthenticatedAppProfileRoute
   '/app/reception': typeof AuthenticatedAppReceptionRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
@@ -120,7 +137,9 @@ export interface FileRoutesById {
   '/_authenticated/app/admin': typeof AuthenticatedAppAdminRoute
   '/_authenticated/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/_authenticated/app/doctor': typeof AuthenticatedAppDoctorRoute
+  '/_authenticated/app/history': typeof AuthenticatedAppHistoryRoute
   '/_authenticated/app/notifications': typeof AuthenticatedAppNotificationsRoute
+  '/_authenticated/app/observation': typeof AuthenticatedAppObservationRoute
   '/_authenticated/app/profile': typeof AuthenticatedAppProfileRoute
   '/_authenticated/app/reception': typeof AuthenticatedAppReceptionRoute
   '/_authenticated/app/settings': typeof AuthenticatedAppSettingsRoute
@@ -135,7 +154,9 @@ export interface FileRouteTypes {
     | '/app/admin'
     | '/app/analytics'
     | '/app/doctor'
+    | '/app/history'
     | '/app/notifications'
+    | '/app/observation'
     | '/app/profile'
     | '/app/reception'
     | '/app/settings'
@@ -147,7 +168,9 @@ export interface FileRouteTypes {
     | '/app/admin'
     | '/app/analytics'
     | '/app/doctor'
+    | '/app/history'
     | '/app/notifications'
+    | '/app/observation'
     | '/app/profile'
     | '/app/reception'
     | '/app/settings'
@@ -161,7 +184,9 @@ export interface FileRouteTypes {
     | '/_authenticated/app/admin'
     | '/_authenticated/app/analytics'
     | '/_authenticated/app/doctor'
+    | '/_authenticated/app/history'
     | '/_authenticated/app/notifications'
+    | '/_authenticated/app/observation'
     | '/_authenticated/app/profile'
     | '/_authenticated/app/reception'
     | '/_authenticated/app/settings'
@@ -232,11 +257,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppProfileRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/observation': {
+      id: '/_authenticated/app/observation'
+      path: '/observation'
+      fullPath: '/app/observation'
+      preLoaderRoute: typeof AuthenticatedAppObservationRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/notifications': {
       id: '/_authenticated/app/notifications'
       path: '/notifications'
       fullPath: '/app/notifications'
       preLoaderRoute: typeof AuthenticatedAppNotificationsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/history': {
+      id: '/_authenticated/app/history'
+      path: '/history'
+      fullPath: '/app/history'
+      preLoaderRoute: typeof AuthenticatedAppHistoryRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/doctor': {
@@ -267,7 +306,9 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppAdminRoute: typeof AuthenticatedAppAdminRoute
   AuthenticatedAppAnalyticsRoute: typeof AuthenticatedAppAnalyticsRoute
   AuthenticatedAppDoctorRoute: typeof AuthenticatedAppDoctorRoute
+  AuthenticatedAppHistoryRoute: typeof AuthenticatedAppHistoryRoute
   AuthenticatedAppNotificationsRoute: typeof AuthenticatedAppNotificationsRoute
+  AuthenticatedAppObservationRoute: typeof AuthenticatedAppObservationRoute
   AuthenticatedAppProfileRoute: typeof AuthenticatedAppProfileRoute
   AuthenticatedAppReceptionRoute: typeof AuthenticatedAppReceptionRoute
   AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
@@ -278,7 +319,9 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppAdminRoute: AuthenticatedAppAdminRoute,
   AuthenticatedAppAnalyticsRoute: AuthenticatedAppAnalyticsRoute,
   AuthenticatedAppDoctorRoute: AuthenticatedAppDoctorRoute,
+  AuthenticatedAppHistoryRoute: AuthenticatedAppHistoryRoute,
   AuthenticatedAppNotificationsRoute: AuthenticatedAppNotificationsRoute,
+  AuthenticatedAppObservationRoute: AuthenticatedAppObservationRoute,
   AuthenticatedAppProfileRoute: AuthenticatedAppProfileRoute,
   AuthenticatedAppReceptionRoute: AuthenticatedAppReceptionRoute,
   AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,
