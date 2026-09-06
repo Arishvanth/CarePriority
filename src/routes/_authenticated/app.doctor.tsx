@@ -27,7 +27,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { usePatients, useConsultations, queryKeys } from "@/hooks/use-care-data";
-import { useSession } from "@/hooks/use-session";
+import { useSession, useProfile } from "@/hooks/use-session";
 import { findByRfid, updatePatient } from "@/data/patients";
 import { startConsultation, completeConsultation } from "@/data/consultations";
 import { addObservationEvent } from "@/data/observations";
@@ -58,6 +58,7 @@ export const Route = createFileRoute("/_authenticated/app/doctor")({
 function DoctorPage() {
   const queryClient = useQueryClient();
   const { user } = useSession();
+  const profile = useProfile(user?.id);
   const { data: patients = [], isLoading } = usePatients();
   const { data: consultations = [] } = useConsultations();
 
