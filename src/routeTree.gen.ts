@@ -17,6 +17,7 @@ import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
 import { Route as AuthenticatedAppReceptionRouteImport } from './routes/_authenticated/app.reception'
 import { Route as AuthenticatedAppProfileRouteImport } from './routes/_authenticated/app.profile'
+import { Route as AuthenticatedAppObservationRouteImport } from './routes/_authenticated/app.observation'
 import { Route as AuthenticatedAppNotificationsRouteImport } from './routes/_authenticated/app.notifications'
 import { Route as AuthenticatedAppDoctorRouteImport } from './routes/_authenticated/app.doctor'
 import { Route as AuthenticatedAppAnalyticsRouteImport } from './routes/_authenticated/app.analytics'
@@ -63,6 +64,12 @@ const AuthenticatedAppProfileRoute = AuthenticatedAppProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppObservationRoute =
+  AuthenticatedAppObservationRouteImport.update({
+    id: '/observation',
+    path: '/observation',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppNotificationsRoute =
   AuthenticatedAppNotificationsRouteImport.update({
     id: '/notifications',
@@ -94,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/app/doctor': typeof AuthenticatedAppDoctorRoute
   '/app/notifications': typeof AuthenticatedAppNotificationsRoute
+  '/app/observation': typeof AuthenticatedAppObservationRoute
   '/app/profile': typeof AuthenticatedAppProfileRoute
   '/app/reception': typeof AuthenticatedAppReceptionRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
@@ -106,6 +114,7 @@ export interface FileRoutesByTo {
   '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/app/doctor': typeof AuthenticatedAppDoctorRoute
   '/app/notifications': typeof AuthenticatedAppNotificationsRoute
+  '/app/observation': typeof AuthenticatedAppObservationRoute
   '/app/profile': typeof AuthenticatedAppProfileRoute
   '/app/reception': typeof AuthenticatedAppReceptionRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
@@ -121,6 +130,7 @@ export interface FileRoutesById {
   '/_authenticated/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/_authenticated/app/doctor': typeof AuthenticatedAppDoctorRoute
   '/_authenticated/app/notifications': typeof AuthenticatedAppNotificationsRoute
+  '/_authenticated/app/observation': typeof AuthenticatedAppObservationRoute
   '/_authenticated/app/profile': typeof AuthenticatedAppProfileRoute
   '/_authenticated/app/reception': typeof AuthenticatedAppReceptionRoute
   '/_authenticated/app/settings': typeof AuthenticatedAppSettingsRoute
@@ -136,6 +146,7 @@ export interface FileRouteTypes {
     | '/app/analytics'
     | '/app/doctor'
     | '/app/notifications'
+    | '/app/observation'
     | '/app/profile'
     | '/app/reception'
     | '/app/settings'
@@ -148,6 +159,7 @@ export interface FileRouteTypes {
     | '/app/analytics'
     | '/app/doctor'
     | '/app/notifications'
+    | '/app/observation'
     | '/app/profile'
     | '/app/reception'
     | '/app/settings'
@@ -162,6 +174,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/analytics'
     | '/_authenticated/app/doctor'
     | '/_authenticated/app/notifications'
+    | '/_authenticated/app/observation'
     | '/_authenticated/app/profile'
     | '/_authenticated/app/reception'
     | '/_authenticated/app/settings'
@@ -232,6 +245,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppProfileRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/observation': {
+      id: '/_authenticated/app/observation'
+      path: '/observation'
+      fullPath: '/app/observation'
+      preLoaderRoute: typeof AuthenticatedAppObservationRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/notifications': {
       id: '/_authenticated/app/notifications'
       path: '/notifications'
@@ -268,6 +288,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppAnalyticsRoute: typeof AuthenticatedAppAnalyticsRoute
   AuthenticatedAppDoctorRoute: typeof AuthenticatedAppDoctorRoute
   AuthenticatedAppNotificationsRoute: typeof AuthenticatedAppNotificationsRoute
+  AuthenticatedAppObservationRoute: typeof AuthenticatedAppObservationRoute
   AuthenticatedAppProfileRoute: typeof AuthenticatedAppProfileRoute
   AuthenticatedAppReceptionRoute: typeof AuthenticatedAppReceptionRoute
   AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
@@ -279,6 +300,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppAnalyticsRoute: AuthenticatedAppAnalyticsRoute,
   AuthenticatedAppDoctorRoute: AuthenticatedAppDoctorRoute,
   AuthenticatedAppNotificationsRoute: AuthenticatedAppNotificationsRoute,
+  AuthenticatedAppObservationRoute: AuthenticatedAppObservationRoute,
   AuthenticatedAppProfileRoute: AuthenticatedAppProfileRoute,
   AuthenticatedAppReceptionRoute: AuthenticatedAppReceptionRoute,
   AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,

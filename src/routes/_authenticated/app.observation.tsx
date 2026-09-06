@@ -22,7 +22,7 @@ import {
 import { usePatients, useConsultations, useObservationEvents, queryKeys } from "@/hooks/use-care-data";
 import { useSession, useProfile } from "@/hooks/use-session";
 import { updatePatient } from "@/data/patients";
-import { addObservationEvent } from "@/data/observations";
+import { addObservationEvent, type ObservationEvent } from "@/data/observations";
 import { setFinalOutcome } from "@/data/consultations";
 import { createAlert } from "@/data/alerts";
 import type { Patient } from "@/data/types";
@@ -278,7 +278,7 @@ function ObservationCard({
   onExit,
 }: {
   patient: Patient;
-  timeline: ReturnType<typeof useObservationEvents>["data"] extends (infer T)[] | undefined ? T[] : never;
+  timeline: ObservationEvent[];
   onUpdate: () => void;
   onExit: (outcome: "discharged" | "referred") => void;
 }) {
