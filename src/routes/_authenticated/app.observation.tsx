@@ -25,6 +25,7 @@ import { updatePatient } from "@/data/patients";
 import { addObservationEvent, type ObservationEvent } from "@/data/observations";
 import { setFinalOutcome } from "@/data/consultations";
 import { createAlert } from "@/data/alerts";
+import { createReferral } from "@/data/referrals";
 import type { Patient } from "@/data/types";
 import { relativeTime } from "@/lib/format";
 
@@ -109,6 +110,16 @@ function ObservationPage() {
       });
       await updatePatient(patient.id, { status: "completed" });
       if (outcome === "referred") {
+        await createReferral({
+          patient_id: patient.id,
+          consultation_id: consult?.id ?? null,
+          doctor_id: user?.id ?? null,
+          doctor_name: profile?.full_name || user?.email || "Doctor",
+          diagnosis: consult?.diagnosis ?? patient.condition,
+          notes: consult?.notes ?? "",
+          reason: "Referred onward from observation.",
+          destination: "",
+        });
         await createAlert({
           kind: "referral",
           severity: "warning",
@@ -126,6 +137,7 @@ function ObservationPage() {
       void queryClient.invalidateQueries({ queryKey: queryKeys.consultations });
       void queryClient.invalidateQueries({ queryKey: queryKeys.observations });
       void queryClient.invalidateQueries({ queryKey: queryKeys.alerts });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.referrals });
     },
     onError: (err: Error) => toast.error(err.message),
   });
