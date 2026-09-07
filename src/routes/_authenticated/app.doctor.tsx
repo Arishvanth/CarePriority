@@ -168,6 +168,7 @@ function DoctorPage() {
       void queryClient.invalidateQueries({ queryKey: queryKeys.patients });
       void queryClient.invalidateQueries({ queryKey: queryKeys.consultations });
       void queryClient.invalidateQueries({ queryKey: queryKeys.alerts });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.observations });
     },
     onError: (err: Error) => toast.error(err.message),
   });
