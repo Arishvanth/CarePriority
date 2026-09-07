@@ -56,3 +56,7 @@ export function useObservationEvents() {
     staleTime: 10_000,
   });
 }
+
+export function useReferrals() {
+  return useQuery({ queryKey: queryKeys.referrals, queryFn: fetchReferrals, staleTime: 10_000 });
+}
