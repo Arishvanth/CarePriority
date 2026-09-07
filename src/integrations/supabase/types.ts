@@ -279,6 +279,69 @@ export type Database = {
         }
         Relationships: []
       }
+      referrals: {
+        Row: {
+          consultation_id: string | null
+          created_at: string
+          destination: string
+          diagnosis: string
+          doctor_id: string | null
+          doctor_name: string
+          id: string
+          notes: string
+          patient_id: string
+          reason: string
+          referred_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          consultation_id?: string | null
+          created_at?: string
+          destination?: string
+          diagnosis?: string
+          doctor_id?: string | null
+          doctor_name?: string
+          id?: string
+          notes?: string
+          patient_id: string
+          reason?: string
+          referred_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          consultation_id?: string | null
+          created_at?: string
+          destination?: string
+          diagnosis?: string
+          doctor_id?: string | null
+          doctor_name?: string
+          id?: string
+          notes?: string
+          patient_id?: string
+          reason?: string
+          referred_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_consultation_id_fkey"
+            columns: ["consultation_id"]
+            isOneToOne: true
+            referencedRelation: "consultations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
