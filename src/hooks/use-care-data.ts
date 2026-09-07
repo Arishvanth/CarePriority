@@ -5,13 +5,16 @@ import { fetchPatients } from "@/data/patients";
 import { fetchAlerts } from "@/data/alerts";
 import { fetchConsultations } from "@/data/consultations";
 import { fetchObservationEvents } from "@/data/observations";
+import { fetchReferrals } from "@/data/referrals";
 
 export const queryKeys = {
   patients: ["patients"] as const,
   alerts: ["alerts"] as const,
   consultations: ["consultations"] as const,
   observations: ["observation-events"] as const,
+  referrals: ["referrals"] as const,
 };
+
 
 /** Subscribes once to live table changes and refreshes the matching cache. */
 export function useCareRealtime() {
@@ -52,4 +55,8 @@ export function useObservationEvents() {
     queryFn: fetchObservationEvents,
     staleTime: 10_000,
   });
+}
+
+export function useReferrals() {
+  return useQuery({ queryKey: queryKeys.referrals, queryFn: fetchReferrals, staleTime: 10_000 });
 }

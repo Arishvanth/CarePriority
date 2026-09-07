@@ -29,7 +29,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { usePatients, useConsultations, queryKeys } from "@/hooks/use-care-data";
 import { useSession, useProfile } from "@/hooks/use-session";
 import { findByRfid, updatePatient } from "@/data/patients";
-import { startConsultation, completeConsultation } from "@/data/consultations";
+import { startConsultation, completeConsultation, setFinalOutcome } from "@/data/consultations";
+import { createReferral } from "@/data/referrals";
 import { addObservationEvent } from "@/data/observations";
 import { createAlert } from "@/data/alerts";
 import type { Patient } from "@/data/types";
@@ -72,6 +73,8 @@ function DoctorPage() {
   const [confirmTarget, setConfirmTarget] = useState<Patient | null>(null);
   const [suppressAutoSelect, setSuppressAutoSelect] = useState(false);
   const [assessTarget, setAssessTarget] = useState<Patient | null>(null);
+  const [referralReason, setReferralReason] = useState("");
+  const [referralDestination, setReferralDestination] = useState("");
 
   const queue = useMemo(
     () =>
@@ -117,6 +120,12 @@ function DoctorPage() {
     mutationFn: async (patient: Patient) => {
       if (!diagnosis.trim()) throw new Error("Record a diagnosis before completing.");
       if (!outcome) throw new Error("Select an outcome before completing.");
+      if (outcome === "referred" && !referralReason.trim()) {
+        throw new Error("Record a reason for the referral.");
+      }
+      if (outcome === "referred" && !referralDestination.trim()) {
+        throw new Error("Record a referral destination.");
+      }
       if (activeConsultId) {
         await completeConsultation(activeConsultId, { notes: notes.trim(), diagnosis: diagnosis.trim(), outcome });
       }
@@ -146,6 +155,19 @@ function DoctorPage() {
         await updatePatient(patient.id, { status: "completed" });
       }
       if (outcome === "referred") {
+        if (activeConsultId) {
+          await setFinalOutcome(activeConsultId, "referred", referralReason.trim());
+        }
+        await createReferral({
+          patient_id: patient.id,
+          consultation_id: activeConsultId,
+          doctor_id: user?.id ?? null,
+          doctor_name: profile?.full_name || user?.email || "Doctor",
+          diagnosis: diagnosis.trim(),
+          notes: notes.trim(),
+          reason: referralReason.trim(),
+          destination: referralDestination.trim(),
+        });
         await createAlert({
           kind: "referral",
           severity: "warning",
@@ -162,6 +184,8 @@ function DoctorPage() {
       setNotes("");
       setDiagnosis("");
       setOutcome(null);
+      setReferralReason("");
+      setReferralDestination("");
       setConfirmTarget(null);
       setSuppressAutoSelect(true);
       setSelectedId(null);
@@ -169,6 +193,7 @@ function DoctorPage() {
       void queryClient.invalidateQueries({ queryKey: queryKeys.consultations });
       void queryClient.invalidateQueries({ queryKey: queryKeys.alerts });
       void queryClient.invalidateQueries({ queryKey: queryKeys.observations });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.referrals });
     },
     onError: (err: Error) => toast.error(err.message),
   });
@@ -348,6 +373,10 @@ function DoctorPage() {
                       toast.error("Select an outcome before completing.");
                       return;
                     }
+                    if (outcome === "referred" && (!referralReason.trim() || !referralDestination.trim())) {
+                      toast.error("Add a referral reason and destination.");
+                      return;
+                    }
                     setConfirmTarget(selected);
                   }}
                 >
@@ -401,13 +430,46 @@ function DoctorPage() {
                       </p>
                     )}
                   </fieldset>
+                  {outcome === "referred" && (
+                    <div className="grid gap-4 rounded-xl border border-border bg-muted/40 p-4 sm:grid-cols-2">
+                      <div className="grid gap-1.5">
+                        <Label htmlFor="referral-destination">Referral destination</Label>
+                        <Input
+                          id="referral-destination"
+                          maxLength={160}
+                          value={referralDestination}
+                          onChange={(e) => setReferralDestination(e.target.value)}
+                          placeholder="e.g. District Hospital — Cardiology"
+                        />
+                      </div>
+                      <div className="grid gap-1.5 sm:col-span-2">
+                        <Label htmlFor="referral-reason">Reason for referral</Label>
+                        <Textarea
+                          id="referral-reason"
+                          rows={3}
+                          maxLength={1000}
+                          value={referralReason}
+                          onChange={(e) => setReferralReason(e.target.value)}
+                          placeholder="Why this patient needs onward care…"
+                        />
+                      </div>
+                    </div>
+                  )}
                   <div className="flex flex-wrap gap-2">
                     {selected.status === "waiting" && (
                       <Button type="button" variant="outline" onClick={() => begin.mutate(selected)} disabled={begin.isPending}>
                         <PlayCircle className="h-4 w-4" /> Start consultation
                       </Button>
                     )}
-                    <Button type="submit" disabled={finish.isPending || !outcome || !diagnosis.trim()}>
+                    <Button
+                      type="submit"
+                      disabled={
+                        finish.isPending ||
+                        !outcome ||
+                        !diagnosis.trim() ||
+                        (outcome === "referred" && (!referralReason.trim() || !referralDestination.trim()))
+                      }
+                    >
                       {finish.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
                       Complete consultation
                     </Button>

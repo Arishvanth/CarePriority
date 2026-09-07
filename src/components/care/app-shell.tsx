@@ -2,8 +2,9 @@ import { useState } from "react";
 import { Link, Outlet, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
   BarChart3, Bell, LayoutDashboard, LogOut, Menu, Settings, ShieldCheck,
-  Stethoscope, UserRound, X, CircleCheck, Activity, History,
+  Stethoscope, UserRound, X, CircleCheck, Activity, History, Send,
 } from "lucide-react";
+
 import { Logo } from "./logo";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,7 +19,9 @@ const primaryNav = [
   { to: "/app/reception", label: "Reception", icon: LayoutDashboard },
   { to: "/app/doctor", label: "Doctor", icon: Stethoscope },
   { to: "/app/observation", label: "Observation", icon: Activity },
+  { to: "/app/referrals", label: "Referrals", icon: Send },
   { to: "/app/history", label: "Patient History", icon: History },
+
   { to: "/app/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/app/admin", label: "Administration", icon: ShieldCheck },
 ] as const;
