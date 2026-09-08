@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
+import { Route as AuthenticatedAppReferralsRouteImport } from './routes/_authenticated/app.referrals'
 import { Route as AuthenticatedAppReceptionRouteImport } from './routes/_authenticated/app.reception'
 import { Route as AuthenticatedAppProfileRouteImport } from './routes/_authenticated/app.profile'
 import { Route as AuthenticatedAppObservationRouteImport } from './routes/_authenticated/app.observation'
@@ -52,6 +53,12 @@ const AuthenticatedAppSettingsRoute =
   AuthenticatedAppSettingsRouteImport.update({
     id: '/settings',
     path: '/settings',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppReferralsRoute =
+  AuthenticatedAppReferralsRouteImport.update({
+    id: '/referrals',
+    path: '/referrals',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
 const AuthenticatedAppReceptionRoute =
@@ -111,6 +118,7 @@ export interface FileRoutesByFullPath {
   '/app/observation': typeof AuthenticatedAppObservationRoute
   '/app/profile': typeof AuthenticatedAppProfileRoute
   '/app/reception': typeof AuthenticatedAppReceptionRoute
+  '/app/referrals': typeof AuthenticatedAppReferralsRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/': typeof AuthenticatedAppIndexRoute
 }
@@ -125,6 +133,7 @@ export interface FileRoutesByTo {
   '/app/observation': typeof AuthenticatedAppObservationRoute
   '/app/profile': typeof AuthenticatedAppProfileRoute
   '/app/reception': typeof AuthenticatedAppReceptionRoute
+  '/app/referrals': typeof AuthenticatedAppReferralsRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app': typeof AuthenticatedAppIndexRoute
 }
@@ -142,6 +151,7 @@ export interface FileRoutesById {
   '/_authenticated/app/observation': typeof AuthenticatedAppObservationRoute
   '/_authenticated/app/profile': typeof AuthenticatedAppProfileRoute
   '/_authenticated/app/reception': typeof AuthenticatedAppReceptionRoute
+  '/_authenticated/app/referrals': typeof AuthenticatedAppReferralsRoute
   '/_authenticated/app/settings': typeof AuthenticatedAppSettingsRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
 }
@@ -159,6 +169,7 @@ export interface FileRouteTypes {
     | '/app/observation'
     | '/app/profile'
     | '/app/reception'
+    | '/app/referrals'
     | '/app/settings'
     | '/app/'
   fileRoutesByTo: FileRoutesByTo
@@ -173,6 +184,7 @@ export interface FileRouteTypes {
     | '/app/observation'
     | '/app/profile'
     | '/app/reception'
+    | '/app/referrals'
     | '/app/settings'
     | '/app'
   id:
@@ -189,6 +201,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/observation'
     | '/_authenticated/app/profile'
     | '/_authenticated/app/reception'
+    | '/_authenticated/app/referrals'
     | '/_authenticated/app/settings'
     | '/_authenticated/app/'
   fileRoutesById: FileRoutesById
@@ -241,6 +254,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/app/settings'
       preLoaderRoute: typeof AuthenticatedAppSettingsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/referrals': {
+      id: '/_authenticated/app/referrals'
+      path: '/referrals'
+      fullPath: '/app/referrals'
+      preLoaderRoute: typeof AuthenticatedAppReferralsRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/reception': {
@@ -311,6 +331,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppObservationRoute: typeof AuthenticatedAppObservationRoute
   AuthenticatedAppProfileRoute: typeof AuthenticatedAppProfileRoute
   AuthenticatedAppReceptionRoute: typeof AuthenticatedAppReceptionRoute
+  AuthenticatedAppReferralsRoute: typeof AuthenticatedAppReferralsRoute
   AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
 }
@@ -324,6 +345,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppObservationRoute: AuthenticatedAppObservationRoute,
   AuthenticatedAppProfileRoute: AuthenticatedAppProfileRoute,
   AuthenticatedAppReceptionRoute: AuthenticatedAppReceptionRoute,
+  AuthenticatedAppReferralsRoute: AuthenticatedAppReferralsRoute,
   AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
 }
