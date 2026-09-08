@@ -11,7 +11,8 @@ import { PriorityChip, StatusChip } from "@/components/care/chips";
 import { VitalsRow } from "@/components/care/vitals";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { usePatients, useConsultations, useObservationEvents } from "@/hooks/use-care-data";
+import { usePatients, useConsultations, useObservationEvents, useReferrals } from "@/hooks/use-care-data";
+import { Link } from "@tanstack/react-router";
 import type { Patient, Consultation } from "@/data/types";
 import { relativeTime } from "@/lib/format";
 
@@ -36,6 +37,7 @@ function HistoryPage() {
   const { data: patients = [], isLoading } = usePatients();
   const { data: consultations = [] } = useConsultations();
   const { data: events = [] } = useObservationEvents();
+  const { data: referrals = [] } = useReferrals();
 
   const [query, setQuery] = useState("");
   const [outcome, setOutcome] = useState<(typeof OUTCOMES)[number]>("all");
@@ -65,6 +67,11 @@ function HistoryPage() {
   }, [patients, consultations, query, outcome, sort]);
 
   const open = rows.find((r) => r.consultation.id === openId) ?? null;
+  const openReferral = open
+    ? referrals.find(
+        (r) => r.consultation_id === open.consultation.id || r.patient_id === open.patient.id,
+      ) ?? null
+    : null;
 
   return (
     <>
@@ -201,6 +208,20 @@ function HistoryPage() {
             <Detail label="Consultation notes" value={open.consultation.notes || "No notes recorded"} />
             <Detail label="Referral note" value={open.consultation.referral_note || "—"} />
           </dl>
+
+          {openReferral && (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-muted/40 p-4">
+              <div className="min-w-0">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Referral record</p>
+                <p className="mt-0.5 break-words text-sm text-foreground">
+                  {openReferral.destination || "Destination not recorded"} · status {openReferral.status}
+                </p>
+              </div>
+              <Button asChild size="sm" variant="outline">
+                <Link to="/app/referrals">Open in Referrals</Link>
+              </Button>
+            </div>
+          )}
 
           <div className="rounded-xl border border-border p-3">
             <VitalsRow
