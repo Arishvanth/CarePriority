@@ -56,7 +56,7 @@ export async function createReferral(input: NewReferral): Promise<void> {
   }
   const { error } = await supabase
     .from("referrals")
-    .insert({ ...input, status: "pending" } as never);
+    .insert({ ...input, status: "referred" } as never);
   if (error && !error.message.includes("duplicate key")) throw error;
 }
 
