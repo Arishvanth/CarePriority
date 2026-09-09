@@ -46,18 +46,27 @@ export interface NewReferral {
  * database, so triggering completion twice never produces a duplicate record.
  */
 export async function createReferral(input: NewReferral): Promise<void> {
-  if (input.consultation_id) {
-    const { data: existing } = await supabase
-      .from("referrals")
-      .select("id")
-      .eq("consultation_id", input.consultation_id)
-      .maybeSingle();
-    if (existing) return;
-  }
-  const { error } = await supabase
+  const payload = { ...input, status: "referred" as const };
+  const write = input.consultation_id
+    ? supabase.from("referrals").upsert(payload as never, { onConflict: "consultation_id" })
+    : supabase.from("referrals").insert(payload as never);
+
+  const { data, error } = await write.select("id,status").single();
+  if (error) throw error;
+
+  const persisted = data as { id: string; status: ReferralStatus };
+  if (persisted.status === "referred") return;
+
+  const { data: corrected, error: correctionError } = await supabase
     .from("referrals")
-    .insert({ ...input, status: "referred" } as never);
-  if (error && !error.message.includes("duplicate key")) throw error;
+    .update({ status: "referred" } as never)
+    .eq("id", persisted.id)
+    .select("status")
+    .single();
+  if (correctionError) throw correctionError;
+  if ((corrected as { status: ReferralStatus }).status !== "referred") {
+    throw new Error("Referral status could not be persisted as referred.");
+  }
 }
 
 export async function updateReferralStatus(id: string, status: ReferralStatus): Promise<void> {
