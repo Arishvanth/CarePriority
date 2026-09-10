@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+
 import { toast } from "sonner";
 import { Loader2, Search, Send, X } from "lucide-react";
 
@@ -14,8 +14,8 @@ import { Chip, PriorityChip } from "@/components/care/chips";
 import { VitalsRow } from "@/components/care/vitals";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { usePatients, useConsultations, useReferrals, queryKeys } from "@/hooks/use-care-data";
-import { updateReferralStatus, REFERRAL_STATUSES, type Referral, type ReferralStatus } from "@/data/referrals";
+import { usePatients, useConsultations, useReferrals } from "@/hooks/use-care-data";
+import { REFERRAL_STATUSES, type Referral, type ReferralStatus } from "@/data/referrals";
 import type { Patient } from "@/data/types";
 import { relativeTime } from "@/lib/format";
 
@@ -45,7 +45,6 @@ function label(value: string) {
 }
 
 function ReferralsPage() {
-  const queryClient = useQueryClient();
   const { data: referrals = [], isLoading } = useReferrals();
   const { data: patients = [] } = usePatients();
   const { data: consultations = [] } = useConsultations();
@@ -88,15 +87,6 @@ function ReferralsPage() {
   const openConsultation = open
     ? consultations.find((c) => c.id === open.referral.consultation_id) ?? null
     : null;
-
-  const setStatusMutation = useMutation({
-    mutationFn: ({ id, next }: { id: string; next: ReferralStatus }) => updateReferralStatus(id, next),
-    onSuccess: () => {
-      toast.success("Referral status updated");
-      void queryClient.invalidateQueries({ queryKey: queryKeys.referrals });
-    },
-    onError: (err: Error) => toast.error(err.message),
-  });
 
   const count = (s: ReferralStatus) => referrals.filter((r) => r.status === s).length;
 
