@@ -103,24 +103,26 @@ function ReferralsPage() {
         aria-label="Referral summary"
         className="panel panel-lift rounded-2xl p-5"
       >
-        <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-4 sm:grid-cols-[auto_minmax(0,1fr)_auto]">
-          <span
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary-light text-primary-hover"
-            aria-hidden="true"
-          >
-            <Send className="h-6 w-6" />
-          </span>
-          <div className="min-w-0">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Total referrals</p>
-            {isLoading ? (
-              <span className="mt-1 block h-9 w-16 animate-pulse rounded-md bg-muted" aria-hidden="true" />
-            ) : (
-              <p className="mt-0.5 font-display text-3xl font-semibold tabular-nums text-foreground">
-                {referrals.length}
-              </p>
-            )}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center">
+          <div className="flex items-center gap-4">
+            <span
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary-light text-primary-hover"
+              aria-hidden="true"
+            >
+              <Send className="h-6 w-6" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Total referrals</p>
+              {isLoading ? (
+                <span className="mt-1 block h-9 w-16 animate-pulse rounded-md bg-muted" aria-hidden="true" />
+              ) : (
+                <p className="mt-0.5 font-display text-3xl font-semibold tabular-nums text-foreground">
+                  {referrals.length}
+                </p>
+              )}
+            </div>
           </div>
-          <div className="col-span-2 min-w-0 border-t border-border pt-3 sm:col-span-1 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0">
+          <div className="min-w-0 sm:border-l sm:border-border sm:pl-5">
             <p className="text-sm text-muted-foreground">
               Patients referred onward from the clinic after a consultation. Each record captures the
               destination, reason and referring doctor for follow-up.
