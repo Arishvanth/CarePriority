@@ -87,8 +87,6 @@ function ReferralsPage() {
     ? consultations.find((c) => c.id === open.referral.consultation_id) ?? null
     : null;
 
-  const count = (s: ReferralStatus) => referrals.filter((r) => r.status === s).length;
-
   return (
     <>
       <PageHeader
@@ -97,11 +95,8 @@ function ReferralsPage() {
         description="Every patient referred onward, with their destination, reason and current referral status."
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="sm:max-w-xs">
         <MetricCard label="Total referrals" value={referrals.length} icon={Send} tone="primary" loading={isLoading} />
-        <MetricCard label="Pending" value={count("pending")} icon={Send} tone="warning" loading={isLoading} />
-        <MetricCard label="Referred" value={count("referred")} icon={Send} tone="primary" loading={isLoading} />
-        <MetricCard label="Completed" value={count("completed")} icon={Send} tone="success" loading={isLoading} />
       </div>
 
       <Panel
