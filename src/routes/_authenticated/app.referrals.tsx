@@ -87,6 +87,11 @@ function ReferralsPage() {
     ? consultations.find((c) => c.id === open.referral.consultation_id) ?? null
     : null;
 
+  const latest = referrals.reduce<Referral | null>(
+    (acc, r) => (!acc || new Date(r.referred_at) > new Date(acc.referred_at) ? r : acc),
+    null,
+  );
+
   return (
     <>
       <PageHeader
@@ -95,9 +100,47 @@ function ReferralsPage() {
         description="Every patient referred onward, with their destination, reason and current referral status."
       />
 
-      <div className="sm:max-w-xs">
-        <MetricCard label="Total referrals" value={referrals.length} icon={Send} tone="primary" loading={isLoading} />
-      </div>
+      <section
+        aria-label="Referral summary"
+        className="panel panel-lift rounded-2xl p-5"
+      >
+        <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-4 sm:grid-cols-[auto_minmax(0,1fr)_auto]">
+          <span
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary-light text-primary-hover"
+            aria-hidden="true"
+          >
+            <Send className="h-6 w-6" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Total referrals</p>
+            {isLoading ? (
+              <span className="mt-1 block h-9 w-16 animate-pulse rounded-md bg-muted" aria-hidden="true" />
+            ) : (
+              <p className="mt-0.5 font-display text-3xl font-semibold tabular-nums text-foreground">
+                {referrals.length}
+              </p>
+            )}
+          </div>
+          <div className="col-span-2 min-w-0 border-t border-border pt-3 sm:col-span-1 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0">
+            <p className="text-sm text-muted-foreground">
+              Patients referred onward from the clinic after a consultation. Each record captures the
+              destination, reason and referring doctor for follow-up.
+            </p>
+            <p className="mt-2 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
+              <span className="font-medium text-foreground">Latest activity</span>
+              {isLoading ? (
+                <span>—</span>
+              ) : latest ? (
+                <span>
+                  {relativeTime(latest.referred_at)} · {latest.doctor_name || "Unknown doctor"}
+                </span>
+              ) : (
+                <span>No referrals yet</span>
+              )}
+            </p>
+          </div>
+        </div>
+      </section>
 
       <Panel
         className="mt-6"
