@@ -87,8 +87,6 @@ function ReferralsPage() {
     ? consultations.find((c) => c.id === open.referral.consultation_id) ?? null
     : null;
 
-  const count = (s: ReferralStatus) => referrals.filter((r) => r.status === s).length;
-
   return (
     <>
       <PageHeader
