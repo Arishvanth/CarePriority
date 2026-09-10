@@ -5,7 +5,6 @@ import { Search, Send, X } from "lucide-react";
 
 import { requireRole } from "@/lib/rbac";
 import { PageHeader } from "@/components/care/page-header";
-import { MetricCard } from "@/components/care/metric-card";
 import { Panel } from "@/components/care/panel";
 import { EmptyState } from "@/components/care/empty-state";
 import { TableSkeleton } from "@/components/care/loading";
@@ -143,7 +142,7 @@ function ReferralsPage() {
       </section>
 
       <Panel
-        className="mt-6"
+        className="mt-4"
         title="Referral records"
         description={`${rows.length} record${rows.length === 1 ? "" : "s"}`}
         bodyClassName="space-y-4"
