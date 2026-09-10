@@ -208,7 +208,7 @@ function ReferralsPage() {
         <Panel
           className="mt-6"
           title={`${open.patient.full_name} — referral detail`}
-          description="Clinical record is read-only; only the referral status can be updated."
+          description="Clinical record is read-only; referral status reflects the workflow set at creation."
           actions={
             <Button size="sm" variant="ghost" onClick={() => setOpenId(null)} aria-label="Close referral detail">
               <X className="h-4 w-4" /> Close
