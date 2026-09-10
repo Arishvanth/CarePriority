@@ -251,23 +251,6 @@ function ReferralsPage() {
             />
           </div>
 
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Update status</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {REFERRAL_STATUSES.map((s) => (
-                <Button
-                  key={s}
-                  size="sm"
-                  variant={open.referral.status === s ? "default" : "outline"}
-                  disabled={setStatusMutation.isPending || open.referral.status === s}
-                  onClick={() => setStatusMutation.mutate({ id: open.referral.id, next: s })}
-                >
-                  {setStatusMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                  {label(s)}
-                </Button>
-              ))}
-            </div>
-          </div>
         </Panel>
       )}
     </>
