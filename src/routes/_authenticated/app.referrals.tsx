@@ -1,8 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { Loader2, Search, Send, X } from "lucide-react";
+
+import { Search, Send, X } from "lucide-react";
 
 import { requireRole } from "@/lib/rbac";
 import { PageHeader } from "@/components/care/page-header";
@@ -14,8 +13,8 @@ import { Chip, PriorityChip } from "@/components/care/chips";
 import { VitalsRow } from "@/components/care/vitals";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { usePatients, useConsultations, useReferrals, queryKeys } from "@/hooks/use-care-data";
-import { updateReferralStatus, REFERRAL_STATUSES, type Referral, type ReferralStatus } from "@/data/referrals";
+import { usePatients, useConsultations, useReferrals } from "@/hooks/use-care-data";
+import { REFERRAL_STATUSES, type Referral, type ReferralStatus } from "@/data/referrals";
 import type { Patient } from "@/data/types";
 import { relativeTime } from "@/lib/format";
 
@@ -45,7 +44,6 @@ function label(value: string) {
 }
 
 function ReferralsPage() {
-  const queryClient = useQueryClient();
   const { data: referrals = [], isLoading } = useReferrals();
   const { data: patients = [] } = usePatients();
   const { data: consultations = [] } = useConsultations();
@@ -88,15 +86,6 @@ function ReferralsPage() {
   const openConsultation = open
     ? consultations.find((c) => c.id === open.referral.consultation_id) ?? null
     : null;
-
-  const setStatusMutation = useMutation({
-    mutationFn: ({ id, next }: { id: string; next: ReferralStatus }) => updateReferralStatus(id, next),
-    onSuccess: () => {
-      toast.success("Referral status updated");
-      void queryClient.invalidateQueries({ queryKey: queryKeys.referrals });
-    },
-    onError: (err: Error) => toast.error(err.message),
-  });
 
   const count = (s: ReferralStatus) => referrals.filter((r) => r.status === s).length;
 
@@ -218,7 +207,7 @@ function ReferralsPage() {
         <Panel
           className="mt-6"
           title={`${open.patient.full_name} — referral detail`}
-          description="Clinical record is read-only; only the referral status can be updated."
+          description="Clinical record is read-only; referral status reflects the workflow set at creation."
           actions={
             <Button size="sm" variant="ghost" onClick={() => setOpenId(null)} aria-label="Close referral detail">
               <X className="h-4 w-4" /> Close
@@ -261,23 +250,6 @@ function ReferralsPage() {
             />
           </div>
 
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Update status</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {REFERRAL_STATUSES.map((s) => (
-                <Button
-                  key={s}
-                  size="sm"
-                  variant={open.referral.status === s ? "default" : "outline"}
-                  disabled={setStatusMutation.isPending || open.referral.status === s}
-                  onClick={() => setStatusMutation.mutate({ id: open.referral.id, next: s })}
-                >
-                  {setStatusMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                  {label(s)}
-                </Button>
-              ))}
-            </div>
-          </div>
         </Panel>
       )}
     </>
