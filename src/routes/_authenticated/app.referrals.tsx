@@ -1,8 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 
-import { toast } from "sonner";
-import { Loader2, Search, Send, X } from "lucide-react";
+import { Search, Send, X } from "lucide-react";
 
 import { requireRole } from "@/lib/rbac";
 import { PageHeader } from "@/components/care/page-header";
