@@ -43,4 +43,13 @@ export async function setFinalOutcome(
     .update({ final_outcome: finalOutcome, referral_note: referralNote } as never)
     .eq("id", consultationId);
   if (error) throw error;
+
+  // A consultation finalised straight from observation never went through
+  // completeConsultation, so it would stay "open" and miss Patient History.
+  const { error: closeError } = await supabase
+    .from("consultations")
+    .update({ ended_at: new Date().toISOString() } as never)
+    .eq("id", consultationId)
+    .is("ended_at", null);
+  if (closeError) throw closeError;
 }
