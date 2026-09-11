@@ -45,7 +45,8 @@ export interface NewReferral {
  * Creates the referral for a consultation, or reuses the one that already
  * exists for it. `consultation_id` is unique in the database, so a repeated
  * completion (double click, retry, reload) updates the same row instead of
- * creating a second referral. Statuses are never modified here.
+ * creating a second referral. This path is only used when a consultation is
+ * referred, so the row is always persisted with status "referred".
  */
 export async function createReferral(input: NewReferral): Promise<string> {
   if (!input.consultation_id) {
