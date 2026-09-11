@@ -45,7 +45,8 @@ export interface NewReferral {
  * Creates the referral for a consultation, or reuses the one that already
  * exists for it. `consultation_id` is unique in the database, so a repeated
  * completion (double click, retry, reload) updates the same row instead of
- * creating a second referral. Statuses are never modified here.
+ * creating a second referral. This path is only used when a consultation is
+ * referred, so the row is always persisted with status "referred".
  */
 export async function createReferral(input: NewReferral): Promise<string> {
   if (!input.consultation_id) {
@@ -88,7 +89,10 @@ async function findReferralIdByConsultation(consultationId: string): Promise<str
   return data ? (data as { id: string }).id : null;
 }
 
-/** Refreshes referral details on an existing row. Status is intentionally untouched. */
+/**
+ * Refreshes referral details on an existing row. A still-pending row is lifted
+ * to "referred"; an already completed referral keeps its status.
+ */
 async function updateReferralDetails(id: string, input: NewReferral): Promise<string> {
   const { patient_id, doctor_id, doctor_name, diagnosis, notes, reason, destination } = input;
   const { error } = await supabase
@@ -96,6 +100,13 @@ async function updateReferralDetails(id: string, input: NewReferral): Promise<st
     .update({ patient_id, doctor_id, doctor_name, diagnosis, notes, reason, destination } as never)
     .eq("id", id);
   if (error) throw error;
+
+  const { error: statusError } = await supabase
+    .from("referrals")
+    .update({ status: "referred" } as never)
+    .eq("id", id)
+    .eq("status", "pending");
+  if (statusError) throw statusError;
   return id;
 }
 
