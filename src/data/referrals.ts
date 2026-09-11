@@ -42,31 +42,61 @@ export interface NewReferral {
 }
 
 /**
- * Creates the referral for a consultation. The consultation id is unique in the
- * database, so triggering completion twice never produces a duplicate record.
+ * Creates the referral for a consultation, or reuses the one that already
+ * exists for it. `consultation_id` is unique in the database, so a repeated
+ * completion (double click, retry, reload) updates the same row instead of
+ * creating a second referral. Statuses are never modified here.
  */
-export async function createReferral(input: NewReferral): Promise<void> {
-  const payload = { ...input, status: "referred" as const };
-  const write = input.consultation_id
-    ? supabase.from("referrals").upsert(payload as never, { onConflict: "consultation_id" })
-    : supabase.from("referrals").insert(payload as never);
-
-  const { data, error } = await write.select("id,status").single();
-  if (error) throw error;
-
-  const persisted = data as { id: string; status: ReferralStatus };
-  if (persisted.status === "referred") return;
-
-  const { data: corrected, error: correctionError } = await supabase
-    .from("referrals")
-    .update({ status: "referred" } as never)
-    .eq("id", persisted.id)
-    .select("status")
-    .single();
-  if (correctionError) throw correctionError;
-  if ((corrected as { status: ReferralStatus }).status !== "referred") {
-    throw new Error("Referral status could not be persisted as referred.");
+export async function createReferral(input: NewReferral): Promise<string> {
+  if (!input.consultation_id) {
+    const { data, error } = await supabase
+      .from("referrals")
+      .insert({ ...input, status: "referred" } as never)
+      .select("id")
+      .single();
+    if (error) throw error;
+    return (data as { id: string }).id;
   }
+
+  const existingId = await findReferralIdByConsultation(input.consultation_id);
+  if (existingId) return updateReferralDetails(existingId, input);
+
+  const { data, error } = await supabase
+    .from("referrals")
+    .insert({ ...input, status: "referred" } as never)
+    .select("id")
+    .single();
+
+  if (error) {
+    // Unique violation: another submission won the race — reuse that row.
+    if (error.code === "23505") {
+      const raced = await findReferralIdByConsultation(input.consultation_id);
+      if (raced) return updateReferralDetails(raced, input);
+    }
+    throw error;
+  }
+  return (data as { id: string }).id;
+}
+
+async function findReferralIdByConsultation(consultationId: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("referrals")
+    .select("id")
+    .eq("consultation_id", consultationId)
+    .maybeSingle();
+  if (error) throw error;
+  return data ? (data as { id: string }).id : null;
+}
+
+/** Refreshes referral details on an existing row. Status is intentionally untouched. */
+async function updateReferralDetails(id: string, input: NewReferral): Promise<string> {
+  const { patient_id, doctor_id, doctor_name, diagnosis, notes, reason, destination } = input;
+  const { error } = await supabase
+    .from("referrals")
+    .update({ patient_id, doctor_id, doctor_name, diagnosis, notes, reason, destination } as never)
+    .eq("id", id);
+  if (error) throw error;
+  return id;
 }
 
 export async function updateReferralStatus(id: string, status: ReferralStatus): Promise<void> {
