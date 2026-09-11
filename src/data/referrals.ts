@@ -89,7 +89,10 @@ async function findReferralIdByConsultation(consultationId: string): Promise<str
   return data ? (data as { id: string }).id : null;
 }
 
-/** Refreshes referral details on an existing row. Status is intentionally untouched. */
+/**
+ * Refreshes referral details on an existing row. A still-pending row is lifted
+ * to "referred"; an already completed referral keeps its status.
+ */
 async function updateReferralDetails(id: string, input: NewReferral): Promise<string> {
   const { patient_id, doctor_id, doctor_name, diagnosis, notes, reason, destination } = input;
   const { error } = await supabase
@@ -97,6 +100,13 @@ async function updateReferralDetails(id: string, input: NewReferral): Promise<st
     .update({ patient_id, doctor_id, doctor_name, diagnosis, notes, reason, destination } as never)
     .eq("id", id);
   if (error) throw error;
+
+  const { error: statusError } = await supabase
+    .from("referrals")
+    .update({ status: "referred" } as never)
+    .eq("id", id)
+    .eq("status", "pending");
+  if (statusError) throw statusError;
   return id;
 }
 
