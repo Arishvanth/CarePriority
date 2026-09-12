@@ -60,6 +60,7 @@ function ObservationPage() {
   const [sort, setSort] = useState<SortKey>("started");
   const [updateTarget, setUpdateTarget] = useState<Patient | null>(null);
   const [exitTarget, setExitTarget] = useState<{ patient: Patient; outcome: "discharged" | "referred" } | null>(null);
+  const [exitDestination, setExitDestination] = useState("");
 
   const observed = useMemo(() => patients.filter((p) => p.status === "observation"), [patients]);
 
@@ -91,7 +92,15 @@ function ObservationPage() {
   }, [observed, query, doctorFilter, roomFilter, sort]);
 
   const exit = useMutation({
-    mutationFn: async ({ patient, outcome }: { patient: Patient; outcome: "discharged" | "referred" }) => {
+    mutationFn: async ({
+      patient,
+      outcome,
+      destination = "",
+    }: {
+      patient: Patient;
+      outcome: "discharged" | "referred";
+      destination?: string;
+    }) => {
       const consult = consultations.find((c) => c.patient_id === patient.id);
       if (consult) await setFinalOutcome(consult.id, outcome);
       await addObservationEvent({
