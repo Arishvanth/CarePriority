@@ -254,7 +254,15 @@ function ObservationPage() {
 
       <ObservationUpdateDialog patient={updateTarget} onOpenChange={(o) => !o && setUpdateTarget(null)} />
 
-      <Dialog open={!!exitTarget} onOpenChange={(o) => !o && setExitTarget(null)}>
+      <Dialog
+        open={!!exitTarget}
+        onOpenChange={(o) => {
+          if (!o) {
+            setExitTarget(null);
+            setExitDestination("");
+          }
+        }}
+      >
         <DialogContent className="w-[calc(100vw-2rem)] max-w-md overflow-x-hidden rounded-2xl">
           <DialogHeader>
             <DialogTitle>
@@ -265,13 +273,38 @@ function ObservationPage() {
               preserved in Patient History.
             </DialogDescription>
           </DialogHeader>
+          {exitTarget?.outcome === "referred" && (
+            <div className="space-y-1.5">
+              <Label htmlFor="exit-destination">Referral destination</Label>
+              <Input
+                id="exit-destination"
+                value={exitDestination}
+                onChange={(e) => setExitDestination(e.target.value)}
+                placeholder="Receiving hospital, department or facility"
+              />
+              <p className="text-xs text-muted-foreground">
+                Required — this is recorded on the referral record.
+              </p>
+            </div>
+          )}
           <DialogFooter className="gap-2 sm:gap-2">
-            <Button variant="outline" onClick={() => setExitTarget(null)}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setExitTarget(null);
+                setExitDestination("");
+              }}
+            >
               Cancel
             </Button>
             <Button
-              disabled={exit.isPending}
-              onClick={() => exitTarget && exit.mutate(exitTarget)}
+              disabled={
+                exit.isPending ||
+                (exitTarget?.outcome === "referred" && !exitDestination.trim())
+              }
+              onClick={() =>
+                exitTarget && exit.mutate({ ...exitTarget, destination: exitDestination.trim() })
+              }
             >
               {exit.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
               Confirm
