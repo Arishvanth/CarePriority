@@ -127,7 +127,7 @@ function ObservationPage() {
           diagnosis: consult?.diagnosis ?? patient.condition,
           notes: consult?.notes ?? "",
           reason: "Referred onward from observation.",
-          destination: "",
+          destination,
         });
         await createAlert({
           kind: "referral",
@@ -142,6 +142,7 @@ function ObservationPage() {
     onSuccess: (_d, vars) => {
       toast.success(vars.outcome === "referred" ? "Patient referred" : "Patient discharged");
       setExitTarget(null);
+      setExitDestination("");
       void queryClient.invalidateQueries({ queryKey: queryKeys.patients });
       void queryClient.invalidateQueries({ queryKey: queryKeys.consultations });
       void queryClient.invalidateQueries({ queryKey: queryKeys.observations });
