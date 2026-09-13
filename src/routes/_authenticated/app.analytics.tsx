@@ -155,16 +155,19 @@ function AnalyticsPage() {
   const heatmap = useMemo(() => {
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
     const slots = ["08", "10", "12", "14", "16", "18"];
-    return days.map((day, di) => ({
-      day,
-      cells: slots.map((slot, si) => ({
-        slot,
-        load: Math.round(
-          ((patients.length || 6) * (1 + Math.sin(di * 1.1 + si * 0.8))) / 2.4,
-        ),
-      })),
-    }));
-  }, [patients.length]);
+    const grid = days.map((day) => ({ day, cells: slots.map((slot) => ({ slot, load: 0 })) }));
+    for (const p of patients) {
+      const d = new Date(p.registered_at);
+      const dayIdx = (d.getDay() + 6) % 7; // Monday-first
+      const slotIdx = slots.findIndex((s, i) => {
+        const start = Number(s);
+        const end = i === slots.length - 1 ? 24 : Number(slots[i + 1]);
+        return d.getHours() >= start && d.getHours() < end;
+      });
+      if (slotIdx >= 0) grid[dayIdx].cells[slotIdx].load += 1;
+    }
+    return grid;
+  }, [patients]);
 
   const maxLoad = Math.max(1, ...heatmap.flatMap((r) => r.cells.map((c) => c.load)));
 
