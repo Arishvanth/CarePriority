@@ -241,7 +241,17 @@ function AnalyticsPage() {
       </div>
 
       <div className="mt-6 grid gap-5 lg:mt-8 xl:grid-cols-3">
-        <Panel className="xl:col-span-2" title="Arrivals through the day" description="Total arrivals and high-priority cases per hour.">
+        <Panel
+          className="xl:col-span-2"
+          title={range === "day" ? "Arrivals through the day" : "Arrivals over time"}
+          description={
+            range === "day"
+              ? "Total arrivals and high-priority cases per hour."
+              : range === "year"
+                ? "Total arrivals and high-priority cases per month."
+                : "Total arrivals and high-priority cases per day."
+          }
+        >
           <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={hourly} margin={{ left: -20, right: 8, top: 8 }}>
