@@ -207,7 +207,13 @@ function AnalyticsPage() {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Patients today" value={patients.length} icon={Activity} tone="primary" loading={isLoading} />
+        <MetricCard
+          label={range === "day" ? "Patients today" : `Patients (${RANGES.find((r) => r.key === range)!.label.toLowerCase()})`}
+          value={patients.length}
+          icon={Activity}
+          tone="primary"
+          loading={isLoading}
+        />
         <MetricCard label="Average wait" value={`${avgWait}m`} icon={Clock3} tone="warning" loading={isLoading} />
         <MetricCard label="High priority share" value={`${highShare}%`} icon={Siren} tone="danger" loading={isLoading} />
         <MetricCard
