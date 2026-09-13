@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer,
@@ -32,26 +32,103 @@ const PRIORITY_COLORS: Record<string, string> = {
   LOW: "var(--success)",
 };
 
+const RANGES = [
+  { key: "day", label: "Today", days: 1 },
+  { key: "week", label: "Week", days: 7 },
+  { key: "month", label: "Month", days: 30 },
+  { key: "year", label: "Year", days: 365 },
+] as const;
+
+type RangeKey = (typeof RANGES)[number]["key"];
+
 function AnalyticsPage() {
-  const { data: patients = [], isLoading } = usePatients();
-  const { data: consultations = [] } = useConsultations();
+  const { data: allPatients = [], isLoading } = usePatients();
+  const { data: allConsultations = [] } = useConsultations();
+  const [range, setRange] = useState<RangeKey>("day");
+
+  const since = useMemo(() => {
+    const now = new Date();
+    if (range === "day") {
+      const start = new Date(now);
+      start.setHours(0, 0, 0, 0);
+      return start;
+    }
+    const days = RANGES.find((r) => r.key === range)!.days;
+    return new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+  }, [range]);
+
+  const patients = useMemo(
+    () => allPatients.filter((p) => new Date(p.registered_at) >= since),
+    [allPatients, since],
+  );
+  const consultations = useMemo(
+    () => allConsultations.filter((c) => new Date(c.started_at) >= since),
+    [allConsultations, since],
+  );
 
   const hourly = useMemo(() => {
-    const buckets = Array.from({ length: 12 }, (_, i) => ({
-      hour: `${(8 + i).toString().padStart(2, "0")}:00`,
-      arrivals: 0,
-      high: 0,
-    }));
+    if (range === "day") {
+      const buckets = Array.from({ length: 12 }, (_, i) => ({
+        hour: `${(8 + i).toString().padStart(2, "0")}:00`,
+        arrivals: 0,
+        high: 0,
+      }));
+      for (const p of patients) {
+        const h = new Date(p.registered_at).getHours();
+        const idx = h - 8;
+        if (idx >= 0 && idx < 12) {
+          buckets[idx].arrivals += 1;
+          if (p.priority === "HIGH") buckets[idx].high += 1;
+        }
+      }
+      return buckets;
+    }
+
+    if (range === "year") {
+      const buckets = Array.from({ length: 12 }, (_, i) => {
+        const d = new Date();
+        d.setDate(1);
+        d.setMonth(d.getMonth() - (11 - i));
+        return {
+          hour: d.toLocaleDateString(undefined, { month: "short" }),
+          stamp: `${d.getFullYear()}-${d.getMonth()}`,
+          arrivals: 0,
+          high: 0,
+        };
+      });
+      for (const p of patients) {
+        const d = new Date(p.registered_at);
+        const bucket = buckets.find((b) => b.stamp === `${d.getFullYear()}-${d.getMonth()}`);
+        if (bucket) {
+          bucket.arrivals += 1;
+          if (p.priority === "HIGH") bucket.high += 1;
+        }
+      }
+      return buckets;
+    }
+
+    const days = range === "week" ? 7 : 30;
+    const buckets = Array.from({ length: days }, (_, i) => {
+      const d = new Date();
+      d.setHours(0, 0, 0, 0);
+      d.setDate(d.getDate() - (days - 1 - i));
+      return {
+        hour: d.toLocaleDateString(undefined, { day: "2-digit", month: "short" }),
+        stamp: d.toDateString(),
+        arrivals: 0,
+        high: 0,
+      };
+    });
     for (const p of patients) {
-      const h = new Date(p.registered_at).getHours();
-      const idx = h - 8;
-      if (idx >= 0 && idx < 12) {
-        buckets[idx].arrivals += 1;
-        if (p.priority === "HIGH") buckets[idx].high += 1;
+      const d = new Date(p.registered_at);
+      const bucket = buckets.find((b) => b.stamp === d.toDateString());
+      if (bucket) {
+        bucket.arrivals += 1;
+        if (p.priority === "HIGH") bucket.high += 1;
       }
     }
     return buckets;
-  }, [patients]);
+  }, [patients, range]);
 
   const mix = useMemo(
     () =>
