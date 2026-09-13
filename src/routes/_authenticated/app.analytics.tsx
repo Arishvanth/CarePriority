@@ -140,16 +140,31 @@ function AnalyticsPage() {
     [patients],
   );
 
+  /** Registration → first consultation for seen patients; registration → now for those still waiting. */
+  const waitFor = useMemo(() => {
+    const seenAt = new Map<string, number>();
+    for (const c of allConsultations) {
+      const t = new Date(c.started_at).getTime();
+      const prev = seenAt.get(c.patient_id);
+      if (prev === undefined || t < prev) seenAt.set(c.patient_id, t);
+    }
+    return (p: (typeof patients)[number]) => {
+      const seen = seenAt.get(p.id);
+      if (seen === undefined) return waitMinutes(p.registered_at);
+      return Math.max(0, Math.round((seen - new Date(p.registered_at).getTime()) / 60000));
+    };
+  }, [allConsultations]);
+
   const waitByPriority = useMemo(
     () =>
       (["HIGH", "MODERATE", "LOW"] as const).map((key) => {
         const group = patients.filter((p) => p.priority === key);
         const avg = group.length
-          ? Math.round(group.reduce((sum, p) => sum + waitMinutes(p.registered_at), 0) / group.length)
+          ? Math.round(group.reduce((sum, p) => sum + waitFor(p), 0) / group.length)
           : 0;
         return { name: key === "HIGH" ? "High" : key === "MODERATE" ? "Moderate" : "Low", key, minutes: avg };
       }),
-    [patients],
+    [patients, waitFor],
   );
 
   const heatmap = useMemo(() => {
@@ -172,7 +187,7 @@ function AnalyticsPage() {
   const maxLoad = Math.max(1, ...heatmap.flatMap((r) => r.cells.map((c) => c.load)));
 
   const avgWait = patients.length
-    ? Math.round(patients.reduce((sum, p) => sum + waitMinutes(p.registered_at), 0) / patients.length)
+    ? Math.round(patients.reduce((sum, p) => sum + waitFor(p), 0) / patients.length)
     : 0;
   const highShare = patients.length
     ? Math.round((patients.filter((p) => p.priority === "HIGH").length / patients.length) * 100)
