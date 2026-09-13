@@ -1,11 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { requireRole } from "@/lib/rbac";
 import { PageHeader } from "@/components/care/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Plus, ShieldCheck, Stethoscope, Trash2, User } from "lucide-react";
+import { BarChart3, Plus, ShieldCheck, Stethoscope, Trash2, User } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/app/admin")({
   beforeLoad: () => requireRole(["admin"]),
@@ -25,7 +25,14 @@ function Admin() {
   return (
     <>
       <PageHeader breadcrumbs={[{ label: "Console", to: "/app/reception" }]} title="Workspace settings" description="Manage staff, thresholds, and hospital-wide configuration."
-        actions={<Button className="bg-primary text-white hover:bg-primary/90"><Plus className="mr-2 h-4 w-4" /> Invite user</Button>} />
+        actions={
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="outline">
+              <Link to="/app/analytics"><BarChart3 className="mr-2 h-4 w-4" /> Open analytics</Link>
+            </Button>
+            <Button className="bg-primary text-white hover:bg-primary/90"><Plus className="mr-2 h-4 w-4" /> Invite user</Button>
+          </div>
+        } />
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="glass rounded-3xl p-6 lg:col-span-2">
           <div className="mb-4">
