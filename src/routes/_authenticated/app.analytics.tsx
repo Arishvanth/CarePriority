@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer,
@@ -32,26 +32,103 @@ const PRIORITY_COLORS: Record<string, string> = {
   LOW: "var(--success)",
 };
 
+const RANGES = [
+  { key: "day", label: "Today", days: 1 },
+  { key: "week", label: "Week", days: 7 },
+  { key: "month", label: "Month", days: 30 },
+  { key: "year", label: "Year", days: 365 },
+] as const;
+
+type RangeKey = (typeof RANGES)[number]["key"];
+
 function AnalyticsPage() {
-  const { data: patients = [], isLoading } = usePatients();
-  const { data: consultations = [] } = useConsultations();
+  const { data: allPatients = [], isLoading } = usePatients();
+  const { data: allConsultations = [] } = useConsultations();
+  const [range, setRange] = useState<RangeKey>("day");
+
+  const since = useMemo(() => {
+    const now = new Date();
+    if (range === "day") {
+      const start = new Date(now);
+      start.setHours(0, 0, 0, 0);
+      return start;
+    }
+    const days = RANGES.find((r) => r.key === range)!.days;
+    return new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+  }, [range]);
+
+  const patients = useMemo(
+    () => allPatients.filter((p) => new Date(p.registered_at) >= since),
+    [allPatients, since],
+  );
+  const consultations = useMemo(
+    () => allConsultations.filter((c) => new Date(c.started_at) >= since),
+    [allConsultations, since],
+  );
 
   const hourly = useMemo(() => {
-    const buckets = Array.from({ length: 12 }, (_, i) => ({
-      hour: `${(8 + i).toString().padStart(2, "0")}:00`,
-      arrivals: 0,
-      high: 0,
-    }));
+    if (range === "day") {
+      const buckets = Array.from({ length: 12 }, (_, i) => ({
+        hour: `${(8 + i).toString().padStart(2, "0")}:00`,
+        arrivals: 0,
+        high: 0,
+      }));
+      for (const p of patients) {
+        const h = new Date(p.registered_at).getHours();
+        const idx = h - 8;
+        if (idx >= 0 && idx < 12) {
+          buckets[idx].arrivals += 1;
+          if (p.priority === "HIGH") buckets[idx].high += 1;
+        }
+      }
+      return buckets;
+    }
+
+    if (range === "year") {
+      const buckets = Array.from({ length: 12 }, (_, i) => {
+        const d = new Date();
+        d.setDate(1);
+        d.setMonth(d.getMonth() - (11 - i));
+        return {
+          hour: d.toLocaleDateString(undefined, { month: "short" }),
+          stamp: `${d.getFullYear()}-${d.getMonth()}`,
+          arrivals: 0,
+          high: 0,
+        };
+      });
+      for (const p of patients) {
+        const d = new Date(p.registered_at);
+        const bucket = buckets.find((b) => b.stamp === `${d.getFullYear()}-${d.getMonth()}`);
+        if (bucket) {
+          bucket.arrivals += 1;
+          if (p.priority === "HIGH") bucket.high += 1;
+        }
+      }
+      return buckets;
+    }
+
+    const days = range === "week" ? 7 : 30;
+    const buckets = Array.from({ length: days }, (_, i) => {
+      const d = new Date();
+      d.setHours(0, 0, 0, 0);
+      d.setDate(d.getDate() - (days - 1 - i));
+      return {
+        hour: d.toLocaleDateString(undefined, { day: "2-digit", month: "short" }),
+        stamp: d.toDateString(),
+        arrivals: 0,
+        high: 0,
+      };
+    });
     for (const p of patients) {
-      const h = new Date(p.registered_at).getHours();
-      const idx = h - 8;
-      if (idx >= 0 && idx < 12) {
-        buckets[idx].arrivals += 1;
-        if (p.priority === "HIGH") buckets[idx].high += 1;
+      const d = new Date(p.registered_at);
+      const bucket = buckets.find((b) => b.stamp === d.toDateString());
+      if (bucket) {
+        bucket.arrivals += 1;
+        if (p.priority === "HIGH") bucket.high += 1;
       }
     }
     return buckets;
-  }, [patients]);
+  }, [patients, range]);
 
   const mix = useMemo(
     () =>
@@ -63,36 +140,54 @@ function AnalyticsPage() {
     [patients],
   );
 
+  /** Registration → first consultation for seen patients; registration → now for those still waiting. */
+  const waitFor = useMemo(() => {
+    const seenAt = new Map<string, number>();
+    for (const c of allConsultations) {
+      const t = new Date(c.started_at).getTime();
+      const prev = seenAt.get(c.patient_id);
+      if (prev === undefined || t < prev) seenAt.set(c.patient_id, t);
+    }
+    return (p: (typeof patients)[number]) => {
+      const seen = seenAt.get(p.id);
+      if (seen === undefined) return waitMinutes(p.registered_at);
+      return Math.max(0, Math.round((seen - new Date(p.registered_at).getTime()) / 60000));
+    };
+  }, [allConsultations]);
+
   const waitByPriority = useMemo(
     () =>
       (["HIGH", "MODERATE", "LOW"] as const).map((key) => {
         const group = patients.filter((p) => p.priority === key);
         const avg = group.length
-          ? Math.round(group.reduce((sum, p) => sum + waitMinutes(p.registered_at), 0) / group.length)
+          ? Math.round(group.reduce((sum, p) => sum + waitFor(p), 0) / group.length)
           : 0;
         return { name: key === "HIGH" ? "High" : key === "MODERATE" ? "Moderate" : "Low", key, minutes: avg };
       }),
-    [patients],
+    [patients, waitFor],
   );
 
   const heatmap = useMemo(() => {
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
     const slots = ["08", "10", "12", "14", "16", "18"];
-    return days.map((day, di) => ({
-      day,
-      cells: slots.map((slot, si) => ({
-        slot,
-        load: Math.round(
-          ((patients.length || 6) * (1 + Math.sin(di * 1.1 + si * 0.8))) / 2.4,
-        ),
-      })),
-    }));
-  }, [patients.length]);
+    const grid = days.map((day) => ({ day, cells: slots.map((slot) => ({ slot, load: 0 })) }));
+    for (const p of patients) {
+      const d = new Date(p.registered_at);
+      const dayIdx = (d.getDay() + 6) % 7; // Monday-first
+      const slotIdx = slots.findIndex((s, i) => {
+        const start = Number(s);
+        const end = i === slots.length - 1 ? 24 : Number(slots[i + 1]);
+        return d.getHours() >= start && d.getHours() < end;
+      });
+      if (slotIdx >= 0) grid[dayIdx].cells[slotIdx].load += 1;
+    }
+    return grid;
+  }, [patients]);
 
   const maxLoad = Math.max(1, ...heatmap.flatMap((r) => r.cells.map((c) => c.load)));
 
   const avgWait = patients.length
-    ? Math.round(patients.reduce((sum, p) => sum + waitMinutes(p.registered_at), 0) / patients.length)
+    ? Math.round(patients.reduce((sum, p) => sum + waitFor(p), 0) / patients.length)
     : 0;
   const highShare = patients.length
     ? Math.round((patients.filter((p) => p.priority === "HIGH").length / patients.length) * 100)
@@ -104,10 +199,36 @@ function AnalyticsPage() {
         breadcrumbs={[{ label: "Console", to: "/app/reception" }, { label: "Analytics" }]}
         title="Clinic performance"
         description="Understand demand patterns, triage mix and where waiting time builds up."
+        actions={
+          <div className="inline-flex flex-wrap rounded-lg border border-border bg-card p-0.5" role="group" aria-label="Time range">
+            {RANGES.map((r) => (
+              <button
+                key={r.key}
+                type="button"
+                onClick={() => setRange(r.key)}
+                aria-pressed={range === r.key}
+                className={cn(
+                  "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+                  range === r.key
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {r.label}
+              </button>
+            ))}
+          </div>
+        }
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Patients today" value={patients.length} icon={Activity} tone="primary" loading={isLoading} />
+        <MetricCard
+          label={range === "day" ? "Patients today" : `Patients (${RANGES.find((r) => r.key === range)!.label.toLowerCase()})`}
+          value={patients.length}
+          icon={Activity}
+          tone="primary"
+          loading={isLoading}
+        />
         <MetricCard label="Average wait" value={`${avgWait}m`} icon={Clock3} tone="warning" loading={isLoading} />
         <MetricCard label="High priority share" value={`${highShare}%`} icon={Siren} tone="danger" loading={isLoading} />
         <MetricCard
@@ -120,7 +241,17 @@ function AnalyticsPage() {
       </div>
 
       <div className="mt-6 grid gap-5 lg:mt-8 xl:grid-cols-3">
-        <Panel className="xl:col-span-2" title="Arrivals through the day" description="Total arrivals and high-priority cases per hour.">
+        <Panel
+          className="xl:col-span-2"
+          title={range === "day" ? "Arrivals through the day" : "Arrivals over time"}
+          description={
+            range === "day"
+              ? "Total arrivals and high-priority cases per hour."
+              : range === "year"
+                ? "Total arrivals and high-priority cases per month."
+                : "Total arrivals and high-priority cases per day."
+          }
+        >
           <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={hourly} margin={{ left: -20, right: 8, top: 8 }}>
