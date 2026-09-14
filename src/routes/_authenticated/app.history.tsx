@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { History, Search, X } from "lucide-react";
+import { History, Search } from "lucide-react";
 
 import { requireRole } from "@/lib/rbac";
 import { PageHeader } from "@/components/care/page-header";
@@ -11,6 +11,8 @@ import { PriorityChip, StatusChip } from "@/components/care/chips";
 import { VitalsRow } from "@/components/care/vitals";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { usePatients, useConsultations, useObservationEvents, useReferrals } from "@/hooks/use-care-data";
 import { Link } from "@tanstack/react-router";
 import type { Patient, Consultation } from "@/data/types";
