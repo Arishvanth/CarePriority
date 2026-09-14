@@ -174,90 +174,96 @@ function HistoryPage() {
         )}
       </Panel>
 
-      {open && (
-        <Panel
-          className="mt-6"
-          title={`${open.patient.full_name} — record detail`}
-          description="Read-only history. Nothing on this page can be edited."
-          actions={
-            <Button size="sm" variant="ghost" onClick={() => setOpenId(null)} aria-label="Close record detail">
-              <X className="h-4 w-4" /> Close
-            </Button>
-          }
-          bodyClassName="space-y-5"
-        >
-          <div className="flex flex-wrap items-center gap-2">
-            <PriorityChip priority={open.patient.priority} />
-            <StatusChip status={open.patient.status} />
-            <span className="text-xs text-muted-foreground">
-              {open.patient.age}
-              {open.patient.gender} · registered {relativeTime(open.patient.registered_at)}
-            </span>
-          </div>
+      <Dialog open={!!open} onOpenChange={(o) => !o && setOpenId(null)}>
+        <DialogContent className="flex max-h-[90vh] w-[calc(100vw-2rem)] max-w-3xl flex-col gap-0 overflow-hidden p-0 sm:rounded-2xl">
+          <DialogHeader className="border-b border-border px-5 py-4 text-left">
+            <DialogTitle className="font-display text-base font-semibold text-foreground">
+              {open ? `${open.patient.full_name} — record detail` : "Record detail"}
+            </DialogTitle>
+            <DialogDescription>Read-only history. Nothing here can be edited.</DialogDescription>
+          </DialogHeader>
+          {open && (
+            <ScrollArea className="flex-1">
+              <div className="space-y-5 px-5 py-5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <PriorityChip priority={open.patient.priority} />
+                  <StatusChip status={open.patient.status} />
+                  <span className="text-xs text-muted-foreground">
+                    {open.patient.age}
+                    {open.patient.gender} · registered {relativeTime(open.patient.registered_at)}
+                  </span>
+                </div>
 
-          <dl className="grid gap-4 sm:grid-cols-2">
-            <Detail label="Symptoms" value={open.patient.symptoms || "Not recorded"} />
-            <Detail label="Diagnosis" value={open.consultation.diagnosis || "Not recorded"} />
-            <Detail label="Outcome" value={open.consultation.final_outcome || open.consultation.outcome || "—"} />
-            <Detail
-              label="Room / bed"
-              value={
-                open.patient.room_number
-                  ? `Room ${open.patient.room_number}${open.patient.bed_number ? ` · Bed ${open.patient.bed_number}` : ""}`
-                  : "Not assigned"
-              }
-            />
-            <Detail label="Consultation notes" value={open.consultation.notes || "No notes recorded"} />
-            <Detail label="Referral note" value={open.consultation.referral_note || "—"} />
-          </dl>
+                <dl className="grid gap-4 sm:grid-cols-2">
+                  <Detail label="Symptoms" value={open.patient.symptoms || "Not recorded"} />
+                  <Detail label="Diagnosis" value={open.consultation.diagnosis || "Not recorded"} />
+                  <Detail label="Outcome" value={open.consultation.final_outcome || open.consultation.outcome || "—"} />
+                  <Detail
+                    label="Room / bed"
+                    value={
+                      open.patient.room_number
+                        ? `Room ${open.patient.room_number}${open.patient.bed_number ? ` · Bed ${open.patient.bed_number}` : ""}`
+                        : "Not assigned"
+                    }
+                  />
+                  <Detail label="Consultation notes" value={open.consultation.notes || "No notes recorded"} />
+                  <Detail label="Referral note" value={open.consultation.referral_note || "—"} />
+                </dl>
 
-          {openReferral && (
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-muted/40 p-4">
-              <div className="min-w-0">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Referral record</p>
-                <p className="mt-0.5 break-words text-sm text-foreground">
-                  {openReferral.destination || "Destination not recorded"} · status {openReferral.status}
-                </p>
-              </div>
-              <Button asChild size="sm" variant="outline">
-                <Link to="/app/referrals">Open in Referrals</Link>
-              </Button>
-            </div>
-          )}
-
-          <div className="rounded-xl border border-border p-3">
-            <VitalsRow
-              temperature={open.patient.temperature}
-              heartRate={open.patient.heart_rate}
-              spo2={open.patient.spo2}
-            />
-          </div>
-
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Observation timeline</p>
-            {events.filter((e) => e.patient_id === open.patient.id).length === 0 ? (
-              <p className="mt-2 text-sm text-muted-foreground">This patient was never placed under observation.</p>
-            ) : (
-              <ol className="mt-2 space-y-2">
-                {events
-                  .filter((e) => e.patient_id === open.patient.id)
-                  .map((entry) => (
-                    <li key={entry.id} className="rounded-lg border border-border bg-muted/40 p-3 text-sm">
-                      <p className="flex flex-wrap justify-between gap-2 text-xs text-muted-foreground">
-                        <span>{new Date(entry.created_at).toLocaleString()}</span>
-                        <span>
-                          {entry.author_name || "Staff"} · {entry.kind}
-                        </span>
+                {openReferral && (
+                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-muted/40 p-4">
+                    <div className="min-w-0">
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">Referral record</p>
+                      <p className="mt-0.5 break-words text-sm text-foreground">
+                        {openReferral.destination || "Destination not recorded"} · status {openReferral.status}
                       </p>
-                      <p className="mt-1 text-foreground">{entry.condition || "Condition unchanged"}</p>
-                      {entry.notes && <p className="mt-1 text-muted-foreground">{entry.notes}</p>}
-                    </li>
-                  ))}
-              </ol>
-            )}
-          </div>
-        </Panel>
-      )}
+                    </div>
+                    <Button asChild size="sm" variant="outline">
+                      <Link to="/app/referrals">Open in Referrals</Link>
+                    </Button>
+                  </div>
+                )}
+
+                <div className="rounded-xl border border-border p-3">
+                  <VitalsRow
+                    temperature={open.patient.temperature}
+                    heartRate={open.patient.heart_rate}
+                    spo2={open.patient.spo2}
+                  />
+                </div>
+
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Observation timeline
+                  </p>
+                  {events.filter((e) => e.patient_id === open.patient.id).length === 0 ? (
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      This patient was never placed under observation.
+                    </p>
+                  ) : (
+                    <ol className="mt-2 space-y-2">
+                      {events
+                        .filter((e) => e.patient_id === open.patient.id)
+                        .map((entry) => (
+                          <li key={entry.id} className="rounded-lg border border-border bg-muted/40 p-3 text-sm">
+                            <p className="flex flex-wrap justify-between gap-2 text-xs text-muted-foreground">
+                              <span>{new Date(entry.created_at).toLocaleString()}</span>
+                              <span>
+                                {entry.author_name || "Staff"} · {entry.kind}
+                              </span>
+                            </p>
+                            <p className="mt-1 text-foreground">{entry.condition || "Condition unchanged"}</p>
+                            {entry.notes && <p className="mt-1 text-muted-foreground">{entry.notes}</p>}
+                          </li>
+                        ))}
+                    </ol>
+                  )}
+                </div>
+              </div>
+            </ScrollArea>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
