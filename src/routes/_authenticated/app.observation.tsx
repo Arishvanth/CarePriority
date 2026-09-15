@@ -22,8 +22,10 @@ import {
 import { usePatients, useConsultations, useObservationEvents, queryKeys } from "@/hooks/use-care-data";
 import { useSession, useProfile } from "@/hooks/use-session";
 import { updatePatient } from "@/data/patients";
-import { addObservationEvent, type ObservationEvent } from "@/data/observations";
-import { setFinalOutcome } from "@/data/consultations";
+import {
+  addObservationEvent, findAdmissionConsultationId, type ObservationEvent,
+} from "@/data/observations";
+import { setFinalOutcome, resolveConsultationId } from "@/data/consultations";
 import { createAlert } from "@/data/alerts";
 import { createReferral } from "@/data/referrals";
 import type { Patient } from "@/data/types";
@@ -101,11 +103,18 @@ function ObservationPage() {
       outcome: "discharged" | "referred";
       destination?: string;
     }) => {
-      const consult = consultations.find((c) => c.patient_id === patient.id);
-      if (consult) await setFinalOutcome(consult.id, outcome);
+      // The admission event holds the consultation this observation episode
+      // belongs to. Only if that link is missing do we fall back to an open
+      // consultation, or start one, so we never finalise an unrelated visit.
+      const admissionId = await findAdmissionConsultationId(patient.id);
+      const consultId =
+        admissionId ??
+        (await resolveConsultationId(patient.id, patient.observation_doctor_id ?? user?.id ?? null));
+      const consult = consultations.find((c) => c.id === consultId);
+      await setFinalOutcome(consultId, outcome);
       await addObservationEvent({
         patient_id: patient.id,
-        consultation_id: consult?.id ?? null,
+        consultation_id: consultId,
         author_id: user?.id ?? null,
         author_name: profile?.full_name || user?.email || "Staff",
         kind: outcome,
@@ -121,10 +130,10 @@ function ObservationPage() {
       if (outcome === "referred") {
         await createReferral({
           patient_id: patient.id,
-          consultation_id: consult?.id ?? null,
+          consultation_id: consultId,
           doctor_id: user?.id ?? null,
           doctor_name: profile?.full_name || user?.email || "Doctor",
-          diagnosis: consult?.diagnosis ?? patient.condition,
+          diagnosis: consult?.diagnosis || patient.condition,
           notes: consult?.notes ?? "",
           reason: "Referred onward from observation.",
           destination,

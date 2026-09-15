@@ -36,3 +36,22 @@ export async function addObservationEvent(input: NewObservationEvent): Promise<v
   const { error } = await supabase.from("observation_events").insert(input as never);
   if (error) throw error;
 }
+
+/**
+ * The consultation that admitted this patient to observation. This is the
+ * authoritative link for the current observation episode — picking the
+ * patient's most recent consultation instead can finalise an unrelated visit.
+ */
+export async function findAdmissionConsultationId(patientId: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("observation_events")
+    .select("consultation_id")
+    .eq("patient_id", patientId)
+    .eq("kind", "admitted")
+    .not("consultation_id", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data ? ((data as { consultation_id: string | null }).consultation_id ?? null) : null;
+}
