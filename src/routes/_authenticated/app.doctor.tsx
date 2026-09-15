@@ -29,7 +29,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { usePatients, useConsultations, queryKeys } from "@/hooks/use-care-data";
 import { useSession, useProfile } from "@/hooks/use-session";
 import { findByRfid, updatePatient } from "@/data/patients";
-import { startConsultation, completeConsultation, setFinalOutcome } from "@/data/consultations";
+import {
+  startConsultation, completeConsultation, setFinalOutcome, resolveConsultationId,
+} from "@/data/consultations";
 import { createReferral } from "@/data/referrals";
 import { addObservationEvent } from "@/data/observations";
 import { createAlert } from "@/data/alerts";
