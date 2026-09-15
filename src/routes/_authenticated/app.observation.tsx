@@ -126,7 +126,14 @@ function ObservationPage() {
         spo2: patient.spo2,
         notes: outcome === "referred" ? "Referred onward from observation." : "Discharged from observation.",
       });
-      await updatePatient(patient.id, { status: "completed" });
+      // Observation-only fields belong to the episode, not the finished record.
+      // The timeline in observation_events keeps the full history.
+      await updatePatient(patient.id, {
+        status: "completed",
+        room_number: null,
+        bed_number: null,
+        observation_started_at: null,
+      });
       if (outcome === "referred") {
         await createReferral({
           patient_id: patient.id,
