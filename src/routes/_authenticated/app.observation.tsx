@@ -22,8 +22,10 @@ import {
 import { usePatients, useConsultations, useObservationEvents, queryKeys } from "@/hooks/use-care-data";
 import { useSession, useProfile } from "@/hooks/use-session";
 import { updatePatient } from "@/data/patients";
-import { addObservationEvent, type ObservationEvent } from "@/data/observations";
-import { setFinalOutcome } from "@/data/consultations";
+import {
+  addObservationEvent, findAdmissionConsultationId, type ObservationEvent,
+} from "@/data/observations";
+import { setFinalOutcome, resolveConsultationId } from "@/data/consultations";
 import { createAlert } from "@/data/alerts";
 import { createReferral } from "@/data/referrals";
 import type { Patient } from "@/data/types";
