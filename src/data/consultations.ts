@@ -21,6 +21,56 @@ export async function startConsultation(patientId: string, doctorId: string | nu
   return (data as { id: string }).id;
 }
 
+/** The patient's most recent consultation that has not been closed yet, if any. */
+export async function findOpenConsultationId(patientId: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("consultations")
+    .select("id")
+    .eq("patient_id", patientId)
+    .is("ended_at", null)
+    .order("started_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data ? (data as { id: string }).id : null;
+}
+
+/** True when the id still points at a real consultation for this patient. */
+export async function consultationBelongsToPatient(
+  consultationId: string,
+  patientId: string,
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("consultations")
+    .select("id")
+    .eq("id", consultationId)
+    .eq("patient_id", patientId)
+    .maybeSingle();
+  if (error) throw error;
+  return !!data;
+}
+
+/**
+ * Resolves the consultation a clinical outcome must be written to.
+ *
+ * Page state is only a hint: after a refresh or on another device it is gone,
+ * so we fall back to the patient's open consultation and, only when there is
+ * genuinely none, start one. Never creates a second consultation while one is
+ * still open.
+ */
+export async function resolveConsultationId(
+  patientId: string,
+  doctorId: string | null,
+  preferredId?: string | null,
+): Promise<string> {
+  if (preferredId && (await consultationBelongsToPatient(preferredId, patientId))) {
+    return preferredId;
+  }
+  const open = await findOpenConsultationId(patientId);
+  if (open) return open;
+  return startConsultation(patientId, doctorId);
+}
+
 export async function completeConsultation(
   id: string,
   payload: { notes: string; diagnosis: string; outcome: string },
