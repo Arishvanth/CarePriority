@@ -67,7 +67,7 @@ export async function resequenceQueue(): Promise<void> {
     lane.push(row);
     lanes.set(row.priority, lane);
   }
-  const writes: Array<Promise<unknown>> = [];
+  const writes: Array<PromiseLike<unknown>> = [];
   for (const lane of lanes.values()) {
     lane.sort(
       (a, b) =>
