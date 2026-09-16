@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAllRows } from "./fetch-all";
 
 export interface ObservationEvent {
   id: string;
@@ -18,13 +19,14 @@ export interface ObservationEvent {
 }
 
 export async function fetchObservationEvents(): Promise<ObservationEvent[]> {
-  const { data, error } = await supabase
-    .from("observation_events")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(500);
-  if (error) throw error;
-  return (data ?? []).map((row) => ({
+  const rows = await fetchAllRows(() =>
+    supabase
+      .from("observation_events")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false }),
+  );
+  return rows.map((row) => ({
     ...(row as unknown as ObservationEvent),
     temperature: row.temperature === null ? null : Number(row.temperature),
   }));

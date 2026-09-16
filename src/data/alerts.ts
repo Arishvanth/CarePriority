@@ -1,14 +1,16 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Alert } from "./types";
+import { fetchAllRows } from "./fetch-all";
 
 export async function fetchAlerts(): Promise<Alert[]> {
-  const { data, error } = await supabase
-    .from("alerts")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(60);
-  if (error) throw error;
-  return (data ?? []) as unknown as Alert[];
+  const rows = await fetchAllRows(() =>
+    supabase
+      .from("alerts")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false }),
+  );
+  return rows as unknown as Alert[];
 }
 
 export async function createAlert(input: {
