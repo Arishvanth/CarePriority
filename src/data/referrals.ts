@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAllRows } from "./fetch-all";
 
 export type ReferralStatus = "pending" | "referred" | "completed";
 
@@ -21,13 +22,14 @@ export interface Referral {
 }
 
 export async function fetchReferrals(): Promise<Referral[]> {
-  const { data, error } = await supabase
-    .from("referrals")
-    .select("*")
-    .order("referred_at", { ascending: false })
-    .limit(500);
-  if (error) throw error;
-  return (data ?? []) as unknown as Referral[];
+  const rows = await fetchAllRows(() =>
+    supabase
+      .from("referrals")
+      .select("*")
+      .order("referred_at", { ascending: false })
+      .order("id", { ascending: false }),
+  );
+  return rows as unknown as Referral[];
 }
 
 export interface NewReferral {

@@ -1,14 +1,16 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Consultation } from "./types";
+import { fetchAllRows } from "./fetch-all";
 
 export async function fetchConsultations(): Promise<Consultation[]> {
-  const { data, error } = await supabase
-    .from("consultations")
-    .select("*")
-    .order("started_at", { ascending: false })
-    .limit(100);
-  if (error) throw error;
-  return (data ?? []) as unknown as Consultation[];
+  const rows = await fetchAllRows(() =>
+    supabase
+      .from("consultations")
+      .select("*")
+      .order("started_at", { ascending: false })
+      .order("id", { ascending: false }),
+  );
+  return rows as unknown as Consultation[];
 }
 
 export async function startConsultation(patientId: string, doctorId: string | null): Promise<string> {
