@@ -16,20 +16,29 @@ export const queryKeys = {
 };
 
 
+/** Tables watched live, each mapped to the cache entry it refreshes. */
+const LIVE_TABLES = [
+  ["patients", queryKeys.patients],
+  ["alerts", queryKeys.alerts],
+  ["consultations", queryKeys.consultations],
+  ["referrals", queryKeys.referrals],
+  ["observation_events", queryKeys.observations],
+] as const;
+
 /** Subscribes once to live table changes and refreshes the matching cache. */
 export function useCareRealtime() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    const channel = supabase
-      .channel("care-live")
-      .on("postgres_changes", { event: "*", schema: "public", table: "patients" }, () => {
-        queryClient.invalidateQueries({ queryKey: queryKeys.patients });
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "alerts" }, () => {
-        queryClient.invalidateQueries({ queryKey: queryKeys.alerts });
-      })
-      .subscribe();
+    // One channel with one listener per table, torn down together on unmount,
+    // so remounts never leave a second subscription behind.
+    let channel = supabase.channel("care-live");
+    for (const [table, queryKey] of LIVE_TABLES) {
+      channel = channel.on("postgres_changes", { event: "*", schema: "public", table }, () => {
+        queryClient.invalidateQueries({ queryKey });
+      });
+    }
+    channel.subscribe();
 
     return () => {
       supabase.removeChannel(channel);
