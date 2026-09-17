@@ -21,7 +21,7 @@ interface RfidScannerProps {
  * tag then press Enter. The hidden input captures that; manual search is the
  * documented fallback when a wristband will not read.
  */
-export function RfidScanner({ onScan, state, message, className, label = "Scan wristband" }: RfidScannerProps) {
+export function RfidScanner({ onScan, state, message, className, label = "Simulate scan (demo)" }: RfidScannerProps) {
   const [manual, setManual] = useState(false);
   const [value, setValue] = useState("");
   const captureRef = useRef<HTMLInputElement>(null);
@@ -64,10 +64,10 @@ export function RfidScanner({ onScan, state, message, className, label = "Scan w
           <Radio className="h-4.5 w-4.5" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-foreground">RFID wristband</p>
+          <p className="text-sm font-medium text-foreground">RFID wristband (demo reader)</p>
           <p className="truncate text-xs text-muted-foreground">
             {message ??
-              (state === "scanning" ? "Hold the wristband near the reader…" : "Tap to scan or search manually.")}
+              (state === "scanning" ? "Simulating a wristband read…" : "Demo scan — no hardware reader is connected. Search manually to load a patient.")}
           </p>
         </div>
       </div>
