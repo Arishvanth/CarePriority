@@ -168,12 +168,16 @@ function AnalyticsPage() {
   );
 
   const heatmap = useMemo(() => {
-    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const allDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const todayIdx = (new Date().getDay() + 6) % 7;
+    const days = range === "day" ? [allDays[todayIdx]] : allDays;
     const slots = ["08", "10", "12", "14", "16", "18"];
     const grid = days.map((day) => ({ day, cells: slots.map((slot) => ({ slot, load: 0 })) }));
     for (const p of patients) {
       const d = new Date(p.registered_at);
-      const dayIdx = (d.getDay() + 6) % 7; // Monday-first
+      const rawDayIdx = (d.getDay() + 6) % 7; // Monday-first
+      const dayIdx = range === "day" ? 0 : rawDayIdx;
+      if (range === "day" && rawDayIdx !== todayIdx) continue;
       const slotIdx = slots.findIndex((s, i) => {
         const start = Number(s);
         const end = i === slots.length - 1 ? 24 : Number(slots[i + 1]);
@@ -182,7 +186,7 @@ function AnalyticsPage() {
       if (slotIdx >= 0) grid[dayIdx].cells[slotIdx].load += 1;
     }
     return grid;
-  }, [patients]);
+  }, [patients, range]);
 
   const maxLoad = Math.max(1, ...heatmap.flatMap((r) => r.cells.map((c) => c.load)));
 
@@ -342,7 +346,10 @@ function AnalyticsPage() {
           </div>
         </Panel>
 
-        <Panel title="Weekly load heatmap" description="Where demand concentrates across the week.">
+        <Panel
+          title={range === "day" ? "Today's load" : "Weekly load heatmap"}
+          description={range === "day" ? "Where demand concentrates through today." : "Where demand concentrates across the week."}
+        >
           <div className="overflow-x-auto">
             <table className="w-full border-separate border-spacing-1 text-xs">
               <caption className="sr-only">Patient load by day and time slot</caption>

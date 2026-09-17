@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAllRows } from "./fetch-all";
+import { assertOutcomeAllowed } from "@/lib/rbac";
 
 export type ReferralStatus = "pending" | "referred" | "completed";
 
@@ -51,6 +52,7 @@ export interface NewReferral {
  * referred, so the row is always persisted with status "referred".
  */
 export async function createReferral(input: NewReferral): Promise<string> {
+  await assertOutcomeAllowed("referred");
   if (!input.consultation_id) {
     const { data, error } = await supabase
       .from("referrals")

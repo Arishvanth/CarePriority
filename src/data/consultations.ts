@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Consultation } from "./types";
 import { fetchAllRows } from "./fetch-all";
+import { assertOutcomeAllowed } from "@/lib/rbac";
 
 export async function fetchConsultations(): Promise<Consultation[]> {
   const rows = await fetchAllRows(() =>
@@ -77,6 +78,7 @@ export async function completeConsultation(
   id: string,
   payload: { notes: string; diagnosis: string; outcome: string },
 ): Promise<void> {
+  await assertOutcomeAllowed(payload.outcome);
   const { error } = await supabase
     .from("consultations")
     .update({ ...payload, final_outcome: payload.outcome, ended_at: new Date().toISOString() } as never)
@@ -90,6 +92,7 @@ export async function setFinalOutcome(
   finalOutcome: "discharged" | "referred",
   referralNote = "",
 ): Promise<void> {
+  await assertOutcomeAllowed(finalOutcome);
   const { error } = await supabase
     .from("consultations")
     .update({ final_outcome: finalOutcome, referral_note: referralNote } as never)
