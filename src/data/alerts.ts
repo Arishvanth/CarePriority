@@ -56,3 +56,39 @@ export async function dispatchExternalNotification(payload: {
     return { delivered: false, reason: (err as Error).message };
   }
 }
+
+/**
+ * Overflow alerts are idempotent for as long as the condition is active: while
+ * an unacknowledged overflow alert exists, repeated detections reuse it instead
+ * of stacking duplicates. Once acknowledged (condition handled), a future
+ * genuine overflow raises a new alert.
+ */
+export async function createOverflowAlertOnce(input: {
+  title: string;
+  message: string;
+  audience?: string | null;
+}): Promise<{ created: boolean }> {
+  const { data, error } = await supabase
+    .from("alerts")
+    .select("id")
+    .eq("kind", "overflow")
+    .is("acknowledged_at", null)
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  if (data) return { created: false };
+
+  const { error: insertError } = await supabase.from("alerts").insert({
+    kind: "overflow",
+    severity: "warning",
+    title: input.title,
+    message: input.message,
+    audience: input.audience ?? "receptionist",
+  } as never);
+  if (insertError) {
+    // Unique partial index race: another client raised the same active alert.
+    if (insertError.code === "23505") return { created: false };
+    throw insertError;
+  }
+  return { created: true };
+}

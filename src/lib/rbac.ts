@@ -78,3 +78,17 @@ export async function requireRole(allowed: AppRole[]) {
   }
   return { role };
 }
+
+/**
+ * Action-level guard for clinical outcomes. Observation and Referral consoles
+ * are Doctor/Admin only, so a nurse must not be able to persist those outcomes
+ * even if they reach the action through a direct UI or state path.
+ */
+export async function assertOutcomeAllowed(outcome: string): Promise<void> {
+  const restricted = outcome === "observation" || outcome === "referred";
+  if (!restricted) return;
+  const current = await fetchCurrentRole();
+  if (current?.role === "nurse") {
+    throw new Error("Observation and referral outcomes can only be recorded by a doctor or administrator.");
+  }
+}

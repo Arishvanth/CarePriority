@@ -28,7 +28,7 @@ import {
 import { useConsultations, usePatients, queryKeys } from "@/hooks/use-care-data";
 import { useProfile, useSession } from "@/hooks/use-session";
 import { createPatient, findByRfid, promoteToEmergency } from "@/data/patients";
-import { createAlert } from "@/data/alerts";
+import { createAlert, createOverflowAlertOnce } from "@/data/alerts";
 import type { Patient } from "@/data/types";
 import { scoreTriage, priorityMeta, missingAssessment, type Priority } from "@/lib/triage";
 import { initials, nextPatientCode, randomRfid, relativeTime, waitMinutes } from "@/lib/format";
@@ -199,12 +199,9 @@ function ReceptionPage() {
         });
       }
       if (waiting.length + 1 >= OVERFLOW_THRESHOLD) {
-        await createAlert({
-          kind: "overflow",
-          severity: "warning",
+        await createOverflowAlertOnce({
           title: "Waiting room approaching capacity",
           message: `${waiting.length + 1} patients now waiting. Consider re-routing low-priority cases.`,
-          audience: "receptionist",
         });
       }
       return patient;

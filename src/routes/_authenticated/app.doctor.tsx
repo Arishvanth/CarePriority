@@ -227,7 +227,12 @@ function DoctorPage() {
     }
   }
 
-  const completedToday = patients.filter((p) => p.status === "completed").length;
+  // Only visits actually closed today, by the consultation's own end timestamp.
+  const completedToday = useMemo(() => {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    return consultations.filter((c) => c.ended_at && new Date(c.ended_at) >= start).length;
+  }, [consultations]);
 
   return (
     <>
