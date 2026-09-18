@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Patient } from "./types";
 import type { Priority, TriageFactor } from "@/lib/triage";
+import { fetchAllRows } from "./fetch-all";
 
 const TABLE = "patients";
 
@@ -14,12 +15,13 @@ function normalise(row: Record<string, unknown>): Patient {
 }
 
 export async function fetchPatients(): Promise<Patient[]> {
-  const { data, error } = await supabase
-    .from(TABLE)
-    .select("*")
-    .order("registered_at", { ascending: true });
-  if (error) throw error;
-  return (data ?? []).map(normalise);
+  const rows = await fetchAllRows(() =>
+    supabase
+      .from(TABLE)
+      .select("*")
+      .order("registered_at", { ascending: true }),
+  );
+  return rows.map((row) => normalise(row as Record<string, unknown>));
 }
 
 export interface NewPatientInput {
