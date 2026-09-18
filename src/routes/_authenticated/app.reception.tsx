@@ -340,10 +340,10 @@ function ReceptionPage() {
         </div>
       )}
 
-      <div className="grid gap-5 xl:grid-cols-5">
+      <div className="grid min-w-0 gap-5 2xl:grid-cols-[minmax(320px,2fr)_minmax(0,3fr)]">
         {/* ── 2. Patient intake ─────────────────────────────────────── */}
-        <div className="space-y-4 xl:col-span-2">
-          <section aria-labelledby="intake-heading">
+        <div className="min-w-0 space-y-4">
+          <section className="min-w-0" aria-labelledby="intake-heading">
             <SectionLabel>Patient intake</SectionLabel>
             <Panel
               title="Register new patient"
@@ -482,8 +482,8 @@ function ReceptionPage() {
         </div>
 
         {/* ── 3 & 4. Live queue + emergency ─────────────────────────── */}
-        <div className="space-y-5 xl:col-span-3">
-          <section aria-labelledby="queue-heading">
+        <div className="min-w-0 space-y-5">
+          <section className="min-w-0" aria-labelledby="queue-heading">
             <div className="mb-3 flex flex-col gap-2 sm:grid sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-3">
               <SectionLabel>Live queue</SectionLabel>
               <div className="relative w-full sm:-mt-3 sm:w-auto">
@@ -537,11 +537,11 @@ function ReceptionPage() {
             </div>
 
 
-            <div className="mt-4 grid items-stretch gap-3 md:grid-cols-2 2xl:grid-cols-3">
+            <div className="mt-4 grid min-w-0 items-stretch gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3">
               {(["HIGH", "MODERATE", "LOW"] as Priority[]).map((key) => (
                 <Panel
                   key={key}
-                  className="flex h-full flex-col"
+                  className="flex h-full min-w-0 flex-col"
                   title={`${priorityMeta[key].label} priority`}
                   description={priorityMeta[key].description}
                   headerClassName="flex-nowrap items-start"
