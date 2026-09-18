@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.block_nurse_restricted_outcomes() FROM PUBLIC, anon, authenticated;
