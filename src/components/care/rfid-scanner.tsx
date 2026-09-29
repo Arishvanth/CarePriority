@@ -52,8 +52,8 @@ export function RfidScanner({ onScan, state, message, className, label = "Simula
           : "border-border bg-muted/40";
 
   return (
-    <div className={cn("rounded-xl border p-4 transition-colors", tone, className)}>
-      <div className="flex items-center gap-3">
+    <div className={cn("min-w-0 max-w-full rounded-xl border p-4 transition-colors", tone, className)}>
+      <div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-3">
         <span
           className={cn(
             "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface text-primary shadow-xs",
@@ -87,7 +87,7 @@ export function RfidScanner({ onScan, state, message, className, label = "Simula
         aria-hidden="true"
       />
 
-      <div className="mt-3 flex flex-wrap items-center gap-2">
+      <div className="mt-3 flex min-w-0 flex-wrap items-center gap-2">
         <Button
           type="button"
           size="sm"
@@ -108,7 +108,7 @@ export function RfidScanner({ onScan, state, message, className, label = "Simula
 
       {manual && (
         <form
-          className="mt-3 flex gap-2"
+          className="mt-3 grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-2"
           onSubmit={(e) => {
             e.preventDefault();
             submit(value);
@@ -119,7 +119,7 @@ export function RfidScanner({ onScan, state, message, className, label = "Simula
             value={value}
             onChange={(e) => setValue(e.target.value)}
             placeholder="RF-88A2 or patient name"
-            className="h-9 font-mono text-sm"
+            className="h-9 min-w-0 font-mono text-sm"
             aria-label="Manual RFID or patient search"
           />
           <Button type="submit" size="sm">
