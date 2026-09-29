@@ -348,16 +348,18 @@ function ReceptionPage() {
             <Panel
               title="Register new patient"
               description="Every field feeds the triage engine in real time."
+              className="min-w-0 max-w-full"
+              bodyClassName="min-w-0 max-w-full"
             >
               <form
-                className="grid gap-2.5"
+                className="grid min-w-0 max-w-full gap-2.5"
                 onSubmit={(e) => {
                   e.preventDefault();
                   register.mutate();
                 }}
               >
-                <div className="grid gap-2.5 sm:grid-cols-3">
-                  <div className="grid gap-1.5 sm:col-span-2">
+                <div className="grid min-w-0 gap-2.5 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+                  <div className="grid min-w-0 gap-1.5">
                     <Label htmlFor="full_name">Full name</Label>
                     <Input
                       id="full_name"
@@ -368,7 +370,7 @@ function ReceptionPage() {
                       placeholder="e.g. Aarav Sharma"
                     />
                   </div>
-                  <div className="grid gap-1.5">
+                  <div className="grid min-w-0 gap-1.5">
                     <Label htmlFor="age">Age</Label>
                     <Input
                       id="age"
@@ -383,9 +385,9 @@ function ReceptionPage() {
                   </div>
                 </div>
 
-                <fieldset className="grid gap-1">
+                <fieldset className="grid min-w-0 max-w-full gap-1">
                   <legend className="mb-1 text-sm font-medium text-foreground">Gender</legend>
-                  <div className="flex gap-2" role="radiogroup">
+                  <div className="grid min-w-0 grid-cols-3 gap-2" role="radiogroup">
                     {[
                       { value: "F", label: "Female" },
                       { value: "M", label: "Male" },
@@ -399,8 +401,8 @@ function ReceptionPage() {
                         onClick={() => setForm({ ...form, gender: option.value })}
                         className={
                           form.gender === option.value
-                            ? "flex-1 rounded-lg border border-primary bg-primary-light py-2 text-sm font-medium text-primary-hover"
-                            : "flex-1 rounded-lg border border-border bg-surface py-2 text-sm text-muted-foreground transition-colors hover:border-primary/35"
+                            ? "min-w-0 rounded-lg border border-primary bg-primary-light px-2 py-2 text-sm font-medium text-primary-hover"
+                            : "min-w-0 rounded-lg border border-border bg-surface px-2 py-2 text-sm text-muted-foreground transition-colors hover:border-primary/35"
                         }
                       >
                         {option.label}
@@ -409,10 +411,10 @@ function ReceptionPage() {
                   </div>
                 </fieldset>
 
-                <div className="grid gap-1.5">
-                  <div className="flex items-center justify-between">
+                <div className="grid min-w-0 gap-1.5">
+                  <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
                     <Label htmlFor="symptoms">Presenting symptoms</Label>
-                    <Button type="button" size="sm" variant="ghost" onClick={simulateVoiceCapture}>
+                    <Button className="shrink-0" type="button" size="sm" variant="ghost" onClick={simulateVoiceCapture}>
                       {listening ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Mic className="h-3.5 w-3.5" />}
                       {listening ? "Listening…" : "Voice capture"}
                     </Button>
@@ -430,8 +432,8 @@ function ReceptionPage() {
                 <p className="-mb-1 text-xs text-muted-foreground">
                   Vitals optional — blank vitals flag the patient “Assessment Pending”.
                 </p>
-                <div className="grid gap-2.5 sm:grid-cols-3">
-                  <div className="grid gap-1.5">
+                <div className="grid min-w-0 gap-2.5 sm:grid-cols-[repeat(3,minmax(0,1fr))]">
+                  <div className="grid min-w-0 gap-1.5">
                     <Label htmlFor="temperature">Temp °C</Label>
                     <Input
                       id="temperature"
@@ -442,7 +444,7 @@ function ReceptionPage() {
                       placeholder="37.0"
                     />
                   </div>
-                  <div className="grid gap-1.5">
+                  <div className="grid min-w-0 gap-1.5">
                     <Label htmlFor="heart_rate">HR bpm</Label>
                     <Input
                       id="heart_rate"
@@ -452,7 +454,7 @@ function ReceptionPage() {
                       placeholder="80"
                     />
                   </div>
-                  <div className="grid gap-1.5">
+                  <div className="grid min-w-0 gap-1.5">
                     <Label htmlFor="spo2">SpO₂ %</Label>
                     <Input
                       id="spo2"
@@ -464,14 +466,14 @@ function ReceptionPage() {
                   </div>
                 </div>
 
-                <RfidScanner onScan={handleScan} state={scanState} message={scanMessage} />
+                <RfidScanner className="min-w-0 max-w-full" onScan={handleScan} state={scanState} message={scanMessage} />
                 {form.rfid_tag && (
                   <p className="text-xs text-muted-foreground">
                     Linked wristband: <span className="font-mono text-foreground">{form.rfid_tag}</span>
                   </p>
                 )}
 
-                <Button type="submit" disabled={register.isPending}>
+                <Button className="min-w-0 max-w-full" type="submit" disabled={register.isPending}>
                   {register.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
                   Add to queue
                 </Button>
@@ -501,7 +503,7 @@ function ReceptionPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 2xl:grid-cols-4">
+            <div className="grid min-w-0 grid-cols-[repeat(2,minmax(0,1fr))] gap-3 sm:gap-4 2xl:grid-cols-[repeat(4,minmax(0,1fr))]">
 
               <MetricCard label="High priority" value={lanes.HIGH.length} icon={Siren} tone="danger" loading={isLoading} />
               <MetricCard label="Waiting" value={waiting.length} icon={Users} tone="warning" loading={isLoading} />
@@ -537,7 +539,7 @@ function ReceptionPage() {
             </div>
 
 
-            <div className="mt-4 grid min-w-0 items-stretch gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3">
+            <div className="mt-4 grid min-w-0 items-stretch gap-3 md:grid-cols-[repeat(2,minmax(0,1fr))] xl:grid-cols-[repeat(3,minmax(0,1fr))]">
               {(["HIGH", "MODERATE", "LOW"] as Priority[]).map((key) => (
                 <Panel
                   key={key}
