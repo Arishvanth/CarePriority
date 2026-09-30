@@ -40,7 +40,7 @@ export function AppShell() {
   const profile = useProfile(user?.id);
   const { role } = useRole();
   const home = homeForRole(role);
-  useCareRealtime();
+  const liveStatus = useCareRealtime();
   const { data: alerts = [] } = useAlerts();
   const unread = alerts.filter((a) => !a.acknowledged_at).length;
 
@@ -86,7 +86,24 @@ export function AppShell() {
         ))}
       </nav>
 
-      <div className="mt-auto rounded-xl border border-border bg-muted/50 p-3">
+      <p
+        role="status"
+        aria-live="polite"
+        className="mt-auto mb-2 flex items-center gap-2 px-3 text-[11px] text-muted-foreground"
+      >
+        <span
+          className={
+            "h-2 w-2 shrink-0 rounded-full " +
+            (liveStatus === "live" ? "bg-primary" : liveStatus === "disconnected" ? "bg-warning animate-pulse" : "bg-muted-foreground/40")
+          }
+        />
+        {liveStatus === "live"
+          ? "Live sync active"
+          : liveStatus === "disconnected"
+            ? "Live sync disconnected — refreshing data automatically."
+            : "Connecting live sync…"}
+      </p>
+      <div className="rounded-xl border border-border bg-muted/50 p-3">
         <div className="flex items-center gap-2.5">
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
             {initials(displayName)}
