@@ -26,6 +26,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { useConsultations, usePatients, queryKeys } from "@/hooks/use-care-data";
+import { useRole } from "@/hooks/use-role";
 import { useProfile, useSession } from "@/hooks/use-session";
 import { createPatient, findByRfid, promoteToEmergency } from "@/data/patients";
 import { createAlert, createOverflowAlertOnce } from "@/data/alerts";
@@ -87,7 +88,11 @@ function SectionLabel({ children }: { children: string }) {
 function ReceptionPage() {
   const queryClient = useQueryClient();
   const { data: patients = [], isLoading } = usePatients();
-  const { data: consultations = [] } = useConsultations();
+  const { role } = useRole();
+  const clinicalView = role !== "receptionist";
+  const { data: consultationRows = [] } = useConsultations();
+  // Receptionists have no database access to visit notes/diagnoses.
+  const consultations = clinicalView ? consultationRows : [];
   const [form, setForm] = useState(emptyForm);
   const [search, setSearch] = useState("");
   const [listening, setListening] = useState(false);
@@ -416,7 +421,7 @@ function ReceptionPage() {
                     <Label htmlFor="symptoms">Presenting symptoms</Label>
                     <Button className="shrink-0" type="button" size="sm" variant="ghost" onClick={simulateVoiceCapture}>
                       {listening ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Mic className="h-3.5 w-3.5" />}
-                      {listening ? "Listening…" : "Voice capture"}
+                      {listening ? "Listening…" : "Voice capture (demo)"}
                     </Button>
                   </div>
                   <Textarea
@@ -427,10 +432,13 @@ function ReceptionPage() {
                     onChange={(e) => setForm({ ...form, symptoms: e.target.value })}
                     placeholder="Describe what the patient reports…"
                   />
+                  <p className="text-[11px] text-muted-foreground">
+                    Demo only — no microphone or AI transcription is connected; voice capture inserts a sample transcript.
+                  </p>
                 </div>
 
                 <p className="-mb-1 text-xs text-muted-foreground">
-                  Vitals optional — blank vitals flag the patient “Assessment Pending”.
+                  Vitals optional, entered manually (no device connected) — blank vitals flag the patient “Assessment Pending”.
                 </p>
                 <div className="grid min-w-0 gap-2.5 sm:grid-cols-[repeat(3,minmax(0,1fr))]">
                   <div className="grid min-w-0 gap-1.5">
