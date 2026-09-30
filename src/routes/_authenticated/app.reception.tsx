@@ -675,8 +675,8 @@ function ReceptionPage() {
             {consultations.length === 0 ? (
               <EmptyState
                 icon={ClipboardList}
-                title="No consultations yet"
-                description="Completed visits will be listed here."
+                title={clinicalView ? "No consultations yet" : "Visible to clinical staff"}
+                description={clinicalView ? "Completed visits will be listed here." : "Visit notes and diagnoses are restricted to nurses, doctors and administrators."}
               />
             ) : (
               <ul className="divide-y divide-border">
