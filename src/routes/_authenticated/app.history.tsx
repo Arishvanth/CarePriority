@@ -131,8 +131,8 @@ function HistoryPage() {
             description="Consultations appear here once a doctor finalises an outcome."
           />
         ) : (
-          <div className="w-full overflow-x-auto">
-            <table className="w-full min-w-[640px] text-sm">
+          <div className="w-full min-w-0">
+            <table className="mobile-records w-full min-w-0 text-sm">
               <thead>
                 <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
                   <th className="py-2 pr-3 font-medium">Patient</th>
@@ -145,20 +145,20 @@ function HistoryPage() {
               <tbody>
                 {rows.map(({ consultation, patient }) => (
                   <tr key={consultation.id} className="border-b border-border/70 last:border-0">
-                    <td className="py-3 pr-3">
+                    <td data-label="Patient" className="py-3 pr-3">
                       <p className="font-medium text-foreground">{patient.full_name}</p>
                       <p className="text-xs text-muted-foreground">
                         {patient.patient_code}
                         {patient.rfid_tag ? ` · ${patient.rfid_tag}` : ""}
                       </p>
                     </td>
-                    <td className="py-3 pr-3 capitalize">
+                    <td data-label="Outcome" className="py-3 pr-3 capitalize">
                       {consultation.final_outcome || consultation.outcome || "—"}
                     </td>
-                    <td className="max-w-[220px] py-3 pr-3 text-muted-foreground">
+                    <td data-label="Diagnosis" className="max-w-[220px] break-words py-3 pr-3 text-muted-foreground max-md:max-w-none">
                       {consultation.diagnosis || "Not recorded"}
                     </td>
-                    <td className="whitespace-nowrap py-3 pr-3 text-muted-foreground">
+                    <td data-label="Completed" className="py-3 pr-3 text-muted-foreground">
                       {consultation.ended_at ? relativeTime(consultation.ended_at) : "—"}
                     </td>
                     <td className="py-3 text-right">
@@ -175,7 +175,7 @@ function HistoryPage() {
       </Panel>
 
       <Dialog open={!!open} onOpenChange={(o) => !o && setOpenId(null)}>
-        <DialogContent className="flex max-h-[90vh] w-[calc(100vw-2rem)] max-w-3xl flex-col gap-0 overflow-hidden p-0 sm:rounded-2xl">
+        <DialogContent className="flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-3xl flex-col gap-0 overflow-hidden p-0 sm:rounded-2xl">
           <DialogHeader className="border-b border-border px-5 py-4 text-left">
             <DialogTitle className="font-display text-base font-semibold text-foreground">
               {open ? `${open.patient.full_name} — record detail` : "Record detail"}
@@ -183,7 +183,7 @@ function HistoryPage() {
             <DialogDescription>Read-only history. Nothing here can be edited.</DialogDescription>
           </DialogHeader>
           {open && (
-            <ScrollArea className="flex-1">
+            <ScrollArea className="min-h-0 flex-1">
               <div className="space-y-5 px-5 py-5">
                 <div className="flex flex-wrap items-center gap-2">
                   <PriorityChip priority={open.patient.priority} />
