@@ -528,7 +528,7 @@ function ObservationUpdateDialog({
             <Field label="Bed number" value={form.bed_number} onChange={(v) => setForm({ ...form, bed_number: v })} placeholder="e.g. B2" />
           </div>
           <Field label="Current condition" value={form.condition} onChange={(v) => setForm({ ...form, condition: v })} placeholder="e.g. Stable, responding to fluids" />
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid min-w-0 gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,7rem),1fr))]">
             <Field label="Temp (°C)" value={form.temperature} onChange={(v) => setForm({ ...form, temperature: v })} placeholder="37.0" inputMode="decimal" />
             <Field label="Heart rate" value={form.heart_rate} onChange={(v) => setForm({ ...form, heart_rate: v })} placeholder="80" inputMode="numeric" />
             <Field label="SpO₂ (%)" value={form.spo2} onChange={(v) => setForm({ ...form, spo2: v })} placeholder="98" inputMode="numeric" />

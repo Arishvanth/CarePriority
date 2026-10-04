@@ -87,7 +87,7 @@ export function AssessmentDialog({ patient, onOpenChange }: AssessmentDialogProp
           </p>
         )}
 
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid min-w-0 gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,7rem),1fr))]">
           <div className="grid gap-1.5">
             <Label htmlFor="assess-temperature">Temp °C</Label>
             <Input

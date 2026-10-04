@@ -440,7 +440,7 @@ function ReceptionPage() {
                 <p className="-mb-1 text-xs text-muted-foreground">
                   Vitals optional, entered manually (no device connected) — blank vitals flag the patient “Assessment Pending”.
                 </p>
-                <div className="grid min-w-0 gap-2.5 sm:grid-cols-[repeat(3,minmax(0,1fr))]">
+                <div className="grid min-w-0 gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(100%,7rem),1fr))]">
                   <div className="grid min-w-0 gap-1.5">
                     <Label htmlFor="temperature">Temp °C</Label>
                     <Input
