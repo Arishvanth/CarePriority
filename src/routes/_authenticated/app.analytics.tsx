@@ -225,7 +225,7 @@ function AnalyticsPage() {
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid min-w-0 gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,13rem),1fr))]">
         <MetricCard
           label={range === "day" ? "Patients today" : `Patients (${RANGES.find((r) => r.key === range)!.label.toLowerCase()})`}
           value={patients.length}
@@ -244,9 +244,9 @@ function AnalyticsPage() {
         />
       </div>
 
-      <div className="mt-6 grid gap-5 lg:mt-8 xl:grid-cols-3">
+      <div className="mt-6 grid min-w-0 gap-5 lg:mt-8 xl:grid-cols-3">
         <Panel
-          className="xl:col-span-2"
+          className="min-w-0 xl:col-span-2"
           title={range === "day" ? "Arrivals through the day" : "Arrivals over time"}
           description={
             range === "day"
@@ -256,7 +256,7 @@ function AnalyticsPage() {
                 : "Total arrivals and high-priority cases per day."
           }
         >
-          <div className="h-72 w-full">
+          <div className="h-72 w-full min-w-0">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={hourly} margin={{ left: -20, right: 8, top: 8 }}>
                 <defs>
@@ -284,7 +284,7 @@ function AnalyticsPage() {
         </Panel>
 
         <Panel title="Triage mix" description="Distribution of priority levels.">
-          <div className="h-72 w-full">
+          <div className="h-72 w-full min-w-0">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie data={mix} dataKey="value" nameKey="name" innerRadius={62} outerRadius={96} paddingAngle={3}>
@@ -319,9 +319,9 @@ function AnalyticsPage() {
         </Panel>
       </div>
 
-      <div className="mt-5 grid gap-5 xl:grid-cols-2">
+      <div className="mt-5 grid min-w-0 gap-5 xl:grid-cols-2">
         <Panel title="Average wait by priority" description="Minutes from registration to being seen.">
-          <div className="h-64 w-full">
+          <div className="h-64 w-full min-w-0">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={waitByPriority} margin={{ left: -20, right: 8, top: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
@@ -350,12 +350,12 @@ function AnalyticsPage() {
           title={range === "day" ? "Today's load" : "Weekly load heatmap"}
           description={range === "day" ? "Where demand concentrates through today." : "Where demand concentrates across the week."}
         >
-          <div className="overflow-x-auto">
-            <table className="w-full border-separate border-spacing-1 text-xs">
+          <div className="min-w-0">
+            <table className="w-full table-fixed border-separate border-spacing-0 text-[10px] min-[420px]:border-spacing-1 min-[420px]:text-xs">
               <caption className="sr-only">Patient load by day and time slot</caption>
               <thead>
                 <tr>
-                  <th scope="col" className="w-10" />
+                  <th scope="col" className="w-8 min-[420px]:w-10" />
                   {heatmap[0].cells.map((cell) => (
                     <th key={cell.slot} scope="col" className="pb-1 font-medium text-muted-foreground">
                       {cell.slot}
@@ -375,7 +375,7 @@ function AnalyticsPage() {
                         <td key={cell.slot}>
                           <div
                             className={cn(
-                              "flex h-9 items-center justify-center rounded-lg font-medium tabular-nums",
+                            "flex min-w-0 items-center justify-center rounded-md py-2 font-medium tabular-nums min-[420px]:h-9 min-[420px]:rounded-lg",
                               intensity > 0.66 ? "text-primary-foreground" : "text-foreground",
                             )}
                             style={{

@@ -206,18 +206,18 @@ function ReferralsPage() {
             description="Referral records appear here when a doctor completes a consultation with the Referred outcome."
           />
         ) : (
-          <ul className="grid gap-3 lg:grid-cols-2">
+          <ul className="grid min-w-0 gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,24rem),1fr))]">
             {rows.map(({ referral, patient }) => (
               <li key={referral.id}>
                 <button
                   type="button"
                   onClick={() => setOpenId((cur) => (cur === referral.id ? null : referral.id))}
-                  className="w-full rounded-xl border border-border bg-surface p-4 text-left transition-colors hover:border-primary/40"
+                  className="w-full min-w-0 rounded-xl border border-border bg-surface p-4 text-left [overflow-wrap:anywhere] transition-colors hover:border-primary/40"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="truncate font-medium text-foreground">{patient.full_name}</p>
-                      <p className="truncate text-xs text-muted-foreground">
+                      <p className="break-words font-medium text-foreground">{patient.full_name}</p>
+                      <p className="break-all text-xs text-muted-foreground">
                         {patient.patient_code}
                         {patient.rfid_tag ? ` · ${patient.rfid_tag}` : ""} · {patient.age}
                         {patient.gender}

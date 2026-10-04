@@ -33,15 +33,15 @@ function Admin() {
             <Button className="bg-primary text-white hover:bg-primary/90"><Plus className="mr-2 h-4 w-4" /> Invite user</Button>
           </div>
         } />
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="glass rounded-3xl p-6 lg:col-span-2">
+      <div className="grid min-w-0 gap-6 lg:grid-cols-3">
+        <div className="glass min-w-0 rounded-3xl p-4 [overflow-wrap:anywhere] sm:p-6 lg:col-span-2">
           <div className="mb-4">
             <h3 className="font-display text-lg font-semibold">Team</h3>
             <p className="text-xs text-muted-foreground">Reception, doctors, and admins.</p>
           </div>
           <div className="divide-y divide-white/5">
             {users.map((u) => (
-              <div key={u.email} className="flex items-center gap-3 py-3">
+              <div key={u.email} className="flex min-w-0 flex-wrap items-center gap-3 py-3">
                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-xs font-semibold text-white">
                   {u.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
                 </div>
@@ -59,7 +59,7 @@ function Admin() {
             ))}
           </div>
         </div>
-        <div className="glass rounded-3xl p-6">
+        <div className="glass min-w-0 rounded-3xl p-4 sm:p-6">
           <h3 className="font-display text-lg font-semibold">Hospital</h3>
           <p className="text-xs text-muted-foreground">Basic clinic profile</p>
           <div className="mt-4 grid gap-3">
@@ -70,8 +70,8 @@ function Admin() {
           </div>
         </div>
       </div>
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <div className="glass rounded-3xl p-6">
+      <div className="mt-6 grid min-w-0 gap-6 lg:grid-cols-2">
+        <div className="glass min-w-0 rounded-3xl p-4 sm:p-6">
           <h3 className="font-display text-lg font-semibold">Triage thresholds</h3>
           <p className="text-xs text-muted-foreground">Tune the AI scoring engine for your population.</p>
           <div className="mt-4 space-y-4">
@@ -80,17 +80,17 @@ function Admin() {
               { l: "Temperature HIGH threshold", d: "Above this triggers HIGH lane", v: "39.0°C" },
               { l: "Heart rate HIGH threshold", d: "Above this triggers HIGH lane", v: "120 bpm" },
             ].map((t) => (
-              <div key={t.l} className="flex items-center gap-4 rounded-2xl border border-white/5 bg-white/[0.02] p-4">
-                <div className="flex-1">
+              <div key={t.l} className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-4 rounded-2xl border border-white/5 bg-white/[0.02] p-4">
+                <div className="min-w-0">
                   <p className="text-sm font-medium">{t.l}</p>
                   <p className="text-xs text-muted-foreground">{t.d}</p>
                 </div>
-                <Input defaultValue={t.v} className="w-24 bg-white/5" />
+                <Input defaultValue={t.v} className="w-20 min-w-0 bg-white/5 sm:w-24" />
               </div>
             ))}
           </div>
         </div>
-        <div className="glass rounded-3xl p-6">
+        <div className="glass min-w-0 rounded-3xl p-4 sm:p-6">
           <h3 className="font-display text-lg font-semibold">System</h3>
           <p className="text-xs text-muted-foreground">Operational toggles</p>
           <div className="mt-4 space-y-3">
@@ -100,8 +100,8 @@ function Admin() {
               { l: "Offline edge mode", d: "Run inference on-prem if internet drops", on: true },
               { l: "Audit trail export", d: "Nightly signed export to encrypted storage", on: false },
             ].map((s) => (
-              <div key={s.l} className="flex items-center justify-between rounded-2xl border border-white/5 bg-white/[0.02] p-4">
-                <div>
+              <div key={s.l} className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border border-white/5 bg-white/[0.02] p-4">
+                <div className="min-w-0">
                   <p className="text-sm font-medium">{s.l}</p>
                   <p className="text-xs text-muted-foreground">{s.d}</p>
                 </div>
