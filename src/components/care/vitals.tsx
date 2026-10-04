@@ -18,11 +18,11 @@ export function VitalsRow({
     { icon: Wind, value: spo2 === null ? "—" : `${spo2}%`, label: "Oxygen saturation", warn: spo2 !== null && spo2 < 94 },
   ];
   return (
-    <dl className={cn("flex items-center gap-3 text-xs", className)}>
+    <dl className={cn("flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs", className)}>
       {items.map((item) => (
         <div
           key={item.label}
-          className={cn("inline-flex items-center gap-1", item.warn ? "font-medium text-danger" : "text-muted-foreground")}
+          className={cn("inline-flex min-w-0 items-center gap-1", item.warn ? "font-medium text-danger" : "text-muted-foreground")}
         >
           <item.icon className="h-3.5 w-3.5" aria-hidden="true" />
           <dt className="sr-only">{item.label}</dt>

@@ -26,11 +26,11 @@ export function Panel({
   flush,
 }: PanelProps) {
   return (
-    <section className={cn("panel rounded-2xl", className)}>
+    <section className={cn("panel min-w-0 max-w-full rounded-2xl [overflow-wrap:anywhere]", className)}>
       {(title || actions) && (
         <header
           className={cn(
-            "flex flex-wrap items-start justify-between gap-3 border-b border-border px-5 py-4",
+            "flex flex-wrap items-start justify-between gap-3 border-b border-border px-4 py-4 sm:px-5",
             headerClassName,
           )}
         >
@@ -40,10 +40,10 @@ export function Panel({
               <p className={cn("mt-0.5 text-sm text-muted-foreground", descriptionClassName)}>{description}</p>
             )}
           </div>
-          {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
+          {actions && <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">{actions}</div>}
         </header>
       )}
-      <div className={cn(flush ? "" : "p-5", bodyClassName)}>{children}</div>
+      <div className={cn("min-w-0 max-w-full", flush ? "" : "p-4 sm:p-5", bodyClassName)}>{children}</div>
     </section>
   );
 }

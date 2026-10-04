@@ -57,7 +57,7 @@ export function AppShell() {
   const visibleAccountNav = accountNav.filter((item) => canAccess(role, item.to));
 
   const sidebar = (
-    <div className="flex h-full flex-col px-3 py-4">
+    <div className="flex min-h-full flex-col px-3 py-4">
       <div className="px-2">
         <Logo to={home} />
       </div>
@@ -89,7 +89,7 @@ export function AppShell() {
       <p
         role="status"
         aria-live="polite"
-        className="mt-auto mb-2 flex items-center gap-2 px-3 text-[11px] text-muted-foreground"
+        className="mt-auto mb-2 flex min-w-0 items-start gap-2 px-3 pt-4 text-[11px] text-muted-foreground [overflow-wrap:anywhere]"
       >
         <span
           className={
@@ -129,18 +129,20 @@ export function AppShell() {
         Skip to content
       </a>
 
-      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r border-border bg-sidebar lg:block">
+      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 overflow-y-auto border-r border-border bg-sidebar lg:block">
         {sidebar}
       </aside>
 
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <button
+          <Button
+            type="button"
+            variant="ghost"
             className="absolute inset-0 bg-foreground/20 backdrop-blur-sm"
             onClick={() => setMobileOpen(false)}
             aria-label="Close navigation"
           />
-          <div className="absolute inset-y-0 left-0 w-72 border-r border-border bg-sidebar shadow-lift animate-rise">
+          <div className="absolute inset-y-0 left-0 w-[min(18rem,calc(100vw-2rem))] overflow-y-auto border-r border-border bg-sidebar shadow-lift animate-rise">
             {sidebar}
           </div>
         </div>
@@ -148,24 +150,27 @@ export function AppShell() {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border bg-background/85 px-4 backdrop-blur-xl lg:px-8">
-          <button
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground lg:hidden"
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="h-10 w-10 shrink-0 lg:hidden"
             onClick={() => setMobileOpen(true)}
             aria-label="Open navigation"
           >
             {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-          </button>
+          </Button>
           <div className="lg:hidden">
             <Logo to={home} compact />
           </div>
 
-          <div className="ml-auto flex items-center gap-2">
-            <span className="hidden items-center gap-1.5 rounded-full border border-success/25 bg-success-soft px-2.5 py-1 text-xs font-medium text-success sm:inline-flex">
-              <CircleCheck className="h-3.5 w-3.5" /> Live sync active
+          <div className="ml-auto flex shrink-0 items-center gap-2">
+            <span className={cn("hidden items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium md:inline-flex", liveStatus === "live" ? "border-success/25 bg-success-soft text-success" : "border-warning/35 bg-warning-soft text-foreground")} role="status">
+              <CircleCheck className="h-3.5 w-3.5" /> {liveStatus === "live" ? "Live sync active" : liveStatus === "disconnected" ? "Sync disconnected" : "Connecting…"}
             </span>
             <Link
               to="/app/notifications"
-              className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               aria-label={`Notifications${unread ? `, ${unread} unread` : ""}`}
             >
               <Bell className="h-4 w-4" />
@@ -177,18 +182,18 @@ export function AppShell() {
             </Link>
             <Link
               to="/app/profile"
-              className="flex h-9 items-center gap-2 rounded-lg border border-border px-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="flex h-10 min-w-0 items-center gap-2 rounded-lg border border-border px-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">
                 {initials(displayName)}
               </span>
-              <span className="hidden max-w-28 truncate sm:inline">{displayName}</span>
+              <span className="hidden max-w-20 truncate sm:inline xl:max-w-28" title={displayName}>{displayName}</span>
             </Link>
           </div>
         </header>
 
-        <main id="main" className="min-w-0 flex-1 px-4 py-6 lg:px-8 lg:py-8">
-          <Outlet />
+        <main id="main" className="min-w-0 flex-1 px-3 py-5 sm:px-4 sm:py-6 lg:px-8 lg:py-8">
+          <div className="mx-auto w-full min-w-0 max-w-[112rem] [overflow-wrap:anywhere]"><Outlet /></div>
         </main>
       </div>
     </div>
@@ -216,13 +221,13 @@ function NavItem({
       onClick={onNavigate}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+        "flex min-h-10 min-w-0 items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
         active
           ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
           : "text-muted-foreground hover:bg-muted hover:text-foreground",
       )}
     >
-      <Icon className={cn("h-4 w-4", active && "text-primary")} aria-hidden="true" />
+      <Icon className={cn("h-4 w-4 shrink-0", active && "text-primary")} aria-hidden="true" />
       {label}
       {badge !== undefined && (
         <span className="ml-auto rounded-full bg-danger px-1.5 text-[10px] font-semibold text-danger-foreground">

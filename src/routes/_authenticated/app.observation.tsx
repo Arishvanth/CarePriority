@@ -176,7 +176,7 @@ function ObservationPage() {
         description="Patients kept under observation after consultation, with their live vitals and timeline."
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid min-w-0 gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,13rem),1fr))]">
         <MetricCard label="Under observation" value={observed.length} icon={Activity} tone="primary" loading={isLoading} />
         <MetricCard
           label="Rooms in use"
@@ -264,7 +264,7 @@ function ObservationPage() {
             description="Patients marked as Observation after a consultation appear here."
           />
         ) : (
-          <div className="grid gap-4 xl:grid-cols-2">
+          <div className="grid min-w-0 gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,25rem),1fr))]">
             {list.map((patient) => (
               <ObservationCard
                 key={patient.id}
@@ -289,7 +289,7 @@ function ObservationPage() {
           }
         }}
       >
-        <DialogContent className="w-[calc(100vw-2rem)] max-w-md overflow-x-hidden rounded-2xl">
+        <DialogContent className="max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-md overflow-y-auto overflow-x-hidden rounded-2xl">
           <DialogHeader>
             <DialogTitle>
               {exitTarget?.outcome === "referred" ? "Refer patient onward" : "Discharge from observation"}
@@ -354,10 +354,10 @@ function ObservationCard({
   onExit: (outcome: "discharged" | "referred") => void;
 }) {
   return (
-    <article className="panel flex flex-col gap-4 rounded-2xl p-4">
+    <article className="panel flex min-w-0 flex-col gap-4 rounded-2xl p-4 [overflow-wrap:anywhere]">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
-          <h3 className="truncate font-display text-base font-semibold text-foreground">{patient.full_name}</h3>
+          <h3 className="break-words font-display text-base font-semibold text-foreground">{patient.full_name}</h3>
           <p className="text-xs text-muted-foreground">
             {patient.patient_code} · {patient.age}
             {patient.gender} · started {relativeTime(patient.observation_started_at ?? patient.updated_at)}
@@ -366,7 +366,7 @@ function ObservationCard({
         <PriorityChip priority={patient.priority} />
       </div>
 
-      <dl className="grid grid-cols-2 gap-3 text-sm">
+      <dl className="grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,9rem),1fr))] gap-3 text-sm">
         <div>
           <dt className="text-xs uppercase tracking-wide text-muted-foreground">Room / bed</dt>
           <dd className="mt-0.5 font-medium text-foreground">
@@ -528,7 +528,7 @@ function ObservationUpdateDialog({
             <Field label="Bed number" value={form.bed_number} onChange={(v) => setForm({ ...form, bed_number: v })} placeholder="e.g. B2" />
           </div>
           <Field label="Current condition" value={form.condition} onChange={(v) => setForm({ ...form, condition: v })} placeholder="e.g. Stable, responding to fluids" />
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid min-w-0 gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,7rem),1fr))]">
             <Field label="Temp (°C)" value={form.temperature} onChange={(v) => setForm({ ...form, temperature: v })} placeholder="37.0" inputMode="decimal" />
             <Field label="Heart rate" value={form.heart_rate} onChange={(v) => setForm({ ...form, heart_rate: v })} placeholder="80" inputMode="numeric" />
             <Field label="SpO₂ (%)" value={form.spo2} onChange={(v) => setForm({ ...form, spo2: v })} placeholder="98" inputMode="numeric" />

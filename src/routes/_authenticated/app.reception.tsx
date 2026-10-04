@@ -345,7 +345,7 @@ function ReceptionPage() {
         </div>
       )}
 
-      <div className="grid min-w-0 gap-5 2xl:grid-cols-[minmax(320px,2fr)_minmax(0,3fr)]">
+      <div className="grid min-w-0 gap-5 2xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
         {/* ── 2. Patient intake ─────────────────────────────────────── */}
         <div className="min-w-0 space-y-4">
           <section className="min-w-0" aria-labelledby="intake-heading">
@@ -417,7 +417,7 @@ function ReceptionPage() {
                 </fieldset>
 
                 <div className="grid min-w-0 gap-1.5">
-                  <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+                  <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
                     <Label htmlFor="symptoms">Presenting symptoms</Label>
                     <Button className="shrink-0" type="button" size="sm" variant="ghost" onClick={simulateVoiceCapture}>
                       {listening ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Mic className="h-3.5 w-3.5" />}
@@ -440,7 +440,7 @@ function ReceptionPage() {
                 <p className="-mb-1 text-xs text-muted-foreground">
                   Vitals optional, entered manually (no device connected) — blank vitals flag the patient “Assessment Pending”.
                 </p>
-                <div className="grid min-w-0 gap-2.5 sm:grid-cols-[repeat(3,minmax(0,1fr))]">
+                <div className="grid min-w-0 gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(100%,7rem),1fr))]">
                   <div className="grid min-w-0 gap-1.5">
                     <Label htmlFor="temperature">Temp °C</Label>
                     <Input
@@ -547,7 +547,7 @@ function ReceptionPage() {
             </div>
 
 
-            <div className="mt-4 grid min-w-0 items-stretch gap-3 md:grid-cols-[repeat(2,minmax(0,1fr))] xl:grid-cols-[repeat(3,minmax(0,1fr))]">
+            <div className="mt-4 grid min-w-0 items-stretch gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,17rem),1fr))]">
               {(["HIGH", "MODERATE", "LOW"] as Priority[]).map((key) => (
                 <Panel
                   key={key}
@@ -592,7 +592,7 @@ function ReceptionPage() {
         </div>
       </div>
 
-      <div className="grid gap-5 items-stretch lg:grid-cols-3">
+      <div className="grid min-w-0 items-stretch gap-5 [grid-template-columns:repeat(auto-fit,minmax(min(100%,19rem),1fr))]">
         {/* ── Triage breakdown preview ─────────────────────────────── */}
         <section className="flex h-full flex-col">
           <SectionLabel>Triage breakdown</SectionLabel>
@@ -714,8 +714,8 @@ function ReceptionPage() {
         ) : filtered.length === 0 ? (
           <EmptyState icon={Search} title="No matching patients" description="Try a different name, ID or wristband tag." />
         ) : (
-          <div className="relative w-full max-w-full overflow-x-auto">
-            <table className="w-full min-w-[720px] text-sm" aria-label="Registered patients with triage results">
+          <div className="relative w-full max-w-full min-w-0">
+            <table className="mobile-records w-full min-w-0 text-sm" aria-label="Registered patients with triage results">
               <thead>
                 <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground [&>th]:px-5 [&>th]:py-3 [&>th]:font-medium">
                   <th scope="col">Patient</th>
@@ -736,25 +736,25 @@ function ReceptionPage() {
                     className="cursor-pointer transition-colors hover:bg-muted/50 [&>td]:px-5 [&>td]:py-3"
                     onClick={() => setRecordId((cur) => (cur === p.id ? null : p.id))}
                   >
-                    <td>
+                    <td data-label="Patient">
                       <div className="font-medium text-foreground">{p.full_name}</div>
                       <div className="text-xs text-muted-foreground">{p.patient_code}</div>
                     </td>
-                    <td className="text-muted-foreground">
+                    <td data-label="Age" className="text-muted-foreground">
                       {p.age} · {p.gender}
                     </td>
-                    <td className="font-mono text-xs text-muted-foreground">{p.rfid_tag ?? "—"}</td>
-                    <td>
+                    <td data-label="Wristband" className="font-mono text-xs text-muted-foreground">{p.rfid_tag ?? "—"}</td>
+                    <td data-label="Vitals">
                       <VitalsRow temperature={p.temperature} heartRate={p.heart_rate} spo2={p.spo2} />
                     </td>
-                    <td className="font-medium tabular-nums text-foreground">{p.triage_score}</td>
-                    <td>
+                    <td data-label="Score" className="font-medium tabular-nums text-foreground">{p.triage_score}</td>
+                    <td data-label="Priority">
                       <PriorityChip priority={p.priority} />
                     </td>
-                    <td>
+                    <td data-label="Status">
                       <StatusChip status={p.status} />
                     </td>
-                    <td>
+                    <td data-label="Assessment">
                       {missingAssessment(p).length > 0 ? (
                         <AssessmentPendingChip />
                       ) : (

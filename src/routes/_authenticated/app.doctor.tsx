@@ -250,7 +250,7 @@ function DoctorPage() {
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid min-w-0 gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,13rem),1fr))]">
         <MetricCard label="Waiting" value={queue.length} icon={Clock3} tone="warning" loading={isLoading} />
         <MetricCard
           label="High priority"
@@ -263,8 +263,8 @@ function DoctorPage() {
         <MetricCard label="Seen today" value={completedToday} icon={CheckCircle2} tone="success" loading={isLoading} />
       </div>
 
-      <div className="mt-6 grid gap-5 xl:grid-cols-5 lg:mt-8">
-        <div className="space-y-5 xl:col-span-2">
+      <div className="mt-6 grid min-w-0 gap-5 xl:grid-cols-5 lg:mt-8">
+        <div className="min-w-0 space-y-5 xl:col-span-2">
           <Panel title="Call next patient" description="Scan a wristband, or pick from the queue below.">
             <RfidScanner onScan={handleScan} state={scanState} message={scanMessage} label="Scan to call patient" />
           </Panel>
@@ -297,7 +297,7 @@ function DoctorPage() {
           </Panel>
         </div>
 
-        <div className="space-y-5 xl:col-span-3">
+        <div className="min-w-0 space-y-5 xl:col-span-3">
           {!selected ? (
             <Panel title="Patient record">
               <EmptyState
@@ -495,10 +495,10 @@ function DoctorPage() {
                   return (
                     <li key={c.id} className="flex flex-wrap items-center gap-3 px-5 py-3.5">
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-foreground">
+                        <p className="break-words text-sm font-medium text-foreground">
                           {patient?.full_name ?? "Unknown patient"}
                         </p>
-                        <p className="truncate text-xs text-muted-foreground">
+                        <p className="break-words text-xs text-muted-foreground">
                           {c.diagnosis || "Diagnosis pending"}
                         </p>
                       </div>
@@ -516,7 +516,7 @@ function DoctorPage() {
       <AssessmentDialog patient={assessTarget} onOpenChange={(open) => !open && setAssessTarget(null)} />
 
       <AlertDialog open={!!confirmTarget} onOpenChange={(open) => !open && setConfirmTarget(null)}>
-        <AlertDialogContent className="w-[calc(100vw-2rem)] max-w-md">
+        <AlertDialogContent className="max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-md overflow-y-auto [overflow-wrap:anywhere]">
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm consultation outcome</AlertDialogTitle>
             <AlertDialogDescription>

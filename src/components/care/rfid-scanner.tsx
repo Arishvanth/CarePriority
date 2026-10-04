@@ -65,7 +65,7 @@ export function RfidScanner({ onScan, state, message, className, label = "Simula
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-foreground">RFID wristband (demo reader)</p>
-          <p className="truncate text-xs text-muted-foreground">
+          <p className="break-words text-xs text-muted-foreground">
             {message ??
               (state === "scanning" ? "Simulating a wristband read…" : "Demo scan — no hardware reader is connected. Search manually to load a patient.")}
           </p>

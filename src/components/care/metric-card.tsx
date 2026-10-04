@@ -33,14 +33,14 @@ export function MetricCard({
   loading,
 }: MetricCardProps) {
   return (
-    <article className="panel panel-lift rounded-2xl p-5">
+    <article className="panel panel-lift min-w-0 rounded-2xl p-4 sm:p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
           {loading ? (
             <Skeleton className="mt-2.5 h-8 w-16" />
           ) : (
-            <p className="mt-1.5 font-display text-3xl font-semibold tabular-nums text-foreground">
+            <p className="mt-1.5 break-all font-display text-2xl font-semibold tabular-nums text-foreground sm:text-3xl">
               {value}
             </p>
           )}

@@ -101,7 +101,7 @@ function AuthPage() {
   return (
     <div className="relative min-h-screen overflow-hidden">
       <div className="absolute inset-0 bg-grid opacity-40" />
-      <div className="relative mx-auto grid min-h-screen max-w-6xl grid-cols-1 gap-10 px-6 py-10 lg:grid-cols-2 lg:items-center">
+      <div className="relative mx-auto grid min-h-screen max-w-6xl min-w-0 grid-cols-1 gap-10 px-3 py-6 sm:px-6 sm:py-10 lg:grid-cols-2 lg:items-center">
         <div className="hidden lg:block">
           <Logo />
           <h2 className="mt-16 font-display text-5xl font-semibold leading-tight tracking-tight">
@@ -127,9 +127,9 @@ function AuthPage() {
           </div>
         </div>
 
-        <div className="mx-auto w-full max-w-md">
+        <div className="mx-auto w-full min-w-0 max-w-md">
           <div className="lg:hidden"><Logo /></div>
-          <div className="mt-6 rounded-3xl border border-border bg-card p-8 shadow-lg">
+          <div className="mt-6 min-w-0 rounded-3xl border border-border bg-card p-4 shadow-lg sm:p-8">
             <div className="mb-6">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted px-3 py-1 text-[11px] font-medium text-muted-foreground">
                 <ShieldCheck className="h-3.5 w-3.5 text-primary" /> Secure staff access
@@ -186,10 +186,10 @@ function AuthPage() {
                     key={a.email}
                     type="button"
                     onClick={() => { setEmail(a.email); setPassword(a.password); setErrors({}); }}
-                    className="flex items-center justify-between rounded-lg px-2 py-1.5 text-left text-xs transition-colors hover:bg-background"
+                    className="flex min-h-10 min-w-0 flex-wrap items-center justify-between gap-1 rounded-lg px-2 py-1.5 text-left text-xs transition-colors hover:bg-background"
                   >
                     <span className="font-medium">{a.label}</span>
-                    <span className="text-muted-foreground">{a.email}</span>
+                    <span className="min-w-0 break-all text-muted-foreground">{a.email}</span>
                   </button>
                 ))}
               </div>
