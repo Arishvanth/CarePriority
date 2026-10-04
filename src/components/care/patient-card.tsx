@@ -67,7 +67,7 @@ export function PatientCard({ patient, onSelect, onEmergency, selected, compact 
       }
       aria-label={onSelect ? `Open record for ${patient.full_name}` : undefined}
       className={cn(
-        "group relative overflow-hidden rounded-xl border bg-surface p-3 pl-4 text-left transition-all duration-200",
+        "group relative min-w-0 rounded-xl border bg-surface p-3 pl-4 text-left [overflow-wrap:anywhere] transition-all duration-200",
         onSelect && "cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
         selected ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-primary/35 hover:shadow-soft",
       )}
@@ -81,7 +81,7 @@ export function PatientCard({ patient, onSelect, onEmergency, selected, compact 
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center gap-2">
-            <h3 className="truncate text-sm font-semibold text-foreground">
+            <h3 className="min-w-0 break-words text-sm font-semibold text-foreground">
               {patient.full_name}
               <span className="ml-1.5 font-normal text-muted-foreground">
                 {patient.age}
@@ -93,7 +93,7 @@ export function PatientCard({ patient, onSelect, onEmergency, selected, compact 
             )}
           </div>
           <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
-            <span className="inline-flex items-center gap-1 truncate">
+            <span className="inline-flex min-w-0 flex-wrap items-center gap-1 break-all">
               <IdCard className="h-3 w-3" aria-hidden="true" />
               {patient.patient_code}
               {patient.rfid_tag ? ` · ${patient.rfid_tag}` : ""}
@@ -124,7 +124,7 @@ export function PatientCard({ patient, onSelect, onEmergency, selected, compact 
       </div>
 
       {/* Vitals */}
-      <div className="mt-2.5 grid grid-cols-3 gap-1.5">
+      <div className="mt-2.5 grid grid-cols-[repeat(auto-fit,minmax(min(100%,4.5rem),1fr))] gap-1.5">
         <Vital
           icon={Thermometer}
           label="Temp"
@@ -146,7 +146,7 @@ export function PatientCard({ patient, onSelect, onEmergency, selected, compact 
       </div>
 
       {!compact && patient.symptoms && (
-        <p className="mt-3 line-clamp-2 text-xs text-muted-foreground">{patient.symptoms}</p>
+        <p className="mt-3 break-words text-xs text-muted-foreground">{patient.symptoms}</p>
       )}
 
       {canEscalate && (
@@ -155,7 +155,7 @@ export function PatientCard({ patient, onSelect, onEmergency, selected, compact 
             type="button"
             size="sm"
             variant="ghost"
-            className="h-7 px-2 text-xs text-danger hover:bg-danger-soft hover:text-danger"
+            className="min-h-10 max-w-full whitespace-normal px-2 text-xs text-danger hover:bg-danger-soft hover:text-danger"
             onClick={(e) => {
               e.stopPropagation();
               onEmergency?.(patient);

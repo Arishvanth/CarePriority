@@ -8,3 +8,4 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+Use shrink-safe containers, fluid grids and stacked mobile records for shared clinical UI; this prevents future nested overflow without hiding information.
