@@ -22,7 +22,7 @@ export const Route = createFileRoute("/_authenticated/app/history")({
   beforeLoad: () => requireRole(["doctor", "admin"]),
   head: () => ({
     meta: [
-      { title: "Patient history — CarePriority" },
+      { title: "Patient history — CarePriority" }, { property: "og:title", content: "Patient history — CarePriority" }, { property: "og:description", content: "Read-only record of past consultations, outcomes and observation timelines." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
       { name: "description", content: "Read-only record of past consultations, outcomes and observation timelines." },
       { name: "robots", content: "noindex" },
     ],
@@ -175,16 +175,16 @@ function HistoryPage() {
       </Panel>
 
       <Dialog open={!!open} onOpenChange={(o) => !o && setOpenId(null)}>
-        <DialogContent className="flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-3xl flex-col gap-0 overflow-hidden p-0 sm:rounded-2xl">
-          <DialogHeader className="border-b border-border px-5 py-4 text-left">
+        <DialogContent className="flex h-[min(48rem,calc(100dvh-2rem))] max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-3xl flex-col gap-0 overflow-hidden p-0 sm:rounded-2xl">
+          <ScrollArea className="min-h-0 min-w-0 flex-1">
+          <DialogHeader className="border-b border-border py-4 pl-5 pr-14 text-left">
             <DialogTitle className="font-display text-base font-semibold text-foreground">
               {open ? `${open.patient.full_name} — record detail` : "Record detail"}
             </DialogTitle>
             <DialogDescription>Read-only history. Nothing here can be edited.</DialogDescription>
           </DialogHeader>
           {open && (
-            <ScrollArea className="min-h-0 flex-1">
-              <div className="space-y-5 px-5 py-5">
+              <div className="min-w-0 space-y-5 px-5 py-5">
                 <div className="flex flex-wrap items-center gap-2">
                   <PriorityChip priority={open.patient.priority} />
                   <StatusChip status={open.patient.status} />
@@ -260,8 +260,8 @@ function HistoryPage() {
                   )}
                 </div>
               </div>
-            </ScrollArea>
           )}
+          </ScrollArea>
         </DialogContent>
       </Dialog>
     </>

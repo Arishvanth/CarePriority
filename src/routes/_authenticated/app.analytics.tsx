@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_authenticated/app/analytics")({
   beforeLoad: () => requireRole(["admin", "doctor"]),
   head: () => ({
     meta: [
-      { title: "Analytics — CarePriority" },
+      { title: "Analytics — CarePriority" }, { property: "og:title", content: "Analytics — CarePriority" }, { property: "og:description", content: "Patient flow, triage mix and waiting-time analytics for your clinic." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
       { name: "description", content: "Patient flow, triage mix and waiting-time analytics for your clinic." },
       { name: "robots", content: "noindex" },
     ],

@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 
 export const Route = createFileRoute("/_authenticated/app/settings")({
-  head: () => ({ meta: [{ title: "Settings — CarePriority" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Settings — CarePriority" }, { name: "description", content: "CarePriority staff preferences and account settings." }, { property: "og:title", content: "Settings — CarePriority" }, { property: "og:description", content: "CarePriority staff preferences and account settings." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }),
   component: Settings,
 });
 

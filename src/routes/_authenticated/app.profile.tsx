@@ -10,7 +10,7 @@ import { initials } from "@/lib/format";
 export const Route = createFileRoute("/_authenticated/app/profile")({
   head: () => ({
     meta: [
-      { title: "Profile — CarePriority" },
+      { title: "Profile — CarePriority" }, { property: "og:title", content: "Profile — CarePriority" }, { property: "og:description", content: "Your clinical profile, role and activity summary." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
       { name: "description", content: "Your clinical profile, role and activity summary." },
       { name: "robots", content: "noindex" },
     ],

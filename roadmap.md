@@ -1,6 +1,7 @@
 # Roadmap
 
 - [ ] Responsive foundation across all CarePriority screens; verify phone through wide desktop without changing data.
+- [ ] Verify and harden remaining responsive issues with long-text and short-height browser checks; no production record writes.
 - [ ] Make referred consultation referral writes deterministic and idempotent.
 - [ ] Enforce the referred status invariant in the database.
 - [ ] Correct only pending referrals linked to referred consultations.

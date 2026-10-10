@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_authenticated/app/referrals")({
   beforeLoad: () => requireRole(["doctor", "admin"]),
   head: () => ({
     meta: [
-      { title: "Referrals — CarePriority" },
+      { title: "Referrals — CarePriority" }, { property: "og:title", content: "Referrals — CarePriority" }, { property: "og:description", content: "Track every patient referred onward, their destination and referral status." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
       { name: "description", content: "Track every patient referred onward, their destination and referral status." },
       { name: "robots", content: "noindex" },
     ],

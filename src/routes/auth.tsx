@@ -28,7 +28,7 @@ const DEMO_ACCOUNTS = import.meta.env.DEV
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Sign in — CarePriority" },
+      { title: "Sign in — CarePriority" }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
       { name: "description", content: "Sign in to the CarePriority console to triage patients, run live queues, and view analytics." },
       { property: "og:title", content: "Sign in — CarePriority" },
       { property: "og:description", content: "Access the smart triage console." },

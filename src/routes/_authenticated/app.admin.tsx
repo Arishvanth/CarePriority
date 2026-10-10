@@ -9,7 +9,7 @@ import { BarChart3, Plus, ShieldCheck, Stethoscope, Trash2, User } from "lucide-
 
 export const Route = createFileRoute("/_authenticated/app/admin")({
   beforeLoad: () => requireRole(["admin"]),
-  head: () => ({ meta: [{ title: "Admin — CarePriority" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Admin — CarePriority" }, { name: "description", content: "Clinic administration and access settings." }, { property: "og:title", content: "Admin — CarePriority" }, { property: "og:description", content: "Clinic administration and access settings." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }),
   component: Admin,
 });
 
