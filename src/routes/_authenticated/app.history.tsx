@@ -22,7 +22,7 @@ export const Route = createFileRoute("/_authenticated/app/history")({
   beforeLoad: () => requireRole(["doctor", "admin"]),
   head: () => ({
     meta: [
-      { title: "Patient history — CarePriority" },
+      { title: "Patient history — CarePriority" }, { property: "og:title", content: "Patient history — CarePriority" }, { property: "og:description", content: "Read-only record of past consultations, outcomes and observation timelines." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
       { name: "description", content: "Read-only record of past consultations, outcomes and observation timelines." },
       { name: "robots", content: "noindex" },
     ],

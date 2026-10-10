@@ -50,7 +50,7 @@ export const Route = createFileRoute("/_authenticated/app/doctor")({
   beforeLoad: () => requireRole(["doctor", "nurse", "admin"]),
   head: () => ({
     meta: [
-      { title: "Doctor console — CarePriority" },
+      { title: "Doctor console — CarePriority" }, { property: "og:title", content: "Doctor console — CarePriority" }, { property: "og:description", content: "Scan wristbands, review triage evidence and record consultations." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
       { name: "description", content: "Scan wristbands, review triage evidence and record consultations." },
       { name: "robots", content: "noindex" },
     ],

@@ -38,7 +38,7 @@ export const Route = createFileRoute("/_authenticated/app/reception")({
   beforeLoad: () => requireRole(["receptionist", "nurse", "admin"]),
   head: () => ({
     meta: [
-      { title: "Reception — CarePriority" },
+      { title: "Reception — CarePriority" }, { property: "og:title", content: "Reception — CarePriority" }, { property: "og:description", content: "Register patients, capture vitals and run the live triage queue." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
       { name: "description", content: "Register patients, capture vitals and run the live triage queue." },
       { name: "robots", content: "noindex" },
     ],

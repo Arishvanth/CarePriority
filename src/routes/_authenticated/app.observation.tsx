@@ -35,7 +35,7 @@ export const Route = createFileRoute("/_authenticated/app/observation")({
   beforeLoad: () => requireRole(["doctor", "admin"]),
   head: () => ({
     meta: [
-      { title: "Observation monitoring — CarePriority" },
+      { title: "Observation monitoring — CarePriority" }, { property: "og:title", content: "Observation monitoring — CarePriority" }, { property: "og:description", content: "Monitor patients under observation, update vitals, rooms and clinical notes." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
       { name: "description", content: "Monitor patients under observation, update vitals, rooms and clinical notes." },
       { name: "robots", content: "noindex" },
     ],

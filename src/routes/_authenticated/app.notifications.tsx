@@ -17,7 +17,7 @@ import type { Alert } from "@/data/types";
 export const Route = createFileRoute("/_authenticated/app/notifications")({
   head: () => ({
     meta: [
-      { title: "Notifications — CarePriority" },
+      { title: "Notifications — CarePriority" }, { property: "og:title", content: "Notifications — CarePriority" }, { property: "og:description", content: "Emergency, overflow and triage alerts with email and SMS escalation." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
       { name: "description", content: "Emergency, overflow and triage alerts with email and SMS escalation." },
       { name: "robots", content: "noindex" },
     ],
