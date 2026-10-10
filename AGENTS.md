@@ -9,3 +9,4 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 Use shrink-safe containers, fluid grids and stacked mobile records for shared clinical UI; this prevents future nested overflow without hiding information.
+Keep shared ScrollArea content block-sized and dialog headers clear of close controls; this prevents intrinsic-width clipping and overlapping long titles.
