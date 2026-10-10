@@ -177,7 +177,7 @@ function HistoryPage() {
       <Dialog open={!!open} onOpenChange={(o) => !o && setOpenId(null)}>
         <DialogContent className="flex h-[min(48rem,calc(100dvh-2rem))] max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-3xl flex-col gap-0 overflow-hidden p-0 sm:rounded-2xl">
           <ScrollArea className="min-h-0 min-w-0 flex-1">
-          <DialogHeader className="border-b border-border px-5 py-4 text-left">
+          <DialogHeader className="border-b border-border py-4 pl-5 pr-14 text-left">
             <DialogTitle className="font-display text-base font-semibold text-foreground">
               {open ? `${open.patient.full_name} — record detail` : "Record detail"}
             </DialogTitle>
