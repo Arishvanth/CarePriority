@@ -10,3 +10,4 @@
 <!-- LOVABLE:END -->
 Use shrink-safe containers, fluid grids and stacked mobile records for shared clinical UI; this prevents future nested overflow without hiding information.
 Keep shared ScrollArea content block-sized and dialog headers clear of close controls; this prevents intrinsic-width clipping and overlapping long titles.
+- New accounts always get the least-privileged role in the signup trigger; never read roles from signup metadata, because users control it.
