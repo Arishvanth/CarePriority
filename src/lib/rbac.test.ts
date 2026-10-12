@@ -6,7 +6,7 @@ const { canAccess, homeForRole } = await import("./rbac");
 describe("route access matrix", () => {
   it("keeps receptionists out of clinical and admin consoles", () => {
     for (const p of ["/app/doctor", "/app/observation", "/app/referrals", "/app/history", "/app/analytics", "/app/admin"]) {
-      expect(canAccess("receptionist", p)).toBe(p === "/app/doctor" ? false : false);
+      expect(canAccess("receptionist", p)).toBe(false);
     }
     expect(canAccess("receptionist", "/app/reception")).toBe(true);
   });
