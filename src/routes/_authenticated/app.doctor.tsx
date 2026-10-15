@@ -29,12 +29,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { usePatients, useConsultations, queryKeys } from "@/hooks/use-care-data";
 import { useSession, useProfile } from "@/hooks/use-session";
 import { findByRfid, updatePatient } from "@/data/patients";
-import {
-  startConsultation, completeConsultation, setFinalOutcome, resolveConsultationId,
-} from "@/data/consultations";
-import { createReferral } from "@/data/referrals";
+import { startConsultation, completeConsultation } from "@/data/consultations";
+import { completeReferredConsultation, resolveDoctorConsultationId } from "@/data/referral-workflow";
 import { addObservationEvent } from "@/data/observations";
-import { createAlert } from "@/data/alerts";
 import type { Patient } from "@/data/types";
 import { waitMinutes, relativeTime } from "@/lib/format";
 
@@ -128,9 +125,23 @@ function DoctorPage() {
       if (outcome === "referred" && !referralDestination.trim()) {
         throw new Error("Record a referral destination.");
       }
+      if (outcome === "referred") {
+        // Every step is repeatable; a retry resumes the same consultation.
+        await completeReferredConsultation({
+          patient,
+          doctorId: user?.id ?? null,
+          doctorName: profile?.full_name || user?.email || "Doctor",
+          preferredConsultationId: activeConsultId,
+          notes,
+          diagnosis,
+          reason: referralReason,
+          destination: referralDestination,
+        });
+        return;
+      }
       // Page state is only a hint — after a refresh it is gone, so resolve the
       // patient's own open consultation (or start one) before saving anything.
-      const consultId = await resolveConsultationId(patient.id, user?.id ?? null, activeConsultId);
+      const consultId = await resolveDoctorConsultationId(patient.id, user?.id ?? null, activeConsultId);
       await completeConsultation(consultId, { notes: notes.trim(), diagnosis: diagnosis.trim(), outcome });
       if (outcome === "observation") {
         const startedAt = new Date().toISOString();
@@ -156,27 +167,6 @@ function DoctorPage() {
         });
       } else {
         await updatePatient(patient.id, { status: "completed" });
-      }
-      if (outcome === "referred") {
-        await setFinalOutcome(consultId, "referred", referralReason.trim());
-        await createReferral({
-          patient_id: patient.id,
-          consultation_id: consultId,
-          doctor_id: user?.id ?? null,
-          doctor_name: profile?.full_name || user?.email || "Doctor",
-          diagnosis: diagnosis.trim(),
-          notes: notes.trim(),
-          reason: referralReason.trim(),
-          destination: referralDestination.trim(),
-        });
-        await createAlert({
-          kind: "referral",
-          severity: "warning",
-          title: `Referral raised — ${patient.full_name}`,
-          message: `${patient.patient_code} referred onward: ${diagnosis.trim()}.`,
-          audience: "receptionist",
-          patient_id: patient.id,
-        });
       }
     },
     onSuccess: () => {
