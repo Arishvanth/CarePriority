@@ -15,6 +15,7 @@ import { AssessmentDialog } from "@/components/care/assessment-dialog";
 import { AssessmentPendingChip, PriorityChip, StatusChip } from "@/components/care/chips";
 import { TriageBreakdown } from "@/components/care/triage-breakdown";
 import { RfidScanner, type ScanState } from "@/components/care/rfid-scanner";
+import { HardwareStatus } from "@/components/care/hardware-status";
 import { VitalsRow } from "@/components/care/vitals";
 import { EmptyState } from "@/components/care/empty-state";
 import { CardsSkeleton, TableSkeleton } from "@/components/care/loading";
@@ -702,6 +703,8 @@ function ReceptionPage() {
           </Panel>
         </section>
       </div>
+
+      <HardwareStatus className="mt-6 lg:mt-8" />
 
       <Panel
         className="mt-6 lg:mt-8"
