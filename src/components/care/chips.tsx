@@ -41,7 +41,10 @@ export function StatusChip({ status, className }: { status: PatientStatus; class
 
 export function AssessmentPendingChip({ className }: { className?: string }) {
   return (
-    <Chip className={cn("border-warning/35 bg-warning-soft text-warning-foreground", className)} dot="bg-warning">
+    <Chip
+      className={cn("border-warning/35 bg-warning-soft text-warning-foreground", className)}
+      dot="bg-warning"
+    >
       Assessment Pending
     </Chip>
   );

@@ -14,7 +14,10 @@ export async function fetchConsultations(): Promise<Consultation[]> {
   return rows as unknown as Consultation[];
 }
 
-export async function startConsultation(patientId: string, doctorId: string | null): Promise<string> {
+export async function startConsultation(
+  patientId: string,
+  doctorId: string | null,
+): Promise<string> {
   const { data, error } = await supabase
     .from("consultations")
     .insert({ patient_id: patientId, doctor_id: doctorId } as never)
@@ -81,7 +84,11 @@ export async function completeConsultation(
   await assertOutcomeAllowed(payload.outcome);
   const { error } = await supabase
     .from("consultations")
-    .update({ ...payload, final_outcome: payload.outcome, ended_at: new Date().toISOString() } as never)
+    .update({
+      ...payload,
+      final_outcome: payload.outcome,
+      ended_at: new Date().toISOString(),
+    } as never)
     .eq("id", id);
   if (error) throw error;
 }

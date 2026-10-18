@@ -2,7 +2,10 @@
 const PAGE_SIZE = 1000;
 
 interface RangeQuery<T> {
-  range(from: number, to: number): PromiseLike<{ data: T[] | null; error: { message: string } | null }>;
+  range(
+    from: number,
+    to: number,
+  ): PromiseLike<{ data: T[] | null; error: { message: string } | null }>;
 }
 
 /**

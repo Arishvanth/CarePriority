@@ -28,6 +28,9 @@ export function nextPatientCode(): string {
 }
 
 export function randomRfid(): string {
-  const hex = Math.floor(Math.random() * 0xffff).toString(16).toUpperCase().padStart(4, "0");
+  const hex = Math.floor(Math.random() * 0xffff)
+    .toString(16)
+    .toUpperCase()
+    .padStart(4, "0");
   return `RF-${hex}`;
 }

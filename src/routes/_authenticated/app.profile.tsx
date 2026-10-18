@@ -10,7 +10,11 @@ import { initials } from "@/lib/format";
 export const Route = createFileRoute("/_authenticated/app/profile")({
   head: () => ({
     meta: [
-      { title: "Profile — CarePriority" }, { property: "og:title", content: "Profile — CarePriority" }, { property: "og:description", content: "Your clinical profile, role and activity summary." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
+      { title: "Profile — CarePriority" },
+      { property: "og:title", content: "Profile — CarePriority" },
+      { property: "og:description", content: "Your clinical profile, role and activity summary." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "description", content: "Your clinical profile, role and activity summary." },
       { name: "robots", content: "noindex" },
     ],
@@ -49,7 +53,12 @@ function ProfilePage() {
       </Panel>
 
       <div className="mt-5 grid gap-4 sm:grid-cols-3">
-        <MetricCard label="Patients today" value={patients.length} icon={Stethoscope} loading={isLoading} />
+        <MetricCard
+          label="Patients today"
+          value={patients.length}
+          icon={Stethoscope}
+          loading={isLoading}
+        />
         <MetricCard
           label="Completed"
           value={patients.filter((p) => p.status === "completed").length}

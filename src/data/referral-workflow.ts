@@ -1,6 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
 import { assertOutcomeAllowed } from "@/lib/rbac";
-import { findOpenConsultationId, consultationBelongsToPatient, startConsultation } from "./consultations";
+import {
+  findOpenConsultationId,
+  consultationBelongsToPatient,
+  startConsultation,
+} from "./consultations";
 import { createReferral, type NewReferral } from "./referrals";
 import { createAlert } from "./alerts";
 import { updatePatient } from "./patients";
@@ -27,15 +31,28 @@ export interface ReferredCompletionInput {
 }
 
 export interface ReferredWorkflowDeps {
-  resolveConsultation(patientId: string, doctorId: string | null, preferredId: string | null): Promise<string>;
-  recordReferredOutcome(consultationId: string, p: { notes: string; diagnosis: string; reason: string }): Promise<void>;
+  resolveConsultation(
+    patientId: string,
+    doctorId: string | null,
+    preferredId: string | null,
+  ): Promise<string>;
+  recordReferredOutcome(
+    consultationId: string,
+    p: { notes: string; diagnosis: string; reason: string },
+  ): Promise<void>;
   createReferral(input: NewReferral): Promise<string>;
-  ensureReferralAlert(consultationId: string, patient: ReferredCompletionInput["patient"], diagnosis: string): Promise<void>;
+  ensureReferralAlert(
+    consultationId: string,
+    patient: ReferredCompletionInput["patient"],
+    diagnosis: string,
+  ): Promise<void>;
   closeConsultation(consultationId: string): Promise<void>;
   markPatientCompleted(patientId: string): Promise<void>;
 }
 
-export function validateReferredInput(input: Pick<ReferredCompletionInput, "diagnosis" | "reason" | "destination">) {
+export function validateReferredInput(
+  input: Pick<ReferredCompletionInput, "diagnosis" | "reason" | "destination">,
+) {
   if (!input.diagnosis.trim()) throw new Error("Record a diagnosis before completing.");
   if (!input.reason.trim()) throw new Error("Record a reason for the referral.");
   if (!input.destination.trim()) throw new Error("Record a referral destination.");
@@ -49,7 +66,11 @@ export async function completeReferredConsultation(
   const notes = input.notes.trim();
   const diagnosis = input.diagnosis.trim();
   const reason = input.reason.trim();
-  const consultationId = await deps.resolveConsultation(input.patient.id, input.doctorId, input.preferredConsultationId);
+  const consultationId = await deps.resolveConsultation(
+    input.patient.id,
+    input.doctorId,
+    input.preferredConsultationId,
+  );
   await deps.recordReferredOutcome(consultationId, { notes, diagnosis, reason });
   const referralId = await deps.createReferral({
     patient_id: input.patient.id,
@@ -77,7 +98,8 @@ export async function resolveDoctorConsultationId(
   doctorId: string | null,
   preferredId: string | null,
 ): Promise<string> {
-  if (preferredId && (await consultationBelongsToPatient(preferredId, patientId))) return preferredId;
+  if (preferredId && (await consultationBelongsToPatient(preferredId, patientId)))
+    return preferredId;
   const open = await findOpenConsultationId(patientId);
   if (open) return open;
 

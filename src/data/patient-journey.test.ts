@@ -32,7 +32,11 @@ function makeJourney() {
     observationEvents: [] as { patient: string; consultation: string | null; kind: string }[],
   };
 
-  function register(id: string, symptoms: string, vitals: { temperature?: number; heartRate?: number; spo2?: number; age?: number }) {
+  function register(
+    id: string,
+    symptoms: string,
+    vitals: { temperature?: number; heartRate?: number; spo2?: number; age?: number },
+  ) {
     const triage = scoreTriage({ symptoms, ...vitals });
     s.patients.push({
       id,
@@ -58,7 +62,8 @@ function makeJourney() {
 
   const deps: Deps = {
     async resolveConsultation(patientId, _d, preferred) {
-      if (preferred && s.consultations.some((c) => c.id === preferred && c.patient === patientId)) return preferred;
+      if (preferred && s.consultations.some((c) => c.id === preferred && c.patient === patientId))
+        return preferred;
       const open = s.consultations.find((c) => c.patient === patientId && !c.ended);
       if (open) return open.id;
       const p = s.patients.find((x) => x.id === patientId)!;
@@ -109,7 +114,12 @@ const referredInput = (patientId: string, preferred: string | null) => ({
 describe("patient journey", () => {
   it("1. registration establishes triage and queue state", () => {
     const { s, register } = makeJourney();
-    const triage = register("p1", "severe chest pain", { temperature: 38.5, heartRate: 120, spo2: 95, age: 65 });
+    const triage = register("p1", "severe chest pain", {
+      temperature: 38.5,
+      heartRate: 120,
+      spo2: 95,
+      age: 65,
+    });
     expect(triage.priority).toBe("HIGH");
     expect(triage.score).toBeGreaterThanOrEqual(55);
     expect(triage.factors.length).toBeGreaterThan(0);
@@ -120,7 +130,10 @@ describe("patient journey", () => {
     const { s, register, startConsult, deps } = makeJourney();
     register("p1", "headache", { age: 40 });
     const cid = startConsult("p1");
-    const { consultationId, referralId } = await completeReferredConsultation(referredInput("p1", cid), deps);
+    const { consultationId, referralId } = await completeReferredConsultation(
+      referredInput("p1", cid),
+      deps,
+    );
     expect(consultationId).toBe(cid);
     expect(referralId).toBe("r1");
     expect(s.consultations[0]).toMatchObject({ ended: true, outcome: "referred" });
@@ -148,7 +161,12 @@ describe("patient journey", () => {
     s.observationEvents.push({ patient: "p1", consultation: "c1", kind: "admitted" });
     Object.assign(p, observationExitPatch());
     s.observationEvents.push({ patient: "p1", consultation: "c1", kind: "discharged" });
-    expect(p).toMatchObject({ status: "completed", room_number: null, bed_number: null, observation_started_at: null });
+    expect(p).toMatchObject({
+      status: "completed",
+      room_number: null,
+      bed_number: null,
+      observation_started_at: null,
+    });
     expect(s.observationEvents.map((e) => e.kind)).toEqual(["admitted", "discharged"]);
   });
 
@@ -169,7 +187,9 @@ describe("patient journey", () => {
         return deps.closeConsultation(id);
       },
     };
-    await expect(completeReferredConsultation(referredInput("p1", cid), flaky)).rejects.toThrow("closeConsultation");
+    await expect(completeReferredConsultation(referredInput("p1", cid), flaky)).rejects.toThrow(
+      "closeConsultation",
+    );
     // Refresh: page state (preferred id) is gone; the retry must resume the
     // same consultation, not start a second one or duplicate the referral.
     await completeReferredConsultation(referredInput("p1", null), deps);
@@ -181,21 +201,51 @@ describe("patient journey", () => {
 
   it("5. observation exit patch never leaks episode fields into history", () => {
     const patch = observationExitPatch();
-    expect(patch).toEqual({ status: "completed", room_number: null, bed_number: null, observation_started_at: null });
+    expect(patch).toEqual({
+      status: "completed",
+      room_number: null,
+      bed_number: null,
+      observation_started_at: null,
+    });
   });
 
   it("6. emergency override orders first without displacing the wrong patient", () => {
     const rows = [
-      { id: "a", triage_score: 80, emergency_override: false, registered_at: "2026-01-01T08:00:00Z" },
-      { id: "b", triage_score: 40, emergency_override: true, registered_at: "2026-01-01T09:00:00Z" },
-      { id: "c", triage_score: 90, emergency_override: false, registered_at: "2026-01-01T07:00:00Z" },
+      {
+        id: "a",
+        triage_score: 80,
+        emergency_override: false,
+        registered_at: "2026-01-01T08:00:00Z",
+      },
+      {
+        id: "b",
+        triage_score: 40,
+        emergency_override: true,
+        registered_at: "2026-01-01T09:00:00Z",
+      },
+      {
+        id: "c",
+        triage_score: 90,
+        emergency_override: false,
+        registered_at: "2026-01-01T07:00:00Z",
+      },
     ];
     const ordered = [...rows].sort(compareQueueRows).map((r) => r.id);
     expect(ordered).toEqual(["b", "c", "a"]); // override first, then score desc
     // ties on score fall back to earliest arrival
     const tied = [
-      { id: "x", triage_score: 50, emergency_override: false, registered_at: "2026-01-01T10:00:00Z" },
-      { id: "y", triage_score: 50, emergency_override: false, registered_at: "2026-01-01T09:00:00Z" },
+      {
+        id: "x",
+        triage_score: 50,
+        emergency_override: false,
+        registered_at: "2026-01-01T10:00:00Z",
+      },
+      {
+        id: "y",
+        triage_score: 50,
+        emergency_override: false,
+        registered_at: "2026-01-01T09:00:00Z",
+      },
     ];
     expect([...tied].sort(compareQueueRows).map((r) => r.id)).toEqual(["y", "x"]);
   });

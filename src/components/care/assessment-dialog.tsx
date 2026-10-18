@@ -4,7 +4,12 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,7 +47,13 @@ export function AssessmentDialog({ patient, onOpenChange }: AssessmentDialogProp
       const heart_rate = form.heart_rate.trim() ? Number(form.heart_rate) : null;
       const spo2 = form.spo2.trim() ? Number(form.spo2) : null;
       const symptoms = form.symptoms.trim();
-      const result = scoreTriage({ symptoms, temperature, heartRate: heart_rate, spo2, age: target.age });
+      const result = scoreTriage({
+        symptoms,
+        temperature,
+        heartRate: heart_rate,
+        spo2,
+        age: target.age,
+      });
       const priority = target.emergency_override ? target.priority : result.priority;
       await updatePatient(target.id, {
         temperature,

@@ -1,8 +1,18 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
-  Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer,
-  Tooltip, XAxis, YAxis,
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
 } from "recharts";
 import { Activity, Clock3, Siren, TrendingUp } from "lucide-react";
 
@@ -18,8 +28,18 @@ export const Route = createFileRoute("/_authenticated/app/analytics")({
   beforeLoad: () => requireRole(["admin", "doctor"]),
   head: () => ({
     meta: [
-      { title: "Analytics — CarePriority" }, { property: "og:title", content: "Analytics — CarePriority" }, { property: "og:description", content: "Patient flow, triage mix and waiting-time analytics for your clinic." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
-      { name: "description", content: "Patient flow, triage mix and waiting-time analytics for your clinic." },
+      { title: "Analytics — CarePriority" },
+      { property: "og:title", content: "Analytics — CarePriority" },
+      {
+        property: "og:description",
+        content: "Patient flow, triage mix and waiting-time analytics for your clinic.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      {
+        name: "description",
+        content: "Patient flow, triage mix and waiting-time analytics for your clinic.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -162,7 +182,11 @@ function AnalyticsPage() {
         const avg = group.length
           ? Math.round(group.reduce((sum, p) => sum + waitFor(p), 0) / group.length)
           : 0;
-        return { name: key === "HIGH" ? "High" : key === "MODERATE" ? "Moderate" : "Low", key, minutes: avg };
+        return {
+          name: key === "HIGH" ? "High" : key === "MODERATE" ? "Moderate" : "Low",
+          key,
+          minutes: avg,
+        };
       }),
     [patients, waitFor],
   );
@@ -204,7 +228,11 @@ function AnalyticsPage() {
         title="Clinic performance"
         description="Understand demand patterns, triage mix and where waiting time builds up."
         actions={
-          <div className="inline-flex flex-wrap rounded-lg border border-border bg-card p-0.5" role="group" aria-label="Time range">
+          <div
+            className="inline-flex flex-wrap rounded-lg border border-border bg-card p-0.5"
+            role="group"
+            aria-label="Time range"
+          >
             {RANGES.map((r) => (
               <button
                 key={r.key}
@@ -227,14 +255,30 @@ function AnalyticsPage() {
 
       <div className="grid min-w-0 gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,13rem),1fr))]">
         <MetricCard
-          label={range === "day" ? "Patients today" : `Patients (${RANGES.find((r) => r.key === range)!.label.toLowerCase()})`}
+          label={
+            range === "day"
+              ? "Patients today"
+              : `Patients (${RANGES.find((r) => r.key === range)!.label.toLowerCase()})`
+          }
           value={patients.length}
           icon={Activity}
           tone="primary"
           loading={isLoading}
         />
-        <MetricCard label="Average wait" value={`${avgWait}m`} icon={Clock3} tone="warning" loading={isLoading} />
-        <MetricCard label="High priority share" value={`${highShare}%`} icon={Siren} tone="danger" loading={isLoading} />
+        <MetricCard
+          label="Average wait"
+          value={`${avgWait}m`}
+          icon={Clock3}
+          tone="warning"
+          loading={isLoading}
+        />
+        <MetricCard
+          label="High priority share"
+          value={`${highShare}%`}
+          icon={Siren}
+          tone="danger"
+          loading={isLoading}
+        />
         <MetricCard
           label="Consultations"
           value={consultations.length}
@@ -266,8 +310,20 @@ function AnalyticsPage() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                <XAxis dataKey="hour" tickLine={false} axisLine={false} fontSize={11} stroke="var(--muted-foreground)" />
-                <YAxis tickLine={false} axisLine={false} fontSize={11} stroke="var(--muted-foreground)" allowDecimals={false} />
+                <XAxis
+                  dataKey="hour"
+                  tickLine={false}
+                  axisLine={false}
+                  fontSize={11}
+                  stroke="var(--muted-foreground)"
+                />
+                <YAxis
+                  tickLine={false}
+                  axisLine={false}
+                  fontSize={11}
+                  stroke="var(--muted-foreground)"
+                  allowDecimals={false}
+                />
                 <Tooltip
                   contentStyle={{
                     borderRadius: 12,
@@ -276,8 +332,20 @@ function AnalyticsPage() {
                     fontSize: 12,
                   }}
                 />
-                <Area type="monotone" dataKey="arrivals" stroke="var(--primary)" strokeWidth={2} fill="url(#arrivals)" />
-                <Area type="monotone" dataKey="high" stroke="var(--danger)" strokeWidth={2} fill="transparent" />
+                <Area
+                  type="monotone"
+                  dataKey="arrivals"
+                  stroke="var(--primary)"
+                  strokeWidth={2}
+                  fill="url(#arrivals)"
+                />
+                <Area
+                  type="monotone"
+                  dataKey="high"
+                  stroke="var(--danger)"
+                  strokeWidth={2}
+                  fill="transparent"
+                />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -287,9 +355,21 @@ function AnalyticsPage() {
           <div className="h-72 w-full min-w-0">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={mix} dataKey="value" nameKey="name" innerRadius={62} outerRadius={96} paddingAngle={3}>
+                <Pie
+                  data={mix}
+                  dataKey="value"
+                  nameKey="name"
+                  innerRadius={62}
+                  outerRadius={96}
+                  paddingAngle={3}
+                >
                   {mix.map((entry) => (
-                    <Cell key={entry.key} fill={PRIORITY_COLORS[entry.key]} stroke="var(--card)" strokeWidth={2} />
+                    <Cell
+                      key={entry.key}
+                      fill={PRIORITY_COLORS[entry.key]}
+                      stroke="var(--card)"
+                      strokeWidth={2}
+                    />
                   ))}
                 </Pie>
                 <Tooltip
@@ -312,7 +392,9 @@ function AnalyticsPage() {
                   aria-hidden="true"
                 />
                 <span className="text-muted-foreground">{entry.name}</span>
-                <span className="ml-auto font-medium tabular-nums text-foreground">{entry.value}</span>
+                <span className="ml-auto font-medium tabular-nums text-foreground">
+                  {entry.value}
+                </span>
               </li>
             ))}
           </ul>
@@ -320,13 +402,27 @@ function AnalyticsPage() {
       </div>
 
       <div className="mt-5 grid min-w-0 gap-5 xl:grid-cols-2">
-        <Panel title="Average wait by priority" description="Minutes from registration to being seen.">
+        <Panel
+          title="Average wait by priority"
+          description="Minutes from registration to being seen."
+        >
           <div className="h-64 w-full min-w-0">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={waitByPriority} margin={{ left: -20, right: 8, top: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                <XAxis dataKey="name" tickLine={false} axisLine={false} fontSize={11} stroke="var(--muted-foreground)" />
-                <YAxis tickLine={false} axisLine={false} fontSize={11} stroke="var(--muted-foreground)" />
+                <XAxis
+                  dataKey="name"
+                  tickLine={false}
+                  axisLine={false}
+                  fontSize={11}
+                  stroke="var(--muted-foreground)"
+                />
+                <YAxis
+                  tickLine={false}
+                  axisLine={false}
+                  fontSize={11}
+                  stroke="var(--muted-foreground)"
+                />
                 <Tooltip
                   cursor={{ fill: "var(--muted)" }}
                   contentStyle={{
@@ -348,7 +444,11 @@ function AnalyticsPage() {
 
         <Panel
           title={range === "day" ? "Today's load" : "Weekly load heatmap"}
-          description={range === "day" ? "Where demand concentrates through today." : "Where demand concentrates across the week."}
+          description={
+            range === "day"
+              ? "Where demand concentrates through today."
+              : "Where demand concentrates across the week."
+          }
         >
           <div className="min-w-0">
             <table className="w-full table-fixed border-separate border-spacing-0 text-[10px] min-[420px]:border-spacing-1 min-[420px]:text-xs">
@@ -357,7 +457,11 @@ function AnalyticsPage() {
                 <tr>
                   <th scope="col" className="w-8 min-[420px]:w-10" />
                   {heatmap[0].cells.map((cell) => (
-                    <th key={cell.slot} scope="col" className="pb-1 font-medium text-muted-foreground">
+                    <th
+                      key={cell.slot}
+                      scope="col"
+                      className="pb-1 font-medium text-muted-foreground"
+                    >
                       {cell.slot}
                     </th>
                   ))}
@@ -375,7 +479,7 @@ function AnalyticsPage() {
                         <td key={cell.slot}>
                           <div
                             className={cn(
-                            "flex min-w-0 items-center justify-center rounded-md py-2 font-medium tabular-nums min-[420px]:h-9 min-[420px]:rounded-lg",
+                              "flex min-w-0 items-center justify-center rounded-md py-2 font-medium tabular-nums min-[420px]:h-9 min-[420px]:rounded-lg",
                               intensity > 0.66 ? "text-primary-foreground" : "text-foreground",
                             )}
                             style={{

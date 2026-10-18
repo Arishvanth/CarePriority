@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { createHardwareService, describeStatus } from "./service";
-import { createBuzzerPlaceholder, createOledPlaceholder, createPulseOxSimulator, createRfidSimulator, createTemperatureSimulator } from "./simulators";
+import {
+  createBuzzerPlaceholder,
+  createOledPlaceholder,
+  createPulseOxSimulator,
+  createRfidSimulator,
+  createTemperatureSimulator,
+} from "./simulators";
 import type { HardwareAdapters, TemperatureAdapter } from "./types";
 
 describe("describeStatus", () => {
@@ -21,7 +27,13 @@ describe("simulators", () => {
   it("never report connected and flag readings as simulated", async () => {
     const svc = createHardwareService();
     const all = await svc.getStatus();
-    expect(all.map((d) => d.kind)).toEqual(["rfid", "temperature", "pulse_oximeter", "oled", "buzzer"]);
+    expect(all.map((d) => d.kind)).toEqual([
+      "rfid",
+      "temperature",
+      "pulse_oximeter",
+      "oled",
+      "buzzer",
+    ]);
     expect(all.every((d) => d.status !== "connected")).toBe(true);
   });
   it("produce plausible simulated readings", async () => {
@@ -33,14 +45,28 @@ describe("simulators", () => {
     expect(p).toEqual({ ok: true, simulated: true, value: { heartRate: 79, spo2: 97 } });
   });
   it("output devices return not_connected instead of faking", async () => {
-    expect(await createOledPlaceholder().showText(["hi"])).toMatchObject({ ok: false, reason: "not_connected" });
-    expect(await createBuzzerPlaceholder().beep("alert")).toMatchObject({ ok: false, reason: "not_connected" });
+    expect(await createOledPlaceholder().showText(["hi"])).toMatchObject({
+      ok: false,
+      reason: "not_connected",
+    });
+    expect(await createBuzzerPlaceholder().beep("alert")).toMatchObject({
+      ok: false,
+      reason: "not_connected",
+    });
   });
   it("a throwing check is reported disconnected", async () => {
-    const broken: TemperatureAdapter = { ...createTemperatureSimulator(), checkStatus: async () => { throw new Error("x"); } };
+    const broken: TemperatureAdapter = {
+      ...createTemperatureSimulator(),
+      checkStatus: async () => {
+        throw new Error("x");
+      },
+    };
     const adapters: HardwareAdapters = {
-      rfid: createRfidSimulator(), temperature: broken, pulse_oximeter: createPulseOxSimulator(),
-      oled: createOledPlaceholder(), buzzer: createBuzzerPlaceholder(),
+      rfid: createRfidSimulator(),
+      temperature: broken,
+      pulse_oximeter: createPulseOxSimulator(),
+      oled: createOledPlaceholder(),
+      buzzer: createBuzzerPlaceholder(),
     };
     const s = await createHardwareService(adapters).getStatus();
     expect(s[1].status).toBe("disconnected");

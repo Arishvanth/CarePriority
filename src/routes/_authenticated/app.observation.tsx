@@ -17,13 +17,26 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
-import { usePatients, useConsultations, useObservationEvents, queryKeys } from "@/hooks/use-care-data";
+import {
+  usePatients,
+  useConsultations,
+  useObservationEvents,
+  queryKeys,
+} from "@/hooks/use-care-data";
 import { useSession, useProfile } from "@/hooks/use-session";
 import { updatePatient } from "@/data/patients";
 import {
-  addObservationEvent, findAdmissionConsultationId, observationExitPatch, type ObservationEvent,
+  addObservationEvent,
+  findAdmissionConsultationId,
+  observationExitPatch,
+  type ObservationEvent,
 } from "@/data/observations";
 import { setFinalOutcome, resolveConsultationId } from "@/data/consultations";
 import { createAlert } from "@/data/alerts";
@@ -35,8 +48,18 @@ export const Route = createFileRoute("/_authenticated/app/observation")({
   beforeLoad: () => requireRole(["doctor", "admin"]),
   head: () => ({
     meta: [
-      { title: "Observation monitoring — CarePriority" }, { property: "og:title", content: "Observation monitoring — CarePriority" }, { property: "og:description", content: "Monitor patients under observation, update vitals, rooms and clinical notes." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
-      { name: "description", content: "Monitor patients under observation, update vitals, rooms and clinical notes." },
+      { title: "Observation monitoring — CarePriority" },
+      { property: "og:title", content: "Observation monitoring — CarePriority" },
+      {
+        property: "og:description",
+        content: "Monitor patients under observation, update vitals, rooms and clinical notes.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      {
+        name: "description",
+        content: "Monitor patients under observation, update vitals, rooms and clinical notes.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -61,7 +84,10 @@ function ObservationPage() {
   const [roomFilter, setRoomFilter] = useState("all");
   const [sort, setSort] = useState<SortKey>("started");
   const [updateTarget, setUpdateTarget] = useState<Patient | null>(null);
-  const [exitTarget, setExitTarget] = useState<{ patient: Patient; outcome: "discharged" | "referred" } | null>(null);
+  const [exitTarget, setExitTarget] = useState<{
+    patient: Patient;
+    outcome: "discharged" | "referred";
+  } | null>(null);
   const [exitDestination, setExitDestination] = useState("");
 
   const observed = useMemo(() => patients.filter((p) => p.status === "observation"), [patients]);
@@ -109,7 +135,10 @@ function ObservationPage() {
       const admissionId = await findAdmissionConsultationId(patient.id);
       const consultId =
         admissionId ??
-        (await resolveConsultationId(patient.id, patient.observation_doctor_id ?? user?.id ?? null));
+        (await resolveConsultationId(
+          patient.id,
+          patient.observation_doctor_id ?? user?.id ?? null,
+        ));
       const consult = consultations.find((c) => c.id === consultId);
       await setFinalOutcome(consultId, outcome);
       await addObservationEvent({
@@ -124,7 +153,10 @@ function ObservationPage() {
         temperature: patient.temperature,
         heart_rate: patient.heart_rate,
         spo2: patient.spo2,
-        notes: outcome === "referred" ? "Referred onward from observation." : "Discharged from observation.",
+        notes:
+          outcome === "referred"
+            ? "Referred onward from observation."
+            : "Discharged from observation.",
       });
       // Observation-only fields belong to the episode, not the finished record.
       // The timeline in observation_events keeps the full history.
@@ -172,7 +204,13 @@ function ObservationPage() {
       />
 
       <div className="grid min-w-0 gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,13rem),1fr))]">
-        <MetricCard label="Under observation" value={observed.length} icon={Activity} tone="primary" loading={isLoading} />
+        <MetricCard
+          label="Under observation"
+          value={observed.length}
+          icon={Activity}
+          tone="primary"
+          loading={isLoading}
+        />
         <MetricCard
           label="Rooms in use"
           value={rooms.length}
@@ -273,7 +311,10 @@ function ObservationPage() {
         )}
       </Panel>
 
-      <ObservationUpdateDialog patient={updateTarget} onOpenChange={(o) => !o && setUpdateTarget(null)} />
+      <ObservationUpdateDialog
+        patient={updateTarget}
+        onOpenChange={(o) => !o && setUpdateTarget(null)}
+      />
 
       <Dialog
         open={!!exitTarget}
@@ -287,11 +328,13 @@ function ObservationPage() {
         <DialogContent className="max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-md overflow-y-auto overflow-x-hidden rounded-2xl">
           <DialogHeader>
             <DialogTitle>
-              {exitTarget?.outcome === "referred" ? "Refer patient onward" : "Discharge from observation"}
+              {exitTarget?.outcome === "referred"
+                ? "Refer patient onward"
+                : "Discharge from observation"}
             </DialogTitle>
             <DialogDescription>
-              {exitTarget?.patient.full_name} leaves the observation dashboard. The full observation history is
-              preserved in Patient History.
+              {exitTarget?.patient.full_name} leaves the observation dashboard. The full observation
+              history is preserved in Patient History.
             </DialogDescription>
           </DialogHeader>
           {exitTarget?.outcome === "referred" && (
@@ -320,8 +363,7 @@ function ObservationPage() {
             </Button>
             <Button
               disabled={
-                exit.isPending ||
-                (exitTarget?.outcome === "referred" && !exitDestination.trim())
+                exit.isPending || (exitTarget?.outcome === "referred" && !exitDestination.trim())
               }
               onClick={() =>
                 exitTarget && exit.mutate({ ...exitTarget, destination: exitDestination.trim() })
@@ -352,10 +394,13 @@ function ObservationCard({
     <article className="panel flex min-w-0 flex-col gap-4 rounded-2xl p-4 [overflow-wrap:anywhere]">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
-          <h3 className="break-words font-display text-base font-semibold text-foreground">{patient.full_name}</h3>
+          <h3 className="break-words font-display text-base font-semibold text-foreground">
+            {patient.full_name}
+          </h3>
           <p className="text-xs text-muted-foreground">
             {patient.patient_code} · {patient.age}
-            {patient.gender} · started {relativeTime(patient.observation_started_at ?? patient.updated_at)}
+            {patient.gender} · started{" "}
+            {relativeTime(patient.observation_started_at ?? patient.updated_at)}
           </p>
         </div>
         <PriorityChip priority={patient.priority} />
@@ -372,12 +417,16 @@ function ObservationCard({
         </div>
         <div>
           <dt className="text-xs uppercase tracking-wide text-muted-foreground">Condition</dt>
-          <dd className="mt-0.5 font-medium text-foreground">{patient.condition || "Not recorded"}</dd>
+          <dd className="mt-0.5 font-medium text-foreground">
+            {patient.condition || "Not recorded"}
+          </dd>
         </div>
         <div>
           <dt className="text-xs uppercase tracking-wide text-muted-foreground">Assigned doctor</dt>
           <dd className="mt-0.5 text-foreground">
-            {patient.observation_doctor_id ? `Doctor ${patient.observation_doctor_id.slice(0, 8)}` : "Unassigned"}
+            {patient.observation_doctor_id
+              ? `Doctor ${patient.observation_doctor_id.slice(0, 8)}`
+              : "Unassigned"}
           </dd>
         </div>
         <div>
@@ -387,7 +436,11 @@ function ObservationCard({
       </dl>
 
       <div className="rounded-xl border border-border p-3">
-        <VitalsRow temperature={patient.temperature} heartRate={patient.heart_rate} spo2={patient.spo2} />
+        <VitalsRow
+          temperature={patient.temperature}
+          heartRate={patient.heart_rate}
+          spo2={patient.spo2}
+        />
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -403,13 +456,18 @@ function ObservationCard({
       </div>
 
       <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Observation timeline</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Observation timeline
+        </p>
         {timeline.length === 0 ? (
           <p className="mt-2 text-sm text-muted-foreground">No updates recorded yet.</p>
         ) : (
           <ol className="mt-2 space-y-2">
             {timeline.slice(0, 4).map((entry) => (
-              <li key={entry.id} className="rounded-lg border border-border bg-muted/40 p-3 text-sm">
+              <li
+                key={entry.id}
+                className="rounded-lg border border-border bg-muted/40 p-3 text-sm"
+              >
                 <p className="flex flex-wrap justify-between gap-2 text-xs text-muted-foreground">
                   <span>{new Date(entry.created_at).toLocaleString()}</span>
                   <span>{entry.author_name || "Staff"}</span>
@@ -476,7 +534,14 @@ function ObservationUpdateDialog({
       const bed_number = form.bed_number.trim() || null;
       const condition = form.condition.trim();
 
-      await updatePatient(target.id, { temperature, heart_rate, spo2, room_number, bed_number, condition });
+      await updatePatient(target.id, {
+        temperature,
+        heart_rate,
+        spo2,
+        room_number,
+        bed_number,
+        condition,
+      });
       await addObservationEvent({
         patient_id: target.id,
         consultation_id: consultations.find((c) => c.patient_id === target.id)?.id ?? null,
@@ -508,7 +573,8 @@ function ObservationUpdateDialog({
         <DialogHeader>
           <DialogTitle>Update observation</DialogTitle>
           <DialogDescription>
-            {patient?.full_name} · {patient?.patient_code}. Each save adds a timestamped timeline entry.
+            {patient?.full_name} · {patient?.patient_code}. Each save adds a timestamped timeline
+            entry.
           </DialogDescription>
         </DialogHeader>
         <form
@@ -519,14 +585,47 @@ function ObservationUpdateDialog({
           }}
         >
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Room number" value={form.room_number} onChange={(v) => setForm({ ...form, room_number: v })} placeholder="e.g. 12" />
-            <Field label="Bed number" value={form.bed_number} onChange={(v) => setForm({ ...form, bed_number: v })} placeholder="e.g. B2" />
+            <Field
+              label="Room number"
+              value={form.room_number}
+              onChange={(v) => setForm({ ...form, room_number: v })}
+              placeholder="e.g. 12"
+            />
+            <Field
+              label="Bed number"
+              value={form.bed_number}
+              onChange={(v) => setForm({ ...form, bed_number: v })}
+              placeholder="e.g. B2"
+            />
           </div>
-          <Field label="Current condition" value={form.condition} onChange={(v) => setForm({ ...form, condition: v })} placeholder="e.g. Stable, responding to fluids" />
+          <Field
+            label="Current condition"
+            value={form.condition}
+            onChange={(v) => setForm({ ...form, condition: v })}
+            placeholder="e.g. Stable, responding to fluids"
+          />
           <div className="grid min-w-0 gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,7rem),1fr))]">
-            <Field label="Temp (°C)" value={form.temperature} onChange={(v) => setForm({ ...form, temperature: v })} placeholder="37.0" inputMode="decimal" />
-            <Field label="Heart rate" value={form.heart_rate} onChange={(v) => setForm({ ...form, heart_rate: v })} placeholder="80" inputMode="numeric" />
-            <Field label="SpO₂ (%)" value={form.spo2} onChange={(v) => setForm({ ...form, spo2: v })} placeholder="98" inputMode="numeric" />
+            <Field
+              label="Temp (°C)"
+              value={form.temperature}
+              onChange={(v) => setForm({ ...form, temperature: v })}
+              placeholder="37.0"
+              inputMode="decimal"
+            />
+            <Field
+              label="Heart rate"
+              value={form.heart_rate}
+              onChange={(v) => setForm({ ...form, heart_rate: v })}
+              placeholder="80"
+              inputMode="numeric"
+            />
+            <Field
+              label="SpO₂ (%)"
+              value={form.spo2}
+              onChange={(v) => setForm({ ...form, spo2: v })}
+              placeholder="98"
+              inputMode="numeric"
+            />
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="obs-notes">Clinical note</Label>
@@ -544,7 +643,11 @@ function ObservationUpdateDialog({
               Cancel
             </Button>
             <Button type="submit" disabled={save.isPending}>
-              {save.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Stethoscope className="h-4 w-4" />}
+              {save.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Stethoscope className="h-4 w-4" />
+              )}
               Save update
             </Button>
           </DialogFooter>
@@ -571,7 +674,13 @@ function Field({
   return (
     <div className="grid min-w-0 gap-1.5">
       <Label htmlFor={id}>{label}</Label>
-      <Input id={id} value={value} inputMode={inputMode} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} />
+      <Input
+        id={id}
+        value={value}
+        inputMode={inputMode}
+        placeholder={placeholder}
+        onChange={(e) => onChange(e.target.value)}
+      />
     </div>
   );
 }

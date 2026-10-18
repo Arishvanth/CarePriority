@@ -36,7 +36,9 @@ export function MetricCard({
     <article className="panel panel-lift min-w-0 rounded-2xl p-4 sm:p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            {label}
+          </p>
           {loading ? (
             <Skeleton className="mt-2.5 h-8 w-16" />
           ) : (
@@ -47,7 +49,10 @@ export function MetricCard({
           {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
         </div>
         <span
-          className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl", toneClasses[tone])}
+          className={cn(
+            "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
+            toneClasses[tone],
+          )}
           aria-hidden="true"
         >
           <Icon className="h-5 w-5" />

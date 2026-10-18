@@ -9,11 +9,19 @@ const tone: Record<DeviceStatus, string> = {
   simulated: "border-warning/40 bg-warning-soft text-foreground",
   disconnected: "border-border bg-muted text-muted-foreground",
 };
-const text: Record<DeviceStatus, string> = { connected: "Connected", simulated: "Demo / simulated", disconnected: "Disconnected" };
+const text: Record<DeviceStatus, string> = {
+  connected: "Connected",
+  simulated: "Demo / simulated",
+  disconnected: "Disconnected",
+};
 
 /** Read-only diagnostics. Does not affect registration, vitals entry, or triage. */
 export function HardwareStatus({ className }: { className?: string }) {
-  const { data = [] } = useQuery({ queryKey: ["hardware-status"], queryFn: () => hardwareService.getStatus(), staleTime: 30_000 });
+  const { data = [] } = useQuery({
+    queryKey: ["hardware-status"],
+    queryFn: () => hardwareService.getStatus(),
+    staleTime: 30_000,
+  });
   return (
     <Panel
       className={className}
@@ -25,7 +33,9 @@ export function HardwareStatus({ className }: { className?: string }) {
           <li key={d.kind} className="min-w-0 rounded-xl border border-border p-3">
             <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
               <span className="text-sm font-medium text-foreground">{d.label}</span>
-              <span className={cn("rounded-full border px-2 py-0.5 text-xs", tone[d.status])}>{text[d.status]}</span>
+              <span className={cn("rounded-full border px-2 py-0.5 text-xs", tone[d.status])}>
+                {text[d.status]}
+              </span>
             </div>
             <p className="mt-1 break-words text-xs text-muted-foreground">{d.detail}</p>
           </li>

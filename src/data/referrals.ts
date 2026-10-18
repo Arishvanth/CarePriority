@@ -115,6 +115,9 @@ async function updateReferralDetails(id: string, input: NewReferral): Promise<st
 }
 
 export async function updateReferralStatus(id: string, status: ReferralStatus): Promise<void> {
-  const { error } = await supabase.from("referrals").update({ status } as never).eq("id", id);
+  const { error } = await supabase
+    .from("referrals")
+    .update({ status } as never)
+    .eq("id", id);
   if (error) throw error;
 }

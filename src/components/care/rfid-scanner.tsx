@@ -21,7 +21,13 @@ interface RfidScannerProps {
  * tag then press Enter. The hidden input captures that; manual search is the
  * documented fallback when a wristband will not read.
  */
-export function RfidScanner({ onScan, state, message, className, label = "Simulate scan (demo)" }: RfidScannerProps) {
+export function RfidScanner({
+  onScan,
+  state,
+  message,
+  className,
+  label = "Simulate scan (demo)",
+}: RfidScannerProps) {
   const [manual, setManual] = useState(false);
   const [value, setValue] = useState("");
   const captureRef = useRef<HTMLInputElement>(null);
@@ -52,7 +58,9 @@ export function RfidScanner({ onScan, state, message, className, label = "Simula
           : "border-border bg-muted/40";
 
   return (
-    <div className={cn("min-w-0 max-w-full rounded-xl border p-4 transition-colors", tone, className)}>
+    <div
+      className={cn("min-w-0 max-w-full rounded-xl border p-4 transition-colors", tone, className)}
+    >
       <div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-3">
         <span
           className={cn(
@@ -67,7 +75,9 @@ export function RfidScanner({ onScan, state, message, className, label = "Simula
           <p className="text-sm font-medium text-foreground">RFID wristband (demo reader)</p>
           <p className="break-words text-xs text-muted-foreground">
             {message ??
-              (state === "scanning" ? "Simulating a wristband read…" : "Demo scan — no hardware reader is connected. Search manually to load a patient.")}
+              (state === "scanning"
+                ? "Simulating a wristband read…"
+                : "Demo scan — no hardware reader is connected. Search manually to load a patient.")}
           </p>
         </div>
       </div>

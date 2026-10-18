@@ -79,10 +79,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "CarePriority — AI Smart Patient Triage & Queue Management" },
-      { name: "description", content: "AI-powered triage & queue management for rural clinics. Prioritize critical patients instantly with symptoms, vitals, and RFID." },
+      {
+        name: "description",
+        content:
+          "AI-powered triage & queue management for rural clinics. Prioritize critical patients instantly with symptoms, vitals, and RFID.",
+      },
       { name: "author", content: "CarePriority" },
       { property: "og:title", content: "CarePriority — Smart Patient Triage Platform" },
-      { property: "og:description", content: "Reduce waiting time for critical patients with AI-driven triage, live queues, and emergency overrides." },
+      {
+        property: "og:description",
+        content:
+          "Reduce waiting time for critical patients with AI-driven triage, live queues, and emergency overrides.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -94,7 +102,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap",
+      },
     ],
   }),
   shellComponent: RootShell,
