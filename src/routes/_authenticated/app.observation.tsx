@@ -128,12 +128,7 @@ function ObservationPage() {
       });
       // Observation-only fields belong to the episode, not the finished record.
       // The timeline in observation_events keeps the full history.
-      await updatePatient(patient.id, {
-        status: "completed",
-        room_number: null,
-        bed_number: null,
-        observation_started_at: null,
-      });
+      await updatePatient(patient.id, observationExitPatch());
       if (outcome === "referred") {
         await createReferral({
           patient_id: patient.id,
