@@ -156,13 +156,27 @@ describe("patient journey", () => {
     const { s, register, startConsult, deps } = makeJourney();
     register("p1", "chest pain", { spo2: 92 });
     const cid = startConsult("p1");
-    await completeReferredConsultation(referredInput("p1", cid), deps);
-    // Refresh: page state (preferred id) is gone; patient already completed
-    // steps must not create a second consultation or referral.
+    // First attempt dies after the referral committed but before the consult
+    // closed — the patient is still "in consult", so a refresh can retry.
+    let failClose = true;
+    const flaky: Deps = {
+      ...deps,
+      async closeConsultation(id) {
+        if (failClose) {
+          failClose = false;
+          throw new Error("network failure in closeConsultation");
+        }
+        return deps.closeConsultation(id);
+      },
+    };
+    await expect(completeReferredConsultation(referredInput("p1", cid), flaky)).rejects.toThrow("closeConsultation");
+    // Refresh: page state (preferred id) is gone; the retry must resume the
+    // same consultation, not start a second one or duplicate the referral.
     await completeReferredConsultation(referredInput("p1", null), deps);
     expect(s.consultations).toHaveLength(1);
     expect(s.referrals).toHaveLength(1);
     expect(s.alerts).toHaveLength(1);
+    expect(s.patients[0].status).toBe("completed");
   });
 
   it("5. observation exit patch never leaks episode fields into history", () => {
