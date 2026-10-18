@@ -40,6 +40,20 @@ export async function addObservationEvent(input: NewObservationEvent): Promise<v
 }
 
 /**
+ * The patient patch applied when an observation episode ends. Observation-only
+ * fields belong to the episode, not the finished record; the timeline in
+ * observation_events keeps the full history.
+ */
+export function observationExitPatch(): {
+  status: "completed";
+  room_number: null;
+  bed_number: null;
+  observation_started_at: null;
+} {
+  return { status: "completed", room_number: null, bed_number: null, observation_started_at: null };
+}
+
+/**
  * The consultation that admitted this patient to observation. This is the
  * authoritative link for the current observation episode — picking the
  * patient's most recent consultation instead can finalise an unrelated visit.
