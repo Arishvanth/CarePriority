@@ -44,6 +44,22 @@ export interface NewPatientInput {
 const QUEUE_FIELDS = ["status", "priority", "triage_score", "emergency_override", "queue_position"] as const;
 
 /**
+ * The queue ordering the UI shows: emergency overrides first, then triage
+ * score descending, then arrival time ascending. Exported so the ordering is
+ * testable without a database.
+ */
+export function compareQueueRows(
+  a: { triage_score: number; emergency_override: boolean; registered_at: string },
+  b: { triage_score: number; emergency_override: boolean; registered_at: string },
+): number {
+  return (
+    Number(b.emergency_override) - Number(a.emergency_override) ||
+    b.triage_score - a.triage_score ||
+    new Date(a.registered_at).getTime() - new Date(b.registered_at).getTime()
+  );
+}
+
+/**
  * Recomputes contiguous queue positions (1..n) for every waiting patient
  * inside each priority lane, using the same ordering the queue UI shows:
  * emergency overrides first, then triage score desc, then arrival time asc.
@@ -71,12 +87,7 @@ export async function resequenceQueue(): Promise<void> {
   }
   const writes: Array<PromiseLike<unknown>> = [];
   for (const lane of lanes.values()) {
-    lane.sort(
-      (a, b) =>
-        Number(b.emergency_override) - Number(a.emergency_override) ||
-        b.triage_score - a.triage_score ||
-        new Date(a.registered_at).getTime() - new Date(b.registered_at).getTime(),
-    );
+    lane.sort(compareQueueRows);
     lane.forEach((row, index) => {
       const position = index + 1;
       if (row.queue_position !== position) {

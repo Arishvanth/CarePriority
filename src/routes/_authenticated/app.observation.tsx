@@ -23,7 +23,7 @@ import { usePatients, useConsultations, useObservationEvents, queryKeys } from "
 import { useSession, useProfile } from "@/hooks/use-session";
 import { updatePatient } from "@/data/patients";
 import {
-  addObservationEvent, findAdmissionConsultationId, type ObservationEvent,
+  addObservationEvent, findAdmissionConsultationId, observationExitPatch, type ObservationEvent,
 } from "@/data/observations";
 import { setFinalOutcome, resolveConsultationId } from "@/data/consultations";
 import { createAlert } from "@/data/alerts";
@@ -128,12 +128,7 @@ function ObservationPage() {
       });
       // Observation-only fields belong to the episode, not the finished record.
       // The timeline in observation_events keeps the full history.
-      await updatePatient(patient.id, {
-        status: "completed",
-        room_number: null,
-        bed_number: null,
-        observation_started_at: null,
-      });
+      await updatePatient(patient.id, observationExitPatch());
       if (outcome === "referred") {
         await createReferral({
           patient_id: patient.id,
