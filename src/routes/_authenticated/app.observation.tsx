@@ -23,7 +23,7 @@ import { usePatients, useConsultations, useObservationEvents, queryKeys } from "
 import { useSession, useProfile } from "@/hooks/use-session";
 import { updatePatient } from "@/data/patients";
 import {
-  addObservationEvent, findAdmissionConsultationId, type ObservationEvent,
+  addObservationEvent, findAdmissionConsultationId, observationExitPatch, type ObservationEvent,
 } from "@/data/observations";
 import { setFinalOutcome, resolveConsultationId } from "@/data/consultations";
 import { createAlert } from "@/data/alerts";
