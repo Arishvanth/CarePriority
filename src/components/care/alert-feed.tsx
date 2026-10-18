@@ -25,7 +25,9 @@ export function AlertFeed({
       <EmptyState
         icon={BellOff}
         title="Nothing needs your attention"
-        description={emptyHint ?? "Emergency and overflow alerts will appear here the moment they are raised."}
+        description={
+          emptyHint ?? "Emergency and overflow alerts will appear here the moment they are raised."
+        }
       />
     );
   }
@@ -37,7 +39,10 @@ export function AlertFeed({
         const Icon = meta.icon;
         const done = Boolean(alert.acknowledged_at);
         return (
-          <li key={alert.id} className={cn("flex items-start gap-3 px-5 py-4", done && "opacity-55")}>
+          <li
+            key={alert.id}
+            className={cn("flex items-start gap-3 px-5 py-4", done && "opacity-55")}
+          >
             <span
               className={cn(
                 "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
@@ -51,7 +56,9 @@ export function AlertFeed({
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-baseline gap-x-2">
                 <p className="text-sm font-medium text-foreground">{alert.title}</p>
-                <span className="text-xs text-muted-foreground">{relativeTime(alert.created_at)}</span>
+                <span className="text-xs text-muted-foreground">
+                  {relativeTime(alert.created_at)}
+                </span>
               </div>
               <p className="mt-0.5 text-sm text-muted-foreground">{alert.message}</p>
               {alert.audience && (

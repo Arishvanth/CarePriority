@@ -89,6 +89,8 @@ export async function assertOutcomeAllowed(outcome: string): Promise<void> {
   if (!restricted) return;
   const current = await fetchCurrentRole();
   if (current?.role === "nurse") {
-    throw new Error("Observation and referral outcomes can only be recorded by a doctor or administrator.");
+    throw new Error(
+      "Observation and referral outcomes can only be recorded by a doctor or administrator.",
+    );
   }
 }

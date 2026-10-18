@@ -16,10 +16,7 @@ function normalise(row: Record<string, unknown>): Patient {
 
 export async function fetchPatients(): Promise<Patient[]> {
   const rows = await fetchAllRows(() =>
-    supabase
-      .from(TABLE)
-      .select("*")
-      .order("registered_at", { ascending: true }),
+    supabase.from(TABLE).select("*").order("registered_at", { ascending: true }),
   );
   return rows.map((row) => normalise(row as Record<string, unknown>));
 }
@@ -41,7 +38,13 @@ export interface NewPatientInput {
 }
 
 /** Fields whose change can alter queue ordering. */
-const QUEUE_FIELDS = ["status", "priority", "triage_score", "emergency_override", "queue_position"] as const;
+const QUEUE_FIELDS = [
+  "status",
+  "priority",
+  "triage_score",
+  "emergency_override",
+  "queue_position",
+] as const;
 
 /**
  * The queue ordering the UI shows: emergency overrides first, then triage
@@ -92,7 +95,10 @@ export async function resequenceQueue(): Promise<void> {
       const position = index + 1;
       if (row.queue_position !== position) {
         writes.push(
-          supabase.from(TABLE).update({ queue_position: position } as never).eq("id", row.id),
+          supabase
+            .from(TABLE)
+            .update({ queue_position: position } as never)
+            .eq("id", row.id),
         );
       }
     });
@@ -112,7 +118,10 @@ export async function createPatient(input: NewPatientInput): Promise<Patient> {
 }
 
 export async function updatePatient(id: string, patch: Partial<Patient>): Promise<void> {
-  const { error } = await supabase.from(TABLE).update(patch as never).eq("id", id);
+  const { error } = await supabase
+    .from(TABLE)
+    .update(patch as never)
+    .eq("id", id);
   if (error) throw error;
   // Any change that can reorder or empty the queue triggers a resequence, so
   // positions stay contiguous no matter which screen made the change.
@@ -145,7 +154,6 @@ export async function promoteToEmergency(
     ],
   });
 }
-
 
 export async function findByRfid(tag: string): Promise<Patient | null> {
   const { data, error } = await supabase

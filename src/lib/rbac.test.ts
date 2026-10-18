@@ -5,14 +5,27 @@ const { canAccess, homeForRole } = await import("./rbac");
 
 describe("route access matrix", () => {
   it("keeps receptionists out of clinical and admin consoles", () => {
-    for (const p of ["/app/doctor", "/app/observation", "/app/referrals", "/app/history", "/app/analytics", "/app/admin"]) {
+    for (const p of [
+      "/app/doctor",
+      "/app/observation",
+      "/app/referrals",
+      "/app/history",
+      "/app/analytics",
+      "/app/admin",
+    ]) {
       expect(canAccess("receptionist", p)).toBe(false);
     }
     expect(canAccess("receptionist", "/app/reception")).toBe(true);
   });
   it("limits nurses to reception and doctor queue", () => {
     expect(canAccess("nurse", "/app/doctor")).toBe(true);
-    for (const p of ["/app/observation", "/app/referrals", "/app/history", "/app/analytics", "/app/admin"]) {
+    for (const p of [
+      "/app/observation",
+      "/app/referrals",
+      "/app/history",
+      "/app/analytics",
+      "/app/admin",
+    ]) {
       expect(canAccess("nurse", p)).toBe(false);
     }
   });

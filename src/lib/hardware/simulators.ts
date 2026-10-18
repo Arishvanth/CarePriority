@@ -1,5 +1,11 @@
 import type {
-  ActionResult, BuzzerAdapter, HardwareAdapters, OledAdapter, PulseOximeterAdapter, RfidAdapter, TemperatureAdapter,
+  ActionResult,
+  BuzzerAdapter,
+  HardwareAdapters,
+  OledAdapter,
+  PulseOximeterAdapter,
+  RfidAdapter,
+  TemperatureAdapter,
 } from "./types";
 
 const notConnected = (label: string): ActionResult<never> => ({
@@ -17,7 +23,10 @@ export function createRfidSimulator(random = Math.random): RfidAdapter {
     readTag: async () => ({
       ok: true,
       simulated: true,
-      value: `RF-${Math.floor(random() * 0xffff).toString(16).toUpperCase().padStart(4, "0")}`,
+      value: `RF-${Math.floor(random() * 0xffff)
+        .toString(16)
+        .toUpperCase()
+        .padStart(4, "0")}`,
     }),
   };
 }
@@ -27,7 +36,11 @@ export function createTemperatureSimulator(random = Math.random): TemperatureAda
     kind: "temperature",
     label: "Temperature sensor",
     checkStatus: async () => "simulated",
-    readTemperature: async () => ({ ok: true, simulated: true, value: Math.round((36.4 + random() * 1.2) * 10) / 10 }),
+    readTemperature: async () => ({
+      ok: true,
+      simulated: true,
+      value: Math.round((36.4 + random() * 1.2) * 10) / 10,
+    }),
   };
 }
 

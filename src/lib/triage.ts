@@ -31,15 +31,35 @@ export interface VitalsInput {
 /** Red-flag phrases, highest clinical weight first. */
 const RED_FLAGS: Array<{ match: RegExp; label: string; weight: number }> = [
   { match: /chest pain|cardiac|heart attack/i, label: "Chest pain reported", weight: 30 },
-  { match: /unconscious|unresponsive|fainted|collapse/i, label: "Loss of consciousness", weight: 32 },
+  {
+    match: /unconscious|unresponsive|fainted|collapse/i,
+    label: "Loss of consciousness",
+    weight: 32,
+  },
   { match: /seizure|convulsion|fit\b/i, label: "Seizure activity", weight: 28 },
-  { match: /stroke|slurred speech|face droop|numbness on one side/i, label: "Stroke warning signs", weight: 30 },
-  { match: /bleeding|haemorrhage|hemorrhage|blood[- ]tinged|blood in/i, label: "Active or occult bleeding", weight: 26 },
-  { match: /breathless|shortness of breath|difficulty breathing|cannot breathe/i, label: "Respiratory distress", weight: 24 },
+  {
+    match: /stroke|slurred speech|face droop|numbness on one side/i,
+    label: "Stroke warning signs",
+    weight: 30,
+  },
+  {
+    match: /bleeding|haemorrhage|hemorrhage|blood[- ]tinged|blood in/i,
+    label: "Active or occult bleeding",
+    weight: 26,
+  },
+  {
+    match: /breathless|shortness of breath|difficulty breathing|cannot breathe/i,
+    label: "Respiratory distress",
+    weight: 24,
+  },
   { match: /severe pain|excruciating|unbearable/i, label: "Severe pain reported", weight: 18 },
   { match: /pregnan|labour|labor pain/i, label: "Pregnancy-related presentation", weight: 16 },
   { match: /poison|overdose|snake ?bite/i, label: "Toxicological emergency", weight: 30 },
-  { match: /fracture|accident|trauma|fall from/i, label: "Trauma / suspected fracture", weight: 16 },
+  {
+    match: /fracture|accident|trauma|fall from/i,
+    label: "Trauma / suspected fracture",
+    weight: 16,
+  },
   { match: /vomit|nausea/i, label: "Vomiting or nausea", weight: 8 },
   { match: /abdominal pain|stomach pain/i, label: "Abdominal pain", weight: 14 },
   { match: /headache|migraine/i, label: "Headache", weight: 8 },
@@ -59,18 +79,25 @@ export function scoreTriage(input: VitalsInput): TriageResult {
 
   const temp = input.temperature ?? null;
   if (temp !== null) {
-    if (temp >= 39.5) factors.push({ label: `Temperature ${temp}°C (high fever)`, weight: 24, kind: "vital" });
-    else if (temp >= 38.3) factors.push({ label: `Temperature ${temp}°C (fever)`, weight: 14, kind: "vital" });
-    else if (temp >= 37.5) factors.push({ label: `Temperature ${temp}°C (low-grade)`, weight: 6, kind: "vital" });
-    else if (temp < 35) factors.push({ label: `Temperature ${temp}°C (hypothermia)`, weight: 26, kind: "vital" });
+    if (temp >= 39.5)
+      factors.push({ label: `Temperature ${temp}°C (high fever)`, weight: 24, kind: "vital" });
+    else if (temp >= 38.3)
+      factors.push({ label: `Temperature ${temp}°C (fever)`, weight: 14, kind: "vital" });
+    else if (temp >= 37.5)
+      factors.push({ label: `Temperature ${temp}°C (low-grade)`, weight: 6, kind: "vital" });
+    else if (temp < 35)
+      factors.push({ label: `Temperature ${temp}°C (hypothermia)`, weight: 26, kind: "vital" });
     else factors.push({ label: "Temperature within normal range", weight: 0, kind: "vital" });
   }
 
   const hr = input.heartRate ?? null;
   if (hr !== null) {
-    if (hr >= 130 || hr <= 45) factors.push({ label: `Heart rate ${hr} bpm (critical)`, weight: 26, kind: "vital" });
-    else if (hr >= 110) factors.push({ label: `Heart rate ${hr} bpm (tachycardic)`, weight: 16, kind: "vital" });
-    else if (hr >= 100) factors.push({ label: `Heart rate ${hr} bpm (elevated)`, weight: 8, kind: "vital" });
+    if (hr >= 130 || hr <= 45)
+      factors.push({ label: `Heart rate ${hr} bpm (critical)`, weight: 26, kind: "vital" });
+    else if (hr >= 110)
+      factors.push({ label: `Heart rate ${hr} bpm (tachycardic)`, weight: 16, kind: "vital" });
+    else if (hr >= 100)
+      factors.push({ label: `Heart rate ${hr} bpm (elevated)`, weight: 8, kind: "vital" });
     else factors.push({ label: "Heart rate within normal range", weight: 0, kind: "vital" });
   }
 
@@ -78,19 +105,27 @@ export function scoreTriage(input: VitalsInput): TriageResult {
   if (spo2 !== null) {
     if (spo2 < 90) factors.push({ label: `SpO₂ ${spo2}% (hypoxic)`, weight: 32, kind: "vital" });
     else if (spo2 < 94) factors.push({ label: `SpO₂ ${spo2}% (low)`, weight: 20, kind: "vital" });
-    else if (spo2 < 96) factors.push({ label: `SpO₂ ${spo2}% (borderline)`, weight: 8, kind: "vital" });
+    else if (spo2 < 96)
+      factors.push({ label: `SpO₂ ${spo2}% (borderline)`, weight: 8, kind: "vital" });
     else factors.push({ label: "SpO₂ within normal range", weight: 0, kind: "vital" });
   }
 
   const age = input.age ?? null;
   if (age !== null) {
-    if (age >= 70) factors.push({ label: `Age ${age} (high-risk group)`, weight: 12, kind: "demographic" });
-    else if (age >= 60) factors.push({ label: `Age ${age} (elevated risk)`, weight: 8, kind: "demographic" });
-    else if (age <= 2) factors.push({ label: `Age ${age} (infant)`, weight: 14, kind: "demographic" });
-    else if (age <= 12) factors.push({ label: `Age ${age} (paediatric)`, weight: 6, kind: "demographic" });
+    if (age >= 70)
+      factors.push({ label: `Age ${age} (high-risk group)`, weight: 12, kind: "demographic" });
+    else if (age >= 60)
+      factors.push({ label: `Age ${age} (elevated risk)`, weight: 8, kind: "demographic" });
+    else if (age <= 2)
+      factors.push({ label: `Age ${age} (infant)`, weight: 14, kind: "demographic" });
+    else if (age <= 12)
+      factors.push({ label: `Age ${age} (paediatric)`, weight: 6, kind: "demographic" });
   }
 
-  const score = Math.min(100, factors.reduce((sum, f) => sum + f.weight, 0));
+  const score = Math.min(
+    100,
+    factors.reduce((sum, f) => sum + f.weight, 0),
+  );
   factors.sort((a, b) => b.weight - a.weight);
 
   return { score, priority: priorityFromScore(score), factors };
@@ -136,7 +171,10 @@ export const priorityMeta: Record<
 
 export const statusMeta: Record<PatientStatus, { label: string; chip: string }> = {
   waiting: { label: "Waiting", chip: "bg-muted text-muted-foreground border-border" },
-  "in-consult": { label: "In consult", chip: "bg-primary-light text-primary-hover border-primary/25" },
+  "in-consult": {
+    label: "In consult",
+    chip: "bg-primary-light text-primary-hover border-primary/25",
+  },
   completed: { label: "Completed", chip: "bg-success-soft text-success border-success/25" },
   observation: { label: "Observation", chip: "bg-warning-soft text-warning border-warning/25" },
 };

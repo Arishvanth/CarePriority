@@ -4,7 +4,14 @@ import { requireRole } from "@/lib/rbac";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  CheckCircle2, ClipboardList, Clock3, Loader2, PlayCircle, Siren, Stethoscope, UserRound,
+  CheckCircle2,
+  ClipboardList,
+  Clock3,
+  Loader2,
+  PlayCircle,
+  Siren,
+  Stethoscope,
+  UserRound,
 } from "lucide-react";
 
 import { PageHeader } from "@/components/care/page-header";
@@ -20,8 +27,14 @@ import { CardsSkeleton } from "@/components/care/loading";
 import { AssessmentDialog } from "@/components/care/assessment-dialog";
 import { Button } from "@/components/ui/button";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,7 +43,10 @@ import { usePatients, useConsultations, queryKeys } from "@/hooks/use-care-data"
 import { useSession, useProfile } from "@/hooks/use-session";
 import { findByRfid, updatePatient } from "@/data/patients";
 import { startConsultation, completeConsultation } from "@/data/consultations";
-import { completeReferredConsultation, resolveDoctorConsultationId } from "@/data/referral-workflow";
+import {
+  completeReferredConsultation,
+  resolveDoctorConsultationId,
+} from "@/data/referral-workflow";
 import { addObservationEvent } from "@/data/observations";
 import type { Patient } from "@/data/types";
 import { waitMinutes, relativeTime } from "@/lib/format";
@@ -38,17 +54,39 @@ import { waitMinutes, relativeTime } from "@/lib/format";
 type Outcome = "discharged" | "observation" | "referred";
 
 const OUTCOMES: { value: Outcome; label: string; hint: string }[] = [
-  { value: "discharged", label: "Discharged", hint: "Patient leaves the clinic; record kept in history." },
-  { value: "observation", label: "Observation", hint: "Patient stays under observation for monitoring." },
-  { value: "referred", label: "Referred", hint: "Patient referred onward; kept as a referral record." },
+  {
+    value: "discharged",
+    label: "Discharged",
+    hint: "Patient leaves the clinic; record kept in history.",
+  },
+  {
+    value: "observation",
+    label: "Observation",
+    hint: "Patient stays under observation for monitoring.",
+  },
+  {
+    value: "referred",
+    label: "Referred",
+    hint: "Patient referred onward; kept as a referral record.",
+  },
 ];
 
 export const Route = createFileRoute("/_authenticated/app/doctor")({
   beforeLoad: () => requireRole(["doctor", "nurse", "admin"]),
   head: () => ({
     meta: [
-      { title: "Doctor console — CarePriority" }, { property: "og:title", content: "Doctor console — CarePriority" }, { property: "og:description", content: "Scan wristbands, review triage evidence and record consultations." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
-      { name: "description", content: "Scan wristbands, review triage evidence and record consultations." },
+      { title: "Doctor console — CarePriority" },
+      { property: "og:title", content: "Doctor console — CarePriority" },
+      {
+        property: "og:description",
+        content: "Scan wristbands, review triage evidence and record consultations.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      {
+        name: "description",
+        content: "Scan wristbands, review triage evidence and record consultations.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -91,9 +129,7 @@ function DoctorPage() {
   const inConsult = patients.filter((p) => p.status === "in-consult");
   const selected = useMemo(() => {
     if (!selectedId && suppressAutoSelect) return null;
-    return (
-      patients.find((p) => p.id === selectedId) ?? inConsult[0] ?? queue[0] ?? null
-    );
+    return patients.find((p) => p.id === selectedId) ?? inConsult[0] ?? queue[0] ?? null;
   }, [patients, selectedId, inConsult, queue, suppressAutoSelect]);
 
   useEffect(() => {
@@ -141,8 +177,16 @@ function DoctorPage() {
       }
       // Page state is only a hint — after a refresh it is gone, so resolve the
       // patient's own open consultation (or start one) before saving anything.
-      const consultId = await resolveDoctorConsultationId(patient.id, user?.id ?? null, activeConsultId);
-      await completeConsultation(consultId, { notes: notes.trim(), diagnosis: diagnosis.trim(), outcome });
+      const consultId = await resolveDoctorConsultationId(
+        patient.id,
+        user?.id ?? null,
+        activeConsultId,
+      );
+      await completeConsultation(consultId, {
+        notes: notes.trim(),
+        diagnosis: diagnosis.trim(),
+        outcome,
+      });
       if (outcome === "observation") {
         const startedAt = new Date().toISOString();
         await updatePatient(patient.id, {
@@ -233,7 +277,11 @@ function DoctorPage() {
         actions={
           selected && selected.status === "waiting" ? (
             <Button onClick={() => begin.mutate(selected)} disabled={begin.isPending}>
-              {begin.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <PlayCircle className="h-4 w-4" />}
+              {begin.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <PlayCircle className="h-4 w-4" />
+              )}
               Start consultation
             </Button>
           ) : null
@@ -241,7 +289,13 @@ function DoctorPage() {
       />
 
       <div className="grid min-w-0 gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,13rem),1fr))]">
-        <MetricCard label="Waiting" value={queue.length} icon={Clock3} tone="warning" loading={isLoading} />
+        <MetricCard
+          label="Waiting"
+          value={queue.length}
+          icon={Clock3}
+          tone="warning"
+          loading={isLoading}
+        />
         <MetricCard
           label="High priority"
           value={queue.filter((p) => p.priority === "HIGH").length}
@@ -249,14 +303,34 @@ function DoctorPage() {
           tone="danger"
           loading={isLoading}
         />
-        <MetricCard label="In consultation" value={inConsult.length} icon={Stethoscope} tone="primary" loading={isLoading} />
-        <MetricCard label="Seen today" value={completedToday} icon={CheckCircle2} tone="success" loading={isLoading} />
+        <MetricCard
+          label="In consultation"
+          value={inConsult.length}
+          icon={Stethoscope}
+          tone="primary"
+          loading={isLoading}
+        />
+        <MetricCard
+          label="Seen today"
+          value={completedToday}
+          icon={CheckCircle2}
+          tone="success"
+          loading={isLoading}
+        />
       </div>
 
       <div className="mt-6 grid min-w-0 gap-5 xl:grid-cols-5 lg:mt-8">
         <div className="min-w-0 space-y-5 xl:col-span-2">
-          <Panel title="Call next patient" description="Scan a wristband, or pick from the queue below.">
-            <RfidScanner onScan={handleScan} state={scanState} message={scanMessage} label="Scan to call patient" />
+          <Panel
+            title="Call next patient"
+            description="Scan a wristband, or pick from the queue below."
+          >
+            <RfidScanner
+              onScan={handleScan}
+              state={scanState}
+              message={scanMessage}
+              label="Scan to call patient"
+            />
           </Panel>
 
           <Panel
@@ -272,7 +346,11 @@ function DoctorPage() {
             {isLoading ? (
               <CardsSkeleton />
             ) : queue.length === 0 ? (
-              <EmptyState icon={CheckCircle2} title="Queue is clear" description="Every waiting patient has been seen." />
+              <EmptyState
+                icon={CheckCircle2}
+                title="Queue is clear"
+                description="Every waiting patient has been seen."
+              />
             ) : (
               queue.map((patient) => (
                 <PatientCard
@@ -316,7 +394,9 @@ function DoctorPage() {
                     <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                       Presenting symptoms
                     </p>
-                    <p className="mt-1.5 text-sm text-foreground">{selected.symptoms || "None recorded."}</p>
+                    <p className="mt-1.5 text-sm text-foreground">
+                      {selected.symptoms || "None recorded."}
+                    </p>
                   </div>
                   <div className="rounded-xl border border-border bg-muted/40 p-4">
                     <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -328,7 +408,10 @@ function DoctorPage() {
                       <ul className="mt-1.5 space-y-1 text-sm text-foreground">
                         {selected.medical_history.map((item) => (
                           <li key={item} className="flex gap-2">
-                            <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary" aria-hidden="true" />
+                            <span
+                              className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary"
+                              aria-hidden="true"
+                            />
                             {item}
                           </li>
                         ))}
@@ -348,7 +431,10 @@ function DoctorPage() {
                 </div>
               </Panel>
 
-              <Panel title="Why this priority" description="Every point in the triage score, itemised.">
+              <Panel
+                title="Why this priority"
+                description="Every point in the triage score, itemised."
+              >
                 <TriageBreakdown
                   score={selected.triage_score}
                   priority={selected.priority}
@@ -356,7 +442,10 @@ function DoctorPage() {
                 />
               </Panel>
 
-              <Panel title="Consultation record" description="Saved to the patient's clinical history.">
+              <Panel
+                title="Consultation record"
+                description="Saved to the patient's clinical history."
+              >
                 <form
                   className="grid gap-4"
                   onSubmit={(e) => {
@@ -369,7 +458,10 @@ function DoctorPage() {
                       toast.error("Select an outcome before completing.");
                       return;
                     }
-                    if (outcome === "referred" && (!referralReason.trim() || !referralDestination.trim())) {
+                    if (
+                      outcome === "referred" &&
+                      (!referralReason.trim() || !referralDestination.trim())
+                    ) {
                       toast.error("Add a referral reason and destination.");
                       return;
                     }
@@ -401,7 +493,11 @@ function DoctorPage() {
                     <legend className="mb-1.5 text-sm font-medium text-foreground">
                       Outcome <span className="text-destructive">*</span>
                     </legend>
-                    <div className="grid gap-2 sm:grid-cols-3" role="radiogroup" aria-label="Consultation outcome">
+                    <div
+                      className="grid gap-2 sm:grid-cols-3"
+                      role="radiogroup"
+                      aria-label="Consultation outcome"
+                    >
                       {OUTCOMES.map((option) => (
                         <button
                           key={option.value}
@@ -416,7 +512,9 @@ function DoctorPage() {
                           }
                         >
                           <span className="block">{option.label}</span>
-                          <span className="mt-0.5 block text-xs font-normal opacity-80">{option.hint}</span>
+                          <span className="mt-0.5 block text-xs font-normal opacity-80">
+                            {option.hint}
+                          </span>
                         </button>
                       ))}
                     </div>
@@ -453,7 +551,12 @@ function DoctorPage() {
                   )}
                   <div className="flex flex-wrap gap-2">
                     {selected.status === "waiting" && (
-                      <Button type="button" variant="outline" onClick={() => begin.mutate(selected)} disabled={begin.isPending}>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => begin.mutate(selected)}
+                        disabled={begin.isPending}
+                      >
                         <PlayCircle className="h-4 w-4" /> Start consultation
                       </Button>
                     )}
@@ -463,10 +566,15 @@ function DoctorPage() {
                         finish.isPending ||
                         !outcome ||
                         !diagnosis.trim() ||
-                        (outcome === "referred" && (!referralReason.trim() || !referralDestination.trim()))
+                        (outcome === "referred" &&
+                          (!referralReason.trim() || !referralDestination.trim()))
                       }
                     >
-                      {finish.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                      {finish.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <CheckCircle2 className="h-4 w-4" />
+                      )}
                       Complete consultation
                     </Button>
                   </div>
@@ -475,9 +583,17 @@ function DoctorPage() {
             </>
           )}
 
-          <Panel title="Recent consultations" description="Latest completed records across the clinic." flush>
+          <Panel
+            title="Recent consultations"
+            description="Latest completed records across the clinic."
+            flush
+          >
             {consultations.length === 0 ? (
-              <EmptyState icon={ClipboardList} title="No consultations yet" description="Completed visits will be listed here." />
+              <EmptyState
+                icon={ClipboardList}
+                title="No consultations yet"
+                description="Completed visits will be listed here."
+              />
             ) : (
               <ul className="divide-y divide-border">
                 {consultations.slice(0, 6).map((c) => {
@@ -492,8 +608,12 @@ function DoctorPage() {
                           {c.diagnosis || "Diagnosis pending"}
                         </p>
                       </div>
-                      <span className="text-xs capitalize text-muted-foreground">{c.outcome || "—"}</span>
-                      <span className="text-xs text-muted-foreground">{relativeTime(c.started_at)}</span>
+                      <span className="text-xs capitalize text-muted-foreground">
+                        {c.outcome || "—"}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {relativeTime(c.started_at)}
+                      </span>
                     </li>
                   );
                 })}
@@ -503,7 +623,10 @@ function DoctorPage() {
         </div>
       </div>
 
-      <AssessmentDialog patient={assessTarget} onOpenChange={(open) => !open && setAssessTarget(null)} />
+      <AssessmentDialog
+        patient={assessTarget}
+        onOpenChange={(open) => !open && setAssessTarget(null)}
+      />
 
       <AlertDialog open={!!confirmTarget} onOpenChange={(open) => !open && setConfirmTarget(null)}>
         <AlertDialogContent className="max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-md overflow-y-auto [overflow-wrap:anywhere]">
@@ -514,7 +637,8 @@ function DoctorPage() {
               <strong className="text-foreground">
                 {OUTCOMES.find((o) => o.value === outcome)?.label ?? "—"}
               </strong>
-              . {outcome === "observation"
+              .{" "}
+              {outcome === "observation"
                 ? "The patient stays under observation and leaves the waiting queue."
                 : "The patient leaves the waiting queue; the consultation stays in history."}
             </AlertDialogDescription>

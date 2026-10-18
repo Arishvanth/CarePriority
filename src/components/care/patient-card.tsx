@@ -42,11 +42,18 @@ function Vital({
   );
 }
 
-export function PatientCard({ patient, onSelect, onEmergency, selected, compact }: PatientCardProps) {
+export function PatientCard({
+  patient,
+  onSelect,
+  onEmergency,
+  selected,
+  compact,
+}: PatientCardProps) {
   const meta = priorityMeta[patient.priority];
   const waited = waitMinutes(patient.registered_at);
   const missing = missingAssessment(patient);
-  const canEscalate = Boolean(onEmergency) && patient.status === "waiting" && !patient.emergency_override;
+  const canEscalate =
+    Boolean(onEmergency) && patient.status === "waiting" && !patient.emergency_override;
 
   const open = () => onSelect?.(patient);
 
@@ -68,8 +75,11 @@ export function PatientCard({ patient, onSelect, onEmergency, selected, compact 
       aria-label={onSelect ? `Open record for ${patient.full_name}` : undefined}
       className={cn(
         "group relative min-w-0 rounded-xl border bg-surface p-3 pl-4 text-left [overflow-wrap:anywhere] transition-all duration-200",
-        onSelect && "cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
-        selected ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-primary/35 hover:shadow-soft",
+        onSelect &&
+          "cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+        selected
+          ? "border-primary ring-2 ring-primary/20"
+          : "border-border hover:border-primary/35 hover:shadow-soft",
       )}
     >
       <span className={cn("absolute inset-y-0 left-0 w-1", meta.bar)} aria-hidden="true" />
@@ -135,7 +145,9 @@ export function PatientCard({ patient, onSelect, onEmergency, selected, compact 
           icon={HeartPulse}
           label="HR"
           value={patient.heart_rate === null ? "—" : `${patient.heart_rate}`}
-          warn={patient.heart_rate !== null && (patient.heart_rate >= 110 || patient.heart_rate <= 50)}
+          warn={
+            patient.heart_rate !== null && (patient.heart_rate >= 110 || patient.heart_rate <= 50)
+          }
         />
         <Vital
           icon={Wind}

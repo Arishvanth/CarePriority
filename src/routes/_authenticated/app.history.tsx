@@ -11,9 +11,20 @@ import { PriorityChip, StatusChip } from "@/components/care/chips";
 import { VitalsRow } from "@/components/care/vitals";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { usePatients, useConsultations, useObservationEvents, useReferrals } from "@/hooks/use-care-data";
+import {
+  usePatients,
+  useConsultations,
+  useObservationEvents,
+  useReferrals,
+} from "@/hooks/use-care-data";
 import { Link } from "@tanstack/react-router";
 import type { Patient, Consultation } from "@/data/types";
 import { relativeTime } from "@/lib/format";
@@ -22,8 +33,18 @@ export const Route = createFileRoute("/_authenticated/app/history")({
   beforeLoad: () => requireRole(["doctor", "admin"]),
   head: () => ({
     meta: [
-      { title: "Patient history — CarePriority" }, { property: "og:title", content: "Patient history — CarePriority" }, { property: "og:description", content: "Read-only record of past consultations, outcomes and observation timelines." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
-      { name: "description", content: "Read-only record of past consultations, outcomes and observation timelines." },
+      { title: "Patient history — CarePriority" },
+      { property: "og:title", content: "Patient history — CarePriority" },
+      {
+        property: "og:description",
+        content: "Read-only record of past consultations, outcomes and observation timelines.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      {
+        name: "description",
+        content: "Read-only record of past consultations, outcomes and observation timelines.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -60,7 +81,10 @@ function HistoryPage() {
           r.patient.patient_code.toLowerCase().includes(q) ||
           (r.patient.rfid_tag ?? "").toLowerCase().includes(q),
       )
-      .filter((r) => outcome === "all" || (r.consultation.final_outcome || r.consultation.outcome) === outcome)
+      .filter(
+        (r) =>
+          outcome === "all" || (r.consultation.final_outcome || r.consultation.outcome) === outcome,
+      )
       .sort((a, b) => {
         const at = new Date(a.consultation.ended_at ?? a.consultation.started_at).getTime();
         const bt = new Date(b.consultation.ended_at ?? b.consultation.started_at).getTime();
@@ -70,9 +94,9 @@ function HistoryPage() {
 
   const open = rows.find((r) => r.consultation.id === openId) ?? null;
   const openReferral = open
-    ? referrals.find(
+    ? (referrals.find(
         (r) => r.consultation_id === open.consultation.id || r.patient_id === open.patient.id,
-      ) ?? null
+      ) ?? null)
     : null;
 
   return (
@@ -155,14 +179,21 @@ function HistoryPage() {
                     <td data-label="Outcome" className="py-3 pr-3 capitalize">
                       {consultation.final_outcome || consultation.outcome || "—"}
                     </td>
-                    <td data-label="Diagnosis" className="max-w-[220px] break-words py-3 pr-3 text-muted-foreground max-md:max-w-none">
+                    <td
+                      data-label="Diagnosis"
+                      className="max-w-[220px] break-words py-3 pr-3 text-muted-foreground max-md:max-w-none"
+                    >
                       {consultation.diagnosis || "Not recorded"}
                     </td>
                     <td data-label="Completed" className="py-3 pr-3 text-muted-foreground">
                       {consultation.ended_at ? relativeTime(consultation.ended_at) : "—"}
                     </td>
                     <td className="py-3 text-right">
-                      <Button size="sm" variant="outline" onClick={() => setOpenId(consultation.id)}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setOpenId(consultation.id)}
+                      >
                         View
                       </Button>
                     </td>
@@ -177,13 +208,13 @@ function HistoryPage() {
       <Dialog open={!!open} onOpenChange={(o) => !o && setOpenId(null)}>
         <DialogContent className="flex h-[min(48rem,calc(100dvh-2rem))] max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-3xl flex-col gap-0 overflow-hidden p-0 sm:rounded-2xl">
           <ScrollArea className="min-h-0 min-w-0 flex-1">
-          <DialogHeader className="border-b border-border py-4 pl-5 pr-14 text-left">
-            <DialogTitle className="font-display text-base font-semibold text-foreground">
-              {open ? `${open.patient.full_name} — record detail` : "Record detail"}
-            </DialogTitle>
-            <DialogDescription>Read-only history. Nothing here can be edited.</DialogDescription>
-          </DialogHeader>
-          {open && (
+            <DialogHeader className="border-b border-border py-4 pl-5 pr-14 text-left">
+              <DialogTitle className="font-display text-base font-semibold text-foreground">
+                {open ? `${open.patient.full_name} — record detail` : "Record detail"}
+              </DialogTitle>
+              <DialogDescription>Read-only history. Nothing here can be edited.</DialogDescription>
+            </DialogHeader>
+            {open && (
               <div className="min-w-0 space-y-5 px-5 py-5">
                 <div className="flex flex-wrap items-center gap-2">
                   <PriorityChip priority={open.patient.priority} />
@@ -197,7 +228,10 @@ function HistoryPage() {
                 <dl className="grid gap-4 sm:grid-cols-2">
                   <Detail label="Symptoms" value={open.patient.symptoms || "Not recorded"} />
                   <Detail label="Diagnosis" value={open.consultation.diagnosis || "Not recorded"} />
-                  <Detail label="Outcome" value={open.consultation.final_outcome || open.consultation.outcome || "—"} />
+                  <Detail
+                    label="Outcome"
+                    value={open.consultation.final_outcome || open.consultation.outcome || "—"}
+                  />
                   <Detail
                     label="Room / bed"
                     value={
@@ -206,16 +240,22 @@ function HistoryPage() {
                         : "Not assigned"
                     }
                   />
-                  <Detail label="Consultation notes" value={open.consultation.notes || "No notes recorded"} />
+                  <Detail
+                    label="Consultation notes"
+                    value={open.consultation.notes || "No notes recorded"}
+                  />
                   <Detail label="Referral note" value={open.consultation.referral_note || "—"} />
                 </dl>
 
                 {openReferral && (
                   <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-muted/40 p-4">
                     <div className="min-w-0">
-                      <p className="text-xs uppercase tracking-wide text-muted-foreground">Referral record</p>
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                        Referral record
+                      </p>
                       <p className="mt-0.5 break-words text-sm text-foreground">
-                        {openReferral.destination || "Destination not recorded"} · status {openReferral.status}
+                        {openReferral.destination || "Destination not recorded"} · status{" "}
+                        {openReferral.status}
                       </p>
                     </div>
                     <Button asChild size="sm" variant="outline">
@@ -245,22 +285,29 @@ function HistoryPage() {
                       {events
                         .filter((e) => e.patient_id === open.patient.id)
                         .map((entry) => (
-                          <li key={entry.id} className="rounded-lg border border-border bg-muted/40 p-3 text-sm">
+                          <li
+                            key={entry.id}
+                            className="rounded-lg border border-border bg-muted/40 p-3 text-sm"
+                          >
                             <p className="flex flex-wrap justify-between gap-2 text-xs text-muted-foreground">
                               <span>{new Date(entry.created_at).toLocaleString()}</span>
                               <span>
                                 {entry.author_name || "Staff"} · {entry.kind}
                               </span>
                             </p>
-                            <p className="mt-1 text-foreground">{entry.condition || "Condition unchanged"}</p>
-                            {entry.notes && <p className="mt-1 text-muted-foreground">{entry.notes}</p>}
+                            <p className="mt-1 text-foreground">
+                              {entry.condition || "Condition unchanged"}
+                            </p>
+                            {entry.notes && (
+                              <p className="mt-1 text-muted-foreground">{entry.notes}</p>
+                            )}
                           </li>
                         ))}
                     </ol>
                   )}
                 </div>
               </div>
-          )}
+            )}
           </ScrollArea>
         </DialogContent>
       </Dialog>

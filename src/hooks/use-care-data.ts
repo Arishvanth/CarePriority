@@ -15,7 +15,6 @@ export const queryKeys = {
   referrals: ["referrals"] as const,
 };
 
-
 /** Tables watched live, each mapped to the cache entry it refreshes. */
 const LIVE_TABLES = [
   ["patients", queryKeys.patients],
@@ -76,7 +75,11 @@ export function useAlerts() {
 }
 
 export function useConsultations() {
-  return useQuery({ queryKey: queryKeys.consultations, queryFn: fetchConsultations, staleTime: 30_000 });
+  return useQuery({
+    queryKey: queryKeys.consultations,
+    queryFn: fetchConsultations,
+    staleTime: 30_000,
+  });
 }
 
 export function useObservationEvents() {

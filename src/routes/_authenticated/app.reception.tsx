@@ -4,8 +4,19 @@ import { requireRole } from "@/lib/rbac";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  Activity, AlertTriangle, ClipboardList, Clock3, Loader2, MapPin, Mic, PencilLine, Search,
-  Siren, Stethoscope, Users, UserPlus,
+  Activity,
+  AlertTriangle,
+  ClipboardList,
+  Clock3,
+  Loader2,
+  MapPin,
+  Mic,
+  PencilLine,
+  Search,
+  Siren,
+  Stethoscope,
+  Users,
+  UserPlus,
 } from "lucide-react";
 
 import { MetricCard } from "@/components/care/metric-card";
@@ -24,7 +35,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { useConsultations, usePatients, queryKeys } from "@/hooks/use-care-data";
 import { useRole } from "@/hooks/use-role";
@@ -39,8 +55,18 @@ export const Route = createFileRoute("/_authenticated/app/reception")({
   beforeLoad: () => requireRole(["receptionist", "nurse", "admin"]),
   head: () => ({
     meta: [
-      { title: "Reception — CarePriority" }, { property: "og:title", content: "Reception — CarePriority" }, { property: "og:description", content: "Register patients, capture vitals and run the live triage queue." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
-      { name: "description", content: "Register patients, capture vitals and run the live triage queue." },
+      { title: "Reception — CarePriority" },
+      { property: "og:title", content: "Reception — CarePriority" },
+      {
+        property: "og:description",
+        content: "Register patients, capture vitals and run the live triage queue.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      {
+        name: "description",
+        content: "Register patients, capture vitals and run the live triage queue.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -74,7 +100,12 @@ function LiveClock() {
         {now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
       </span>
       <span className="block text-xs text-muted-foreground">
-        {now.toLocaleDateString([], { weekday: "short", day: "numeric", month: "short", year: "numeric" })}
+        {now.toLocaleDateString([], {
+          weekday: "short",
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })}
       </span>
     </span>
   );
@@ -82,7 +113,9 @@ function LiveClock() {
 
 function SectionLabel({ children }: { children: string }) {
   return (
-    <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">{children}</p>
+    <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+      {children}
+    </p>
   );
 }
 
@@ -146,11 +179,11 @@ function ReceptionPage() {
       )
       .sort(
         (a, b) =>
-          priorityRank[a.priority] - priorityRank[b.priority] || a.queue_position - b.queue_position,
+          priorityRank[a.priority] - priorityRank[b.priority] ||
+          a.queue_position - b.queue_position,
       );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [waiting, emergencySearch]);
-
 
   const filtered = patients.filter((p) => {
     if (!search.trim()) return true;
@@ -177,8 +210,7 @@ function ReceptionPage() {
       if (!form.full_name.trim() || !Number.isFinite(age) || age <= 0) {
         throw new Error("Enter a patient name and a valid age.");
       }
-      const queuePosition =
-        active.filter((p) => p.priority === preview.priority).length + 1;
+      const queuePosition = active.filter((p) => p.priority === preview.priority).length + 1;
       const patient = await createPatient({
         patient_code: nextPatientCode(),
         rfid_tag: form.rfid_tag.trim() || randomRfid(),
@@ -337,7 +369,8 @@ function ReceptionPage() {
               Overflow warning — {waiting.length} patients waiting
             </p>
             <p className="text-xs text-muted-foreground">
-              Above the {OVERFLOW_THRESHOLD}-patient threshold. Consider re-routing low-priority cases.
+              Above the {OVERFLOW_THRESHOLD}-patient threshold. Consider re-routing low-priority
+              cases.
             </p>
           </div>
           <Button size="sm" variant="outline">
@@ -420,8 +453,18 @@ function ReceptionPage() {
                 <div className="grid min-w-0 gap-1.5">
                   <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
                     <Label htmlFor="symptoms">Presenting symptoms</Label>
-                    <Button className="shrink-0" type="button" size="sm" variant="ghost" onClick={simulateVoiceCapture}>
-                      {listening ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Mic className="h-3.5 w-3.5" />}
+                    <Button
+                      className="shrink-0"
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={simulateVoiceCapture}
+                    >
+                      {listening ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Mic className="h-3.5 w-3.5" />
+                      )}
                       {listening ? "Listening…" : "Voice capture (demo)"}
                     </Button>
                   </div>
@@ -434,12 +477,14 @@ function ReceptionPage() {
                     placeholder="Describe what the patient reports…"
                   />
                   <p className="text-[11px] text-muted-foreground">
-                    Demo only — no microphone or AI transcription is connected; voice capture inserts a sample transcript.
+                    Demo only — no microphone or AI transcription is connected; voice capture
+                    inserts a sample transcript.
                   </p>
                 </div>
 
                 <p className="-mb-1 text-xs text-muted-foreground">
-                  Vitals optional, entered manually (no device connected) — blank vitals flag the patient “Assessment Pending”.
+                  Vitals optional, entered manually (no device connected) — blank vitals flag the
+                  patient “Assessment Pending”.
                 </p>
                 <div className="grid min-w-0 gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(100%,7rem),1fr))]">
                   <div className="grid min-w-0 gap-1.5">
@@ -475,21 +520,30 @@ function ReceptionPage() {
                   </div>
                 </div>
 
-                <RfidScanner className="min-w-0 max-w-full" onScan={handleScan} state={scanState} message={scanMessage} />
+                <RfidScanner
+                  className="min-w-0 max-w-full"
+                  onScan={handleScan}
+                  state={scanState}
+                  message={scanMessage}
+                />
                 {form.rfid_tag && (
                   <p className="text-xs text-muted-foreground">
-                    Linked wristband: <span className="font-mono text-foreground">{form.rfid_tag}</span>
+                    Linked wristband:{" "}
+                    <span className="font-mono text-foreground">{form.rfid_tag}</span>
                   </p>
                 )}
 
                 <Button className="min-w-0 max-w-full" type="submit" disabled={register.isPending}>
-                  {register.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
+                  {register.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <UserPlus className="h-4 w-4" />
+                  )}
                   Add to queue
                 </Button>
               </form>
             </Panel>
           </section>
-
         </div>
 
         {/* ── 3 & 4. Live queue + emergency ─────────────────────────── */}
@@ -513,10 +567,27 @@ function ReceptionPage() {
             </div>
 
             <div className="grid min-w-0 grid-cols-[repeat(2,minmax(0,1fr))] gap-3 sm:gap-4 2xl:grid-cols-[repeat(4,minmax(0,1fr))]">
-
-              <MetricCard label="High priority" value={lanes.HIGH.length} icon={Siren} tone="danger" loading={isLoading} />
-              <MetricCard label="Waiting" value={waiting.length} icon={Users} tone="warning" loading={isLoading} />
-              <MetricCard label="Average wait" value={`${avgWait}m`} icon={Clock3} tone="primary" loading={isLoading} />
+              <MetricCard
+                label="High priority"
+                value={lanes.HIGH.length}
+                icon={Siren}
+                tone="danger"
+                loading={isLoading}
+              />
+              <MetricCard
+                label="Waiting"
+                value={waiting.length}
+                icon={Users}
+                tone="warning"
+                loading={isLoading}
+              />
+              <MetricCard
+                label="Average wait"
+                value={`${avgWait}m`}
+                icon={Clock3}
+                tone="primary"
+                loading={isLoading}
+              />
               <MetricCard
                 label="In consultation"
                 value={patients.filter((p) => p.status === "in-consult").length}
@@ -546,7 +617,6 @@ function ReceptionPage() {
                 <Siren className="h-4 w-4" /> Emergency override
               </Button>
             </div>
-
 
             <div className="mt-4 grid min-w-0 items-stretch gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,17rem),1fr))]">
               {(["HIGH", "MODERATE", "LOW"] as Priority[]).map((key) => (
@@ -589,7 +659,6 @@ function ReceptionPage() {
               ))}
             </div>
           </section>
-
         </div>
       </div>
 
@@ -602,7 +671,11 @@ function ReceptionPage() {
             description="Live preview of the score this registration will receive."
             className="flex flex-1 flex-col"
           >
-            <TriageBreakdown score={preview.score} priority={preview.priority} factors={preview.factors} />
+            <TriageBreakdown
+              score={preview.score}
+              priority={preview.priority}
+              factors={preview.factors}
+            />
           </Panel>
         </section>
 
@@ -611,7 +684,11 @@ function ReceptionPage() {
           <SectionLabel>Patient record</SectionLabel>
           <Panel
             title={record ? record.full_name : "No patient selected"}
-            description={record ? `${record.patient_code} · ${record.age}${record.gender}` : "Select a patient from the queue or the table below."}
+            description={
+              record
+                ? `${record.patient_code} · ${record.age}${record.gender}`
+                : "Select a patient from the queue or the table below."
+            }
             actions={
               record ? (
                 <Button size="sm" variant="outline" onClick={() => setAssessTarget(record)}>
@@ -646,13 +723,19 @@ function ReceptionPage() {
                     </span>
                   </span>
                 </div>
-                <VitalsRow temperature={record.temperature} heartRate={record.heart_rate} spo2={record.spo2} />
+                <VitalsRow
+                  temperature={record.temperature}
+                  heartRate={record.heart_rate}
+                  spo2={record.spo2}
+                />
                 {record.symptoms ? (
                   <p className="rounded-lg bg-muted/50 p-3 text-xs leading-relaxed text-muted-foreground">
                     {record.symptoms}
                   </p>
                 ) : (
-                  <p className="text-xs text-muted-foreground">No clinical information recorded yet.</p>
+                  <p className="text-xs text-muted-foreground">
+                    No clinical information recorded yet.
+                  </p>
                 )}
                 <TriageBreakdown
                   score={record.triage_score}
@@ -677,7 +760,11 @@ function ReceptionPage() {
               <EmptyState
                 icon={ClipboardList}
                 title={clinicalView ? "No consultations yet" : "Visible to clinical staff"}
-                description={clinicalView ? "Completed visits will be listed here." : "Visit notes and diagnoses are restricted to nurses, doctors and administrators."}
+                description={
+                  clinicalView
+                    ? "Completed visits will be listed here."
+                    : "Visit notes and diagnoses are restricted to nurses, doctors and administrators."
+                }
               />
             ) : (
               <ul className="divide-y divide-border">
@@ -693,8 +780,12 @@ function ReceptionPage() {
                           {c.diagnosis || "Diagnosis pending"}
                         </p>
                       </div>
-                      <span className="text-xs capitalize text-muted-foreground">{c.outcome || "—"}</span>
-                      <span className="text-xs text-muted-foreground">{relativeTime(c.started_at)}</span>
+                      <span className="text-xs capitalize text-muted-foreground">
+                        {c.outcome || "—"}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {relativeTime(c.started_at)}
+                      </span>
                     </li>
                   );
                 })}
@@ -715,10 +806,17 @@ function ReceptionPage() {
         {isLoading ? (
           <TableSkeleton />
         ) : filtered.length === 0 ? (
-          <EmptyState icon={Search} title="No matching patients" description="Try a different name, ID or wristband tag." />
+          <EmptyState
+            icon={Search}
+            title="No matching patients"
+            description="Try a different name, ID or wristband tag."
+          />
         ) : (
           <div className="relative w-full max-w-full min-w-0">
-            <table className="mobile-records w-full min-w-0 text-sm" aria-label="Registered patients with triage results">
+            <table
+              className="mobile-records w-full min-w-0 text-sm"
+              aria-label="Registered patients with triage results"
+            >
               <thead>
                 <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground [&>th]:px-5 [&>th]:py-3 [&>th]:font-medium">
                   <th scope="col">Patient</th>
@@ -729,7 +827,9 @@ function ReceptionPage() {
                   <th scope="col">Priority</th>
                   <th scope="col">Status</th>
                   <th scope="col">Assessment</th>
-                  <th scope="col"><span className="sr-only">Actions</span></th>
+                  <th scope="col">
+                    <span className="sr-only">Actions</span>
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -746,11 +846,19 @@ function ReceptionPage() {
                     <td data-label="Age" className="text-muted-foreground">
                       {p.age} · {p.gender}
                     </td>
-                    <td data-label="Wristband" className="font-mono text-xs text-muted-foreground">{p.rfid_tag ?? "—"}</td>
-                    <td data-label="Vitals">
-                      <VitalsRow temperature={p.temperature} heartRate={p.heart_rate} spo2={p.spo2} />
+                    <td data-label="Wristband" className="font-mono text-xs text-muted-foreground">
+                      {p.rfid_tag ?? "—"}
                     </td>
-                    <td data-label="Score" className="font-medium tabular-nums text-foreground">{p.triage_score}</td>
+                    <td data-label="Vitals">
+                      <VitalsRow
+                        temperature={p.temperature}
+                        heartRate={p.heart_rate}
+                        spo2={p.spo2}
+                      />
+                    </td>
+                    <td data-label="Score" className="font-medium tabular-nums text-foreground">
+                      {p.triage_score}
+                    </td>
                     <td data-label="Priority">
                       <PriorityChip priority={p.priority} />
                     </td>
@@ -803,8 +911,8 @@ function ReceptionPage() {
               Emergency override
             </DialogTitle>
             <DialogDescription>
-              Select the patient experiencing the emergency. They will be moved to position #1 and the on-duty doctor
-              alerted. All other patients keep their current order.
+              Select the patient experiencing the emergency. They will be moved to position #1 and
+              the on-duty doctor alerted. All other patients keep their current order.
             </DialogDescription>
           </DialogHeader>
 
@@ -823,7 +931,9 @@ function ReceptionPage() {
               className="max-h-64 space-y-2 overflow-y-auto rounded-lg border border-border p-2"
             >
               {emergencyCandidates.length === 0 && (
-                <p className="p-3 text-sm text-muted-foreground">No waiting patients match this search.</p>
+                <p className="p-3 text-sm text-muted-foreground">
+                  No waiting patients match this search.
+                </p>
               )}
               {emergencyCandidates.map((p) => {
                 const selected = emergencyTarget?.id === p.id;
@@ -835,11 +945,15 @@ function ReceptionPage() {
                     aria-checked={selected}
                     onClick={() => setEmergencyTarget(p)}
                     className={`flex w-full items-center gap-3 rounded-lg border p-2.5 text-left transition-colors ${
-                      selected ? "border-danger bg-danger-soft" : "border-border hover:border-primary/40"
+                      selected
+                        ? "border-danger bg-danger-soft"
+                        : "border-border hover:border-primary/40"
                     }`}
                   >
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-medium text-foreground">{p.full_name}</span>
+                      <span className="block truncate text-sm font-medium text-foreground">
+                        {p.full_name}
+                      </span>
                       <span className="block truncate text-xs text-muted-foreground">
                         {p.patient_code} · RFID {p.rfid_tag ?? "—"} · Queue #{p.queue_position}
                       </span>
@@ -871,14 +985,21 @@ function ReceptionPage() {
               disabled={escalate.isPending || !emergencyTarget || !emergencyReason.trim()}
               onClick={() => emergencyTarget && escalate.mutate(emergencyTarget)}
             >
-              {escalate.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Siren className="h-4 w-4" />}
+              {escalate.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Siren className="h-4 w-4" />
+              )}
               Confirm emergency override
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <AssessmentDialog patient={assessTarget} onOpenChange={(open) => !open && setAssessTarget(null)} />
+      <AssessmentDialog
+        patient={assessTarget}
+        onOpenChange={(open) => !open && setAssessTarget(null)}
+      />
     </>
   );
 }

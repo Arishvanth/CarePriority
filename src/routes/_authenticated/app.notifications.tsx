@@ -17,8 +17,18 @@ import type { Alert } from "@/data/types";
 export const Route = createFileRoute("/_authenticated/app/notifications")({
   head: () => ({
     meta: [
-      { title: "Notifications — CarePriority" }, { property: "og:title", content: "Notifications — CarePriority" }, { property: "og:description", content: "Emergency, overflow and triage alerts with email and SMS escalation." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
-      { name: "description", content: "Emergency, overflow and triage alerts with email and SMS escalation." },
+      { title: "Notifications — CarePriority" },
+      { property: "og:title", content: "Notifications — CarePriority" },
+      {
+        property: "og:description",
+        content: "Emergency, overflow and triage alerts with email and SMS escalation.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      {
+        name: "description",
+        content: "Emergency, overflow and triage alerts with email and SMS escalation.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -63,7 +73,11 @@ function NotificationsPage() {
   });
 
   const filtered = alerts.filter((a) =>
-    filter === "unread" ? !a.acknowledged_at : filter === "critical" ? a.severity === "critical" : true,
+    filter === "unread"
+      ? !a.acknowledged_at
+      : filter === "critical"
+        ? a.severity === "critical"
+        : true,
   );
 
   const unread = alerts.filter((a) => !a.acknowledged_at).length;
@@ -78,11 +92,23 @@ function NotificationsPage() {
         description="Every emergency override, overflow warning and high-priority triage lands here in real time."
         actions={
           <>
-            <Button variant="outline" onClick={() => escalate.mutate("email")} disabled={escalate.isPending}>
-              {escalate.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+            <Button
+              variant="outline"
+              onClick={() => escalate.mutate("email")}
+              disabled={escalate.isPending}
+            >
+              {escalate.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Mail className="h-4 w-4" />
+              )}
               Escalate by email
             </Button>
-            <Button variant="outline" onClick={() => escalate.mutate("sms")} disabled={escalate.isPending}>
+            <Button
+              variant="outline"
+              onClick={() => escalate.mutate("sms")}
+              disabled={escalate.isPending}
+            >
               <MessageSquare className="h-4 w-4" /> Escalate by SMS
             </Button>
           </>
@@ -90,9 +116,27 @@ function NotificationsPage() {
       />
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <MetricCard label="Unacknowledged" value={unread} icon={BellRing} tone="warning" loading={isLoading} />
-        <MetricCard label="Critical open" value={critical} icon={Siren} tone="danger" loading={isLoading} />
-        <MetricCard label="Overflow warnings" value={overflow} icon={TriangleAlert} tone="primary" loading={isLoading} />
+        <MetricCard
+          label="Unacknowledged"
+          value={unread}
+          icon={BellRing}
+          tone="warning"
+          loading={isLoading}
+        />
+        <MetricCard
+          label="Critical open"
+          value={critical}
+          icon={Siren}
+          tone="danger"
+          loading={isLoading}
+        />
+        <MetricCard
+          label="Overflow warnings"
+          value={overflow}
+          icon={TriangleAlert}
+          tone="primary"
+          loading={isLoading}
+        />
       </div>
 
       <Panel
@@ -100,7 +144,11 @@ function NotificationsPage() {
         title="Alert feed"
         description="Newest first. Acknowledge to clear from the unread count."
         actions={
-          <div className="flex rounded-lg border border-border p-0.5" role="tablist" aria-label="Filter alerts">
+          <div
+            className="flex rounded-lg border border-border p-0.5"
+            role="tablist"
+            aria-label="Filter alerts"
+          >
             {(["all", "unread", "critical"] as Filter[]).map((option) => (
               <button
                 key={option}
@@ -120,7 +168,11 @@ function NotificationsPage() {
         }
         flush
       >
-        {isLoading ? <TableSkeleton /> : <AlertFeed alerts={filtered} onAcknowledge={(a) => ack.mutate(a)} />}
+        {isLoading ? (
+          <TableSkeleton />
+        ) : (
+          <AlertFeed alerts={filtered} onAcknowledge={(a) => ack.mutate(a)} />
+        )}
       </Panel>
     </>
   );

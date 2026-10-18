@@ -21,8 +21,18 @@ export const Route = createFileRoute("/_authenticated/app/referrals")({
   beforeLoad: () => requireRole(["doctor", "admin"]),
   head: () => ({
     meta: [
-      { title: "Referrals — CarePriority" }, { property: "og:title", content: "Referrals — CarePriority" }, { property: "og:description", content: "Track every patient referred onward, their destination and referral status." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
-      { name: "description", content: "Track every patient referred onward, their destination and referral status." },
+      { title: "Referrals — CarePriority" },
+      { property: "og:title", content: "Referrals — CarePriority" },
+      {
+        property: "og:description",
+        content: "Track every patient referred onward, their destination and referral status.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      {
+        name: "description",
+        content: "Track every patient referred onward, their destination and referral status.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -83,7 +93,7 @@ function ReferralsPage() {
 
   const open = rows.find((r) => r.referral.id === openId) ?? null;
   const openConsultation = open
-    ? consultations.find((c) => c.id === open.referral.consultation_id) ?? null
+    ? (consultations.find((c) => c.id === open.referral.consultation_id) ?? null)
     : null;
 
   const latest = referrals.reduce<Referral | null>(
@@ -99,10 +109,7 @@ function ReferralsPage() {
         description="Every patient referred onward, with their destination, reason and current referral status."
       />
 
-      <section
-        aria-label="Referral summary"
-        className="panel panel-lift rounded-2xl p-5"
-      >
+      <section aria-label="Referral summary" className="panel panel-lift rounded-2xl p-5">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center">
           <div className="flex items-center gap-4">
             <span
@@ -112,9 +119,14 @@ function ReferralsPage() {
               <Send className="h-6 w-6" />
             </span>
             <div className="min-w-0">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Total referrals</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Total referrals
+              </p>
               {isLoading ? (
-                <span className="mt-1 block h-9 w-16 animate-pulse rounded-md bg-muted" aria-hidden="true" />
+                <span
+                  className="mt-1 block h-9 w-16 animate-pulse rounded-md bg-muted"
+                  aria-hidden="true"
+                />
               ) : (
                 <p className="mt-0.5 font-display text-3xl font-semibold tabular-nums text-foreground">
                   {referrals.length}
@@ -124,8 +136,8 @@ function ReferralsPage() {
           </div>
           <div className="min-w-0 sm:border-l sm:border-border sm:pl-5">
             <p className="text-sm text-muted-foreground">
-              Patients referred onward from the clinic after a consultation. Each record captures the
-              destination, reason and referring doctor for follow-up.
+              Patients referred onward from the clinic after a consultation. Each record captures
+              the destination, reason and referring doctor for follow-up.
             </p>
             <p className="mt-2 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
               <span className="font-medium text-foreground">Latest activity</span>
@@ -248,7 +260,12 @@ function ReferralsPage() {
           title={`${open.patient.full_name} — referral detail`}
           description="Clinical record is read-only; referral status reflects the workflow set at creation."
           actions={
-            <Button size="sm" variant="ghost" onClick={() => setOpenId(null)} aria-label="Close referral detail">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setOpenId(null)}
+              aria-label="Close referral detail"
+            >
               <X className="h-4 w-4" /> Close
             </Button>
           }
@@ -267,7 +284,10 @@ function ReferralsPage() {
           <dl className="grid gap-4 sm:grid-cols-2">
             <Detail label="Patient ID" value={open.patient.patient_code} />
             <Detail label="Referring doctor" value={open.referral.doctor_name || "—"} />
-            <Detail label="Referred at" value={new Date(open.referral.referred_at).toLocaleString()} />
+            <Detail
+              label="Referred at"
+              value={new Date(open.referral.referred_at).toLocaleString()}
+            />
             <Detail label="Destination" value={open.referral.destination || "Not recorded"} />
             <Detail label="Symptoms" value={open.patient.symptoms || "Not recorded"} />
             <Detail
@@ -288,7 +308,6 @@ function ReferralsPage() {
               spo2={open.patient.spo2}
             />
           </div>
-
         </Panel>
       )}
     </>

@@ -23,7 +23,8 @@ function makeStore() {
       const open = s.consultations.find((c) => c.patient === patientId && !c.ended);
       if (open) return open.id;
       // resumable: closed this visit while patient still in consult
-      const resumed = s.patientStatus === "in-consult" && s.consultations.find((c) => c.patient === patientId);
+      const resumed =
+        s.patientStatus === "in-consult" && s.consultations.find((c) => c.patient === patientId);
       if (resumed) return resumed.id;
       const id = `c${s.consultations.length + 1}`;
       s.consultations.push({ id, patient: patientId, ended: false, outcome: "" });
@@ -42,7 +43,12 @@ function makeStore() {
         return ex.id;
       }
       const id = `r${s.referrals.length + 1}`;
-      s.referrals.push({ id, consultation: input.consultation_id!, status: "referred", destination: input.destination });
+      s.referrals.push({
+        id,
+        consultation: input.consultation_id!,
+        status: "referred",
+        destination: input.destination,
+      });
       return id;
     },
     async ensureReferralAlert(id) {
@@ -91,12 +97,19 @@ describe("doctor referred completion", () => {
 
   it("survives concurrent double-submit without duplicates", async () => {
     const { s, deps } = makeStore();
-    await Promise.all([completeReferredConsultation(input(), deps), completeReferredConsultation(input(), deps)]);
+    await Promise.all([
+      completeReferredConsultation(input(), deps),
+      completeReferredConsultation(input(), deps),
+    ]);
     expectSingleCompletedVisit(s);
   });
 
   const steps: (keyof Deps)[] = [
-    "recordReferredOutcome", "createReferral", "ensureReferralAlert", "closeConsultation", "markPatientCompleted",
+    "recordReferredOutcome",
+    "createReferral",
+    "ensureReferralAlert",
+    "closeConsultation",
+    "markPatientCompleted",
   ];
   for (const step of steps) {
     it(`resumes the same visit after a refresh when ${step} fails`, async () => {
@@ -119,8 +132,12 @@ describe("doctor referred completion", () => {
 
   it("rejects missing reason or destination before writing", async () => {
     const { s, deps } = makeStore();
-    await expect(completeReferredConsultation({ ...input(), reason: " " }, deps)).rejects.toThrow("reason");
-    await expect(completeReferredConsultation({ ...input(), destination: "" }, deps)).rejects.toThrow("destination");
+    await expect(completeReferredConsultation({ ...input(), reason: " " }, deps)).rejects.toThrow(
+      "reason",
+    );
+    await expect(
+      completeReferredConsultation({ ...input(), destination: "" }, deps),
+    ).rejects.toThrow("destination");
     expect(s.referrals).toHaveLength(0);
     expect(s.consultations[0].outcome).toBe("");
   });

@@ -1,8 +1,20 @@
 import { useState } from "react";
 import { Link, Outlet, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
-  BarChart3, Bell, LayoutDashboard, LogOut, Menu, Settings, ShieldCheck,
-  Stethoscope, UserRound, X, CircleCheck, Activity, History, Send,
+  BarChart3,
+  Bell,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  Settings,
+  ShieldCheck,
+  Stethoscope,
+  UserRound,
+  X,
+  CircleCheck,
+  Activity,
+  History,
+  Send,
 } from "lucide-react";
 
 import { Logo } from "./logo";
@@ -67,7 +79,12 @@ export function AppShell() {
       </p>
       <nav className="mt-2 flex flex-col gap-0.5" aria-label="Main navigation">
         {visiblePrimaryNav.map((item) => (
-          <NavItem key={item.to} {...item} active={pathname.startsWith(item.to)} onNavigate={() => setMobileOpen(false)} />
+          <NavItem
+            key={item.to}
+            {...item}
+            active={pathname.startsWith(item.to)}
+            onNavigate={() => setMobileOpen(false)}
+          />
         ))}
       </nav>
 
@@ -94,7 +111,11 @@ export function AppShell() {
         <span
           className={
             "h-2 w-2 shrink-0 rounded-full " +
-            (liveStatus === "live" ? "bg-primary" : liveStatus === "disconnected" ? "bg-warning animate-pulse" : "bg-muted-foreground/40")
+            (liveStatus === "live"
+              ? "bg-primary"
+              : liveStatus === "disconnected"
+                ? "bg-warning animate-pulse"
+                : "bg-muted-foreground/40")
           }
         />
         {liveStatus === "live"
@@ -165,8 +186,21 @@ export function AppShell() {
           </div>
 
           <div className="ml-auto flex shrink-0 items-center gap-2">
-            <span className={cn("hidden items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium md:inline-flex", liveStatus === "live" ? "border-success/25 bg-success-soft text-success" : "border-warning/35 bg-warning-soft text-foreground")} role="status">
-              <CircleCheck className="h-3.5 w-3.5" /> {liveStatus === "live" ? "Live sync active" : liveStatus === "disconnected" ? "Sync disconnected" : "Connecting…"}
+            <span
+              className={cn(
+                "hidden items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium md:inline-flex",
+                liveStatus === "live"
+                  ? "border-success/25 bg-success-soft text-success"
+                  : "border-warning/35 bg-warning-soft text-foreground",
+              )}
+              role="status"
+            >
+              <CircleCheck className="h-3.5 w-3.5" />{" "}
+              {liveStatus === "live"
+                ? "Live sync active"
+                : liveStatus === "disconnected"
+                  ? "Sync disconnected"
+                  : "Connecting…"}
             </span>
             <Link
               to="/app/notifications"
@@ -187,13 +221,17 @@ export function AppShell() {
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">
                 {initials(displayName)}
               </span>
-              <span className="hidden max-w-20 truncate sm:inline xl:max-w-28" title={displayName}>{displayName}</span>
+              <span className="hidden max-w-20 truncate sm:inline xl:max-w-28" title={displayName}>
+                {displayName}
+              </span>
             </Link>
           </div>
         </header>
 
         <main id="main" className="min-w-0 flex-1 px-3 py-5 sm:px-4 sm:py-6 lg:px-8 lg:py-8">
-          <div className="mx-auto w-full min-w-0 max-w-[112rem] [overflow-wrap:anywhere]"><Outlet /></div>
+          <div className="mx-auto w-full min-w-0 max-w-[112rem] [overflow-wrap:anywhere]">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>
