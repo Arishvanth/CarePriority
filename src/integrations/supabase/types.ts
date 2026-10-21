@@ -1,505 +1,513 @@
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5";
-  };
+    PostgrestVersion: "14.5"
+  }
   public: {
     Tables: {
       alerts: {
         Row: {
-          acknowledged_at: string | null;
-          audience: Database["public"]["Enums"]["app_role"] | null;
-          created_at: string;
-          id: string;
-          kind: string;
-          message: string;
-          patient_id: string | null;
-          severity: string;
-          title: string;
-        };
+          acknowledged_at: string | null
+          audience: Database["public"]["Enums"]["app_role"] | null
+          created_at: string
+          id: string
+          kind: string
+          message: string
+          patient_id: string | null
+          severity: string
+          title: string
+        }
         Insert: {
-          acknowledged_at?: string | null;
-          audience?: Database["public"]["Enums"]["app_role"] | null;
-          created_at?: string;
-          id?: string;
-          kind?: string;
-          message?: string;
-          patient_id?: string | null;
-          severity?: string;
-          title: string;
-        };
+          acknowledged_at?: string | null
+          audience?: Database["public"]["Enums"]["app_role"] | null
+          created_at?: string
+          id?: string
+          kind?: string
+          message?: string
+          patient_id?: string | null
+          severity?: string
+          title: string
+        }
         Update: {
-          acknowledged_at?: string | null;
-          audience?: Database["public"]["Enums"]["app_role"] | null;
-          created_at?: string;
-          id?: string;
-          kind?: string;
-          message?: string;
-          patient_id?: string | null;
-          severity?: string;
-          title?: string;
-        };
+          acknowledged_at?: string | null
+          audience?: Database["public"]["Enums"]["app_role"] | null
+          created_at?: string
+          id?: string
+          kind?: string
+          message?: string
+          patient_id?: string | null
+          severity?: string
+          title?: string
+        }
         Relationships: [
           {
-            foreignKeyName: "alerts_patient_id_fkey";
-            columns: ["patient_id"];
-            isOneToOne: false;
-            referencedRelation: "patients";
-            referencedColumns: ["id"];
+            foreignKeyName: "alerts_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
           },
-        ];
-      };
+        ]
+      }
       consultations: {
         Row: {
-          diagnosis: string;
-          doctor_id: string | null;
-          ended_at: string | null;
-          final_outcome: string;
-          id: string;
-          notes: string;
-          outcome: string;
-          patient_id: string;
-          referral_note: string;
-          started_at: string;
-        };
+          diagnosis: string
+          doctor_id: string | null
+          ended_at: string | null
+          final_outcome: string
+          id: string
+          notes: string
+          outcome: string
+          patient_id: string
+          referral_note: string
+          started_at: string
+        }
         Insert: {
-          diagnosis?: string;
-          doctor_id?: string | null;
-          ended_at?: string | null;
-          final_outcome?: string;
-          id?: string;
-          notes?: string;
-          outcome?: string;
-          patient_id: string;
-          referral_note?: string;
-          started_at?: string;
-        };
+          diagnosis?: string
+          doctor_id?: string | null
+          ended_at?: string | null
+          final_outcome?: string
+          id?: string
+          notes?: string
+          outcome?: string
+          patient_id: string
+          referral_note?: string
+          started_at?: string
+        }
         Update: {
-          diagnosis?: string;
-          doctor_id?: string | null;
-          ended_at?: string | null;
-          final_outcome?: string;
-          id?: string;
-          notes?: string;
-          outcome?: string;
-          patient_id?: string;
-          referral_note?: string;
-          started_at?: string;
-        };
+          diagnosis?: string
+          doctor_id?: string | null
+          ended_at?: string | null
+          final_outcome?: string
+          id?: string
+          notes?: string
+          outcome?: string
+          patient_id?: string
+          referral_note?: string
+          started_at?: string
+        }
         Relationships: [
           {
-            foreignKeyName: "consultations_patient_id_fkey";
-            columns: ["patient_id"];
-            isOneToOne: false;
-            referencedRelation: "patients";
-            referencedColumns: ["id"];
+            foreignKeyName: "consultations_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
           },
-        ];
-      };
+        ]
+      }
       observation_events: {
         Row: {
-          author_id: string | null;
-          author_name: string;
-          bed_number: string | null;
-          condition: string;
-          consultation_id: string | null;
-          created_at: string;
-          heart_rate: number | null;
-          id: string;
-          kind: string;
-          notes: string;
-          patient_id: string;
-          room_number: string | null;
-          spo2: number | null;
-          temperature: number | null;
-        };
+          author_id: string | null
+          author_name: string
+          bed_number: string | null
+          condition: string
+          consultation_id: string | null
+          created_at: string
+          heart_rate: number | null
+          id: string
+          kind: string
+          notes: string
+          patient_id: string
+          room_number: string | null
+          spo2: number | null
+          temperature: number | null
+        }
         Insert: {
-          author_id?: string | null;
-          author_name?: string;
-          bed_number?: string | null;
-          condition?: string;
-          consultation_id?: string | null;
-          created_at?: string;
-          heart_rate?: number | null;
-          id?: string;
-          kind?: string;
-          notes?: string;
-          patient_id: string;
-          room_number?: string | null;
-          spo2?: number | null;
-          temperature?: number | null;
-        };
+          author_id?: string | null
+          author_name?: string
+          bed_number?: string | null
+          condition?: string
+          consultation_id?: string | null
+          created_at?: string
+          heart_rate?: number | null
+          id?: string
+          kind?: string
+          notes?: string
+          patient_id: string
+          room_number?: string | null
+          spo2?: number | null
+          temperature?: number | null
+        }
         Update: {
-          author_id?: string | null;
-          author_name?: string;
-          bed_number?: string | null;
-          condition?: string;
-          consultation_id?: string | null;
-          created_at?: string;
-          heart_rate?: number | null;
-          id?: string;
-          kind?: string;
-          notes?: string;
-          patient_id?: string;
-          room_number?: string | null;
-          spo2?: number | null;
-          temperature?: number | null;
-        };
+          author_id?: string | null
+          author_name?: string
+          bed_number?: string | null
+          condition?: string
+          consultation_id?: string | null
+          created_at?: string
+          heart_rate?: number | null
+          id?: string
+          kind?: string
+          notes?: string
+          patient_id?: string
+          room_number?: string | null
+          spo2?: number | null
+          temperature?: number | null
+        }
         Relationships: [
           {
-            foreignKeyName: "observation_events_consultation_id_fkey";
-            columns: ["consultation_id"];
-            isOneToOne: false;
-            referencedRelation: "consultations";
-            referencedColumns: ["id"];
+            foreignKeyName: "observation_events_consultation_id_fkey"
+            columns: ["consultation_id"]
+            isOneToOne: false
+            referencedRelation: "consultations"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "observation_events_patient_id_fkey";
-            columns: ["patient_id"];
-            isOneToOne: false;
-            referencedRelation: "patients";
-            referencedColumns: ["id"];
+            foreignKeyName: "observation_events_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
           },
-        ];
-      };
+        ]
+      }
       patients: {
         Row: {
-          age: number;
-          bed_number: string | null;
-          condition: string;
-          emergency_override: boolean;
-          full_name: string;
-          gender: string;
-          heart_rate: number | null;
-          id: string;
-          medical_history: string[];
-          observation_doctor_id: string | null;
-          observation_started_at: string | null;
-          patient_code: string;
-          priority: Database["public"]["Enums"]["triage_priority"];
-          queue_position: number;
-          registered_at: string;
-          rfid_tag: string | null;
-          room_number: string | null;
-          spo2: number | null;
-          status: Database["public"]["Enums"]["patient_status"];
-          symptoms: string;
-          temperature: number | null;
-          triage_factors: Json;
-          triage_score: number;
-          updated_at: string;
-        };
+          age: number
+          bed_number: string | null
+          condition: string
+          emergency_override: boolean
+          full_name: string
+          gender: string
+          heart_rate: number | null
+          id: string
+          medical_history: string[]
+          observation_doctor_id: string | null
+          observation_started_at: string | null
+          patient_code: string
+          priority: Database["public"]["Enums"]["triage_priority"]
+          queue_position: number
+          registered_at: string
+          rfid_tag: string | null
+          room_number: string | null
+          spo2: number | null
+          status: Database["public"]["Enums"]["patient_status"]
+          symptoms: string
+          temperature: number | null
+          triage_factors: Json
+          triage_score: number
+          updated_at: string
+        }
         Insert: {
-          age: number;
-          bed_number?: string | null;
-          condition?: string;
-          emergency_override?: boolean;
-          full_name: string;
-          gender?: string;
-          heart_rate?: number | null;
-          id?: string;
-          medical_history?: string[];
-          observation_doctor_id?: string | null;
-          observation_started_at?: string | null;
-          patient_code: string;
-          priority?: Database["public"]["Enums"]["triage_priority"];
-          queue_position?: number;
-          registered_at?: string;
-          rfid_tag?: string | null;
-          room_number?: string | null;
-          spo2?: number | null;
-          status?: Database["public"]["Enums"]["patient_status"];
-          symptoms?: string;
-          temperature?: number | null;
-          triage_factors?: Json;
-          triage_score?: number;
-          updated_at?: string;
-        };
+          age: number
+          bed_number?: string | null
+          condition?: string
+          emergency_override?: boolean
+          full_name: string
+          gender?: string
+          heart_rate?: number | null
+          id?: string
+          medical_history?: string[]
+          observation_doctor_id?: string | null
+          observation_started_at?: string | null
+          patient_code: string
+          priority?: Database["public"]["Enums"]["triage_priority"]
+          queue_position?: number
+          registered_at?: string
+          rfid_tag?: string | null
+          room_number?: string | null
+          spo2?: number | null
+          status?: Database["public"]["Enums"]["patient_status"]
+          symptoms?: string
+          temperature?: number | null
+          triage_factors?: Json
+          triage_score?: number
+          updated_at?: string
+        }
         Update: {
-          age?: number;
-          bed_number?: string | null;
-          condition?: string;
-          emergency_override?: boolean;
-          full_name?: string;
-          gender?: string;
-          heart_rate?: number | null;
-          id?: string;
-          medical_history?: string[];
-          observation_doctor_id?: string | null;
-          observation_started_at?: string | null;
-          patient_code?: string;
-          priority?: Database["public"]["Enums"]["triage_priority"];
-          queue_position?: number;
-          registered_at?: string;
-          rfid_tag?: string | null;
-          room_number?: string | null;
-          spo2?: number | null;
-          status?: Database["public"]["Enums"]["patient_status"];
-          symptoms?: string;
-          temperature?: number | null;
-          triage_factors?: Json;
-          triage_score?: number;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
+          age?: number
+          bed_number?: string | null
+          condition?: string
+          emergency_override?: boolean
+          full_name?: string
+          gender?: string
+          heart_rate?: number | null
+          id?: string
+          medical_history?: string[]
+          observation_doctor_id?: string | null
+          observation_started_at?: string | null
+          patient_code?: string
+          priority?: Database["public"]["Enums"]["triage_priority"]
+          queue_position?: number
+          registered_at?: string
+          rfid_tag?: string | null
+          room_number?: string | null
+          spo2?: number | null
+          status?: Database["public"]["Enums"]["patient_status"]
+          symptoms?: string
+          temperature?: number | null
+          triage_factors?: Json
+          triage_score?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
-          created_at: string;
-          department: string;
-          full_name: string;
-          id: string;
-          job_title: string;
-          updated_at: string;
-        };
+          created_at: string
+          department: string
+          full_name: string
+          id: string
+          job_title: string
+          updated_at: string
+        }
         Insert: {
-          created_at?: string;
-          department?: string;
-          full_name?: string;
-          id: string;
-          job_title?: string;
-          updated_at?: string;
-        };
+          created_at?: string
+          department?: string
+          full_name?: string
+          id: string
+          job_title?: string
+          updated_at?: string
+        }
         Update: {
-          created_at?: string;
-          department?: string;
-          full_name?: string;
-          id?: string;
-          job_title?: string;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
+          created_at?: string
+          department?: string
+          full_name?: string
+          id?: string
+          job_title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       referrals: {
         Row: {
-          consultation_id: string | null;
-          created_at: string;
-          destination: string;
-          diagnosis: string;
-          doctor_id: string | null;
-          doctor_name: string;
-          id: string;
-          notes: string;
-          patient_id: string;
-          reason: string;
-          referred_at: string;
-          status: string;
-          updated_at: string;
-        };
+          consultation_id: string | null
+          created_at: string
+          destination: string
+          diagnosis: string
+          doctor_id: string | null
+          doctor_name: string
+          id: string
+          notes: string
+          patient_id: string
+          reason: string
+          referred_at: string
+          status: string
+          updated_at: string
+        }
         Insert: {
-          consultation_id?: string | null;
-          created_at?: string;
-          destination?: string;
-          diagnosis?: string;
-          doctor_id?: string | null;
-          doctor_name?: string;
-          id?: string;
-          notes?: string;
-          patient_id: string;
-          reason?: string;
-          referred_at?: string;
-          status?: string;
-          updated_at?: string;
-        };
+          consultation_id?: string | null
+          created_at?: string
+          destination?: string
+          diagnosis?: string
+          doctor_id?: string | null
+          doctor_name?: string
+          id?: string
+          notes?: string
+          patient_id: string
+          reason?: string
+          referred_at?: string
+          status?: string
+          updated_at?: string
+        }
         Update: {
-          consultation_id?: string | null;
-          created_at?: string;
-          destination?: string;
-          diagnosis?: string;
-          doctor_id?: string | null;
-          doctor_name?: string;
-          id?: string;
-          notes?: string;
-          patient_id?: string;
-          reason?: string;
-          referred_at?: string;
-          status?: string;
-          updated_at?: string;
-        };
+          consultation_id?: string | null
+          created_at?: string
+          destination?: string
+          diagnosis?: string
+          doctor_id?: string | null
+          doctor_name?: string
+          id?: string
+          notes?: string
+          patient_id?: string
+          reason?: string
+          referred_at?: string
+          status?: string
+          updated_at?: string
+        }
         Relationships: [
           {
-            foreignKeyName: "referrals_consultation_id_fkey";
-            columns: ["consultation_id"];
-            isOneToOne: true;
-            referencedRelation: "consultations";
-            referencedColumns: ["id"];
+            foreignKeyName: "referrals_consultation_id_fkey"
+            columns: ["consultation_id"]
+            isOneToOne: true
+            referencedRelation: "consultations"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "referrals_patient_id_fkey";
-            columns: ["patient_id"];
-            isOneToOne: false;
-            referencedRelation: "patients";
-            referencedColumns: ["id"];
+            foreignKeyName: "referrals_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
           },
-        ];
-      };
+        ]
+      }
       user_roles: {
         Row: {
-          id: string;
-          role: Database["public"]["Enums"]["app_role"];
-          user_id: string;
-        };
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
         Insert: {
-          id?: string;
-          role: Database["public"]["Enums"]["app_role"];
-          user_id: string;
-        };
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
         Update: {
-          id?: string;
-          role?: Database["public"]["Enums"]["app_role"];
-          user_id?: string;
-        };
-        Relationships: [];
-      };
-    };
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+    }
     Views: {
-      [_ in never]: never;
-    };
+      [_ in never]: never
+    }
     Functions: {
       has_any_role: {
         Args: {
-          _roles: Database["public"]["Enums"]["app_role"][];
-          _user_id: string;
-        };
-        Returns: boolean;
-      };
+          _roles: Database["public"]["Enums"]["app_role"][]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
-          _role: Database["public"]["Enums"]["app_role"];
-          _user_id: string;
-        };
-        Returns: boolean;
-      };
-      is_staff: { Args: { _user_id: string }; Returns: boolean };
-    };
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_staff: { Args: { _user_id: string }; Returns: boolean }
+    }
     Enums: {
-      app_role: "admin" | "doctor" | "nurse" | "receptionist";
-      patient_status: "waiting" | "in-consult" | "completed" | "observation";
-      triage_priority: "HIGH" | "MODERATE" | "LOW";
-    };
+      app_role: "admin" | "doctor" | "nurse" | "receptionist"
+      patient_status: "waiting" | "in-consult" | "completed" | "observation"
+      triage_priority: "HIGH" | "MODERATE" | "LOW"
+    }
     CompositeTypes: {
-      [_ in never]: never;
-    };
-  };
-};
+      [_ in never]: never
+    }
+  }
+}
 
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">;
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">];
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals;
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
+  schema: keyof DatabaseWithoutInternals
 }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
       DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R;
+      Row: infer R
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] & DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R;
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
       }
       ? R
       : never
-    : never;
+    : never
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals;
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
+  schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I;
+      Insert: infer I
     }
     ? I
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
     ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I;
+        Insert: infer I
       }
       ? I
       : never
-    : never;
+    : never
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals;
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
+  schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U;
+      Update: infer U
     }
     ? U
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
     ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U;
+        Update: infer U
       }
       ? U
       : never
-    : never;
+    : never
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals;
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
+  schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never;
+    : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals;
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
+  schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never;
+    : never
 
 export const Constants = {
   public: {
@@ -509,4 +517,4 @@ export const Constants = {
       triage_priority: ["HIGH", "MODERATE", "LOW"],
     },
   },
-} as const;
+} as const

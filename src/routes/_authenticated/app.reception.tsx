@@ -327,16 +327,16 @@ function ReceptionPage() {
     <>
       {/* ── 1. Top bar ─────────────────────────────────────────────── */}
       <header className="panel mb-6 rounded-2xl px-5 py-4 lg:mb-8">
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 sm:flex sm:flex-wrap sm:justify-between">
-          <div className="flex min-w-0 items-center gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+          <div className="flex min-w-0 flex-[1_1_12rem] items-center gap-3">
             <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary-light text-sm font-semibold text-primary-hover">
               {initials(profile?.full_name ?? user?.email ?? "R")}
             </span>
             <div className="min-w-0">
-              <h1 className="truncate font-display text-lg font-semibold tracking-tight text-foreground sm:text-xl">
+              <h1 className="font-display text-lg font-semibold leading-snug tracking-tight text-foreground [overflow-wrap:break-word] sm:truncate sm:text-xl">
                 {profile?.full_name ?? "Reception desk"}
               </h1>
-              <p className="truncate text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground [overflow-wrap:break-word] sm:truncate">
                 {profile?.job_title ?? "Receptionist"}
                 {profile?.department ? ` · ${profile.department}` : ""} · Front desk console
               </p>
