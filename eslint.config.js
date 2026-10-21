@@ -6,7 +6,20 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist", ".output", ".vinxi"] },
+  {
+    ignores: [
+      "dist",
+      ".output",
+      ".vinxi",
+      // Platform-generated Supabase files: regenerated on every sync, must not be hand-edited.
+      "src/integrations/supabase/types.ts",
+      "src/integrations/supabase/previewAuthStorage.ts",
+      "src/integrations/supabase/client.ts",
+      "src/integrations/supabase/client.server.ts",
+      "src/integrations/supabase/auth-middleware.ts",
+      "src/integrations/supabase/auth-attacher.ts",
+    ],
+  },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],
