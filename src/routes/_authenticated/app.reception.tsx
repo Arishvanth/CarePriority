@@ -50,6 +50,7 @@ import { createAlert, createOverflowAlertOnce } from "@/data/alerts";
 import type { Patient } from "@/data/types";
 import { scoreTriage, priorityMeta, missingAssessment, type Priority } from "@/lib/triage";
 import { initials, nextPatientCode, randomRfid, relativeTime, waitMinutes } from "@/lib/format";
+import { liveSyncMeta, useLiveSyncStatus } from "@/lib/live-sync";
 
 export const Route = createFileRoute("/_authenticated/app/reception")({
   beforeLoad: () => requireRole(["receptionist", "nurse", "admin"]),
@@ -140,6 +141,7 @@ function ReceptionPage() {
   const [assessTarget, setAssessTarget] = useState<Patient | null>(null);
   const { user } = useSession();
   const profile = useProfile(user?.id);
+  const liveMeta = liveSyncMeta(useLiveSyncStatus());
 
   function openEmergency(patient?: Patient) {
     setEmergencyTarget(patient ?? null);
@@ -360,7 +362,11 @@ function ReceptionPage() {
                 />
               </span>
               <span className="text-xs font-medium text-foreground">
-                {liveMeta.isLive ? "Systems operational" : "Live updates paused"}
+                {liveMeta.isLive
+                  ? "Systems operational"
+                  : liveMeta.tone === "pending"
+                    ? "Starting live updates"
+                    : "Live updates paused"}
               </span>
               <span className="text-xs text-muted-foreground">· {liveMeta.short}</span>
             </span>
