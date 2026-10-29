@@ -51,7 +51,15 @@ export async function fetchCurrentRole(): Promise<{ userId: string; role: AppRol
   const userId = data.user.id;
   if (cache && cache.userId === userId) return cache;
 
-  const { data: rows } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+  const { data: rows, error: roleError } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId);
+  if (roleError) {
+    // Fail closed for this call, but never cache a failed lookup: a transient
+    // error must not strand the user without a role for the rest of the session.
+    return { userId, role: null };
+  }
   const roles = (rows ?? []).map((r) => r.role as AppRole);
   const role = ROLE_RANK.find((r) => roles.includes(r)) ?? null;
   cache = { userId, role };
@@ -64,7 +72,11 @@ export function homeForRole(role: AppRole | null): string {
 
 export function canAccess(role: AppRole | null, path: string): boolean {
   const allowed = ROUTE_ACCESS[path];
-  if (!allowed) return true;
+  if (!allowed) {
+    // Fail closed: a console page missing from the matrix is hidden from everyone.
+    const isConsole = path.startsWith("/app/") && path !== "/app/";
+    return !isConsole;
+  }
   return !!role && allowed.includes(role);
 }
 
@@ -88,7 +100,8 @@ export async function assertOutcomeAllowed(outcome: string): Promise<void> {
   const restricted = outcome === "observation" || outcome === "referred";
   if (!restricted) return;
   const current = await fetchCurrentRole();
-  if (current?.role === "nurse") {
+  // Allow-list, not deny-list: an unknown or failed role lookup is refused too.
+  if (current?.role !== "doctor" && current?.role !== "admin") {
     throw new Error(
       "Observation and referral outcomes can only be recorded by a doctor or administrator.",
     );

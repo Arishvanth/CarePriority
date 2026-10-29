@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, Outlet, useRouterState, useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   BarChart3,
   Bell,
@@ -49,6 +50,7 @@ export function AppShell() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user } = useSession();
   const profile = useProfile(user?.id);
   const { role } = useRole();
@@ -58,9 +60,13 @@ export function AppShell() {
   const unread = alerts.filter((a) => !a.acknowledged_at).length;
 
   async function signOut() {
+    // Drop every cached clinical record so the next person on this device
+    // never sees the previous user's data, and keep Back off the console.
+    await queryClient.cancelQueries();
+    queryClient.clear();
     clearRoleCache();
     await supabase.auth.signOut();
-    navigate({ to: "/auth" });
+    navigate({ to: "/auth", replace: true });
   }
 
   const displayName = profile?.full_name || user?.email?.split("@")[0] || "Staff member";
