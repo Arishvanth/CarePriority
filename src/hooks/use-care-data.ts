@@ -1,5 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  getLiveSyncStatus,
+  nextLiveStatus,
+  setLiveSyncStatus,
+  shouldRefreshOnRecovery,
+  useLiveSyncStatus,
+  type LiveSyncStatus,
+} from "@/lib/live-sync";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchPatients } from "@/data/patients";
 import { fetchAlerts } from "@/data/alerts";
@@ -24,18 +32,22 @@ const LIVE_TABLES = [
   ["observation_events", queryKeys.observations],
 ] as const;
 
-export type LiveSyncStatus = "connecting" | "live" | "disconnected";
+export type { LiveSyncStatus };
 
-/** Subscribes once to live table changes and refreshes the matching cache. */
+/**
+ * Subscribes once to live table changes and refreshes the matching cache.
+ * Mount exactly once (the app shell); other screens read the shared status
+ * with `useLiveSyncStatus()` instead of opening a second channel.
+ */
 export function useCareRealtime(): LiveSyncStatus {
   const queryClient = useQueryClient();
-  const [status, setStatus] = useState<LiveSyncStatus>("connecting");
+  const status = useLiveSyncStatus();
 
   useEffect(() => {
     // One channel with one listener per table, torn down together on unmount,
     // so remounts never leave a second subscription behind.
     let active = true;
-    let wasDown = false;
+    setLiveSyncStatus("connecting");
     let channel = supabase.channel("care-live");
     for (const [table, queryKey] of LIVE_TABLES) {
       channel = channel.on("postgres_changes", { event: "*", schema: "public", table }, () => {
@@ -44,22 +56,20 @@ export function useCareRealtime(): LiveSyncStatus {
     }
     channel.subscribe((state) => {
       if (!active) return;
-      if (state === "SUBSCRIBED") {
-        // Changes may have been missed while offline: refresh once on recovery.
-        if (wasDown) {
-          for (const [, queryKey] of LIVE_TABLES) queryClient.invalidateQueries({ queryKey });
-        }
-        wasDown = false;
-        setStatus("live");
-      } else if (state === "CHANNEL_ERROR" || state === "TIMED_OUT" || state === "CLOSED") {
-        wasDown = true;
-        setStatus("disconnected");
+      const prev = getLiveSyncStatus();
+      const next = nextLiveStatus(prev, state);
+      // Changes may have been missed while offline: refresh once on recovery.
+      if (shouldRefreshOnRecovery(prev, next)) {
+        for (const [, queryKey] of LIVE_TABLES) queryClient.invalidateQueries({ queryKey });
       }
+      setLiveSyncStatus(next);
     });
 
     return () => {
       active = false;
       supabase.removeChannel(channel);
+      // Nothing is subscribed any more: never leave a stale "live" behind.
+      setLiveSyncStatus("connecting");
     };
   }, [queryClient]);
 
