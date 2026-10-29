@@ -50,6 +50,7 @@ import { createAlert, createOverflowAlertOnce } from "@/data/alerts";
 import type { Patient } from "@/data/types";
 import { scoreTriage, priorityMeta, missingAssessment, type Priority } from "@/lib/triage";
 import { initials, nextPatientCode, randomRfid, relativeTime, waitMinutes } from "@/lib/format";
+import { liveSyncMeta, useLiveSyncStatus } from "@/lib/live-sync";
 
 export const Route = createFileRoute("/_authenticated/app/reception")({
   beforeLoad: () => requireRole(["receptionist", "nurse", "admin"]),
@@ -140,6 +141,7 @@ function ReceptionPage() {
   const [assessTarget, setAssessTarget] = useState<Patient | null>(null);
   const { user } = useSession();
   const profile = useProfile(user?.id);
+  const liveMeta = liveSyncMeta(useLiveSyncStatus());
 
   function openEmergency(patient?: Patient) {
     setEmergencyTarget(patient ?? null);
@@ -343,13 +345,30 @@ function ReceptionPage() {
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-5">
-            <span className="hidden items-center gap-2 sm:flex" role="status">
+            <span className="hidden items-center gap-2 sm:flex" role="status" aria-live="polite">
               <span className="relative flex h-2.5 w-2.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-60" />
-                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-success" />
+                {liveMeta.isLive && (
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-60" />
+                )}
+                <span
+                  className={
+                    "relative inline-flex h-2.5 w-2.5 rounded-full " +
+                    (liveMeta.tone === "ok"
+                      ? "bg-success"
+                      : liveMeta.tone === "warning"
+                        ? "bg-warning animate-pulse"
+                        : "bg-muted-foreground/40")
+                  }
+                />
               </span>
-              <span className="text-xs font-medium text-foreground">Systems operational</span>
-              <span className="text-xs text-muted-foreground">· Realtime live</span>
+              <span className="text-xs font-medium text-foreground">
+                {liveMeta.isLive
+                  ? "Systems operational"
+                  : liveMeta.tone === "pending"
+                    ? "Starting live updates"
+                    : "Live updates paused"}
+              </span>
+              <span className="text-xs text-muted-foreground">· {liveMeta.short}</span>
             </span>
             <span className="hidden h-8 w-px bg-border sm:block" aria-hidden="true" />
             <LiveClock />

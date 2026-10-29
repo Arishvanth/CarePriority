@@ -24,6 +24,7 @@ import { useAlerts, useCareRealtime } from "@/hooks/use-care-data";
 import { useSession, useProfile } from "@/hooks/use-session";
 import { useRole } from "@/hooks/use-role";
 import { canAccess, clearRoleCache, homeForRole, ROLE_LABEL } from "@/lib/rbac";
+import { liveSyncMeta } from "@/lib/live-sync";
 import { initials } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 
@@ -52,7 +53,7 @@ export function AppShell() {
   const profile = useProfile(user?.id);
   const { role } = useRole();
   const home = homeForRole(role);
-  const liveStatus = useCareRealtime();
+  const liveMeta = liveSyncMeta(useCareRealtime());
   const { data: alerts = [] } = useAlerts();
   const unread = alerts.filter((a) => !a.acknowledged_at).length;
 
@@ -111,18 +112,14 @@ export function AppShell() {
         <span
           className={
             "h-2 w-2 shrink-0 rounded-full " +
-            (liveStatus === "live"
+            (liveMeta.tone === "ok"
               ? "bg-primary"
-              : liveStatus === "disconnected"
+              : liveMeta.tone === "warning"
                 ? "bg-warning animate-pulse"
                 : "bg-muted-foreground/40")
           }
         />
-        {liveStatus === "live"
-          ? "Live sync active"
-          : liveStatus === "disconnected"
-            ? "Live sync disconnected — refreshing data automatically."
-            : "Connecting live sync…"}
+        {liveMeta.long}
       </p>
       <div className="rounded-xl border border-border bg-muted/50 p-3">
         <div className="flex items-center gap-2.5">
@@ -189,18 +186,14 @@ export function AppShell() {
             <span
               className={cn(
                 "hidden items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium md:inline-flex",
-                liveStatus === "live"
+                liveMeta.isLive
                   ? "border-success/25 bg-success-soft text-success"
                   : "border-warning/35 bg-warning-soft text-foreground",
               )}
               role="status"
             >
               <CircleCheck className="h-3.5 w-3.5" />{" "}
-              {liveStatus === "live"
-                ? "Live sync active"
-                : liveStatus === "disconnected"
-                  ? "Sync disconnected"
-                  : "Connecting…"}
+              {liveMeta.isLive ? "Live sync active" : liveMeta.short}
             </span>
             <Link
               to="/app/notifications"
