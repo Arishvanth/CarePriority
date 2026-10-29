@@ -30,7 +30,9 @@ export function nextLiveStatus(prev: LiveSyncStatus, state: string): LiveSyncSta
 
 /** True when the channel just recovered after a drop, so missed changes must be refetched. */
 export function shouldRefreshOnRecovery(prev: LiveSyncStatus, next: LiveSyncStatus): boolean {
-  return next === "live" && (prev === "reconnecting" || prev === "disconnected" || prev === "error");
+  return (
+    next === "live" && (prev === "reconnecting" || prev === "disconnected" || prev === "error")
+  );
 }
 
 export type LiveSyncTone = "ok" | "pending" | "warning";
