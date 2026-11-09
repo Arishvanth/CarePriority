@@ -172,7 +172,7 @@ OVERFLOW_JS = """
     if (overlaps.length >= 16) break;
     const s = getComputedStyle(el);
     if (s.position === 'absolute' || s.position === 'fixed' || s.display === 'none') continue;
-    if (el.closest('.sr-only,svg')) continue;
+    if (el.closest('.sr-only,svg,details:not([open])')) continue;
     const p = el.parentElement; if (!p) continue;
     const ps = getComputedStyle(p);
     if (!/visible/.test(ps.overflowY) || ps.display === 'contents' || ps.display === 'inline') continue;
