@@ -43,7 +43,7 @@ export function PageHeader({ title, description, actions, breadcrumbs }: PageHea
           <p className="mt-1.5 max-w-2xl text-sm text-muted-foreground">{description}</p>
         )}
       </div>
-      {actions && <div className="flex min-w-0 flex-wrap items-center gap-2">{actions}</div>}
+      {actions && <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2 lg:shrink-0">{actions}</div>}
     </div>
   );
 }
