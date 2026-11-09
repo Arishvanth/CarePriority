@@ -637,8 +637,8 @@ function Contact() {
     <section id="contact" className="mx-auto max-w-7xl scroll-mt-20 px-4 py-20 sm:px-6 lg:py-24">
       <div className="panel relative overflow-hidden rounded-3xl p-6 sm:p-10 lg:p-14">
         <div className="absolute inset-0 bg-aurora opacity-70" aria-hidden="true" />
-        <div className="relative grid gap-10 lg:grid-cols-2 lg:items-center">
-          <div>
+        <div className="relative grid grid-cols-[minmax(0,1fr)] gap-10 lg:grid-cols-2 lg:items-center">
+          <div className="min-w-0">
             <p className="text-xs uppercase tracking-widest text-primary">Talk to us</p>
             <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">
               Bring CarePriority to your clinic.
@@ -648,7 +648,11 @@ function Contact() {
               tailored rollout plan.
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-3">
-              <Button asChild variant="outline" className="rounded-full">
+              <Button
+                asChild
+                variant="outline"
+                className="h-auto min-h-10 max-w-full whitespace-normal rounded-full [overflow-wrap:anywhere]"
+              >
                 <a href="mailto:hello@carepriority.io">hello@carepriority.io</a>
               </Button>
               <Button asChild variant="ghost" className="rounded-full">
@@ -663,7 +667,7 @@ function Contact() {
               toast.success("Thanks — we'll be in touch within one working day.");
               (e.currentTarget as HTMLFormElement).reset();
             }}
-            className="grid gap-3"
+            className="grid min-w-0 gap-3"
           >
             <input
               required
