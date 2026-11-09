@@ -166,6 +166,21 @@ OVERFLOW_JS = """
     if (/(hidden|clip)/.test(s.overflowY) && el.scrollHeight > el.clientHeight + 4)
       overlaps.push({ kind: 'collapsed', a: label(el), h: el.clientHeight, content: el.scrollHeight });
   }
+  // Spill: an in-flow child that extends below/right of a visible-overflow
+  // parent box (fixed height/width too small), painting over the next card.
+  for (const el of document.querySelectorAll('main *, [role=dialog] *')) {
+    if (overlaps.length >= 16) break;
+    const s = getComputedStyle(el);
+    if (s.position === 'absolute' || s.position === 'fixed' || s.display === 'none') continue;
+    if (el.closest('.sr-only,svg')) continue;
+    const p = el.parentElement; if (!p) continue;
+    const ps = getComputedStyle(p);
+    if (!/visible/.test(ps.overflowY) || ps.display === 'contents' || ps.display === 'inline') continue;
+    const r = el.getBoundingClientRect(), pr = p.getBoundingClientRect();
+    if (r.height < 2 || pr.height < 2) continue;
+    if (r.bottom > pr.bottom + 4 || r.right > pr.right + 4)
+      overlaps.push({ kind: 'spill', a: label(el), b: label(p), dy: Math.round(r.bottom - pr.bottom), dx: Math.round(r.right - pr.right) });
+  }
   return { vw, sw, overflow: sw > vw + 1, offenders, clipped, overlaps };
 }
 """
@@ -195,7 +210,7 @@ async def settle(page) -> None:
         await page.wait_for_load_state("networkidle", timeout=8000)
     except Exception:
         pass
-    await page.wait_for_timeout(400)
+    await page.wait_for_timeout(1200)
 
 
 async def audit_role(browser, base, role, email, password, access, viewports, out, results):
