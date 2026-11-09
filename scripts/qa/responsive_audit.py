@@ -47,12 +47,14 @@ RBAC = ROOT / "src" / "lib" / "rbac.ts"
 
 VIEWPORTS = [
     ("mobile-320", 320, 720),
-    ("mobile-360", 360, 760),
+    ("mobile-360", 360, 800),
     ("mobile-390", 390, 844),
     ("mobile-430", 430, 932),
     ("tablet-768", 768, 1024),
     ("tablet-1024", 1024, 768),
+    ("laptop-1280x800", 1280, 800),
     ("laptop-1366x768", 1366, 768),
+    ("desktop-1440x900", 1440, 900),
     ("desktop-1920x1080", 1920, 1080),
 ]
 QUICK_VIEWPORTS = {"mobile-320", "tablet-768", "laptop-1366x768", "desktop-1920x1080"}
@@ -132,7 +134,54 @@ OVERFLOW_JS = """
       }
     }
   }
-  return { vw, sw, overflow: sw > vw + 1, offenders, clipped };
+  // Overlap/collapse: in-flow siblings of a grid/flex container whose boxes
+  // intersect (cards stacked on top of each other), or a box whose content is
+  // taller than the box while overflow is hidden (a squashed card).
+  const overlaps = [];
+  const label = (e) => (typeof e.className === 'string' ? e.className : '').slice(0, 90) + ' | ' + (e.innerText || '').trim().slice(0, 40);
+  for (const parent of document.querySelectorAll('main *, [role=dialog] *')) {
+    if (overlaps.length >= 8) break;
+    const ps = getComputedStyle(parent);
+    if (!/(grid|flex)/.test(ps.display)) continue;
+    const kids = [...parent.children].filter((k) => {
+      const ks = getComputedStyle(k);
+      if (ks.position === 'absolute' || ks.position === 'fixed' || ks.display === 'none' || ks.display === 'contents') return false;
+      if (k.closest('.sr-only')) return false;
+      const r = k.getBoundingClientRect();
+      return r.width > 1 && r.height > 1;
+    });
+    for (let i = 0; i < kids.length && overlaps.length < 8; i++) {
+      const a = kids[i].getBoundingClientRect();
+      for (let j = i + 1; j < kids.length; j++) {
+        const b = kids[j].getBoundingClientRect();
+        const ix = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+        const iy = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+        if (ix > 3 && iy > 3) { overlaps.push({ kind: 'overlap', a: label(kids[i]), b: label(kids[j]), ix: Math.round(ix), iy: Math.round(iy) }); break; }
+      }
+    }
+  }
+  for (const el of document.querySelectorAll('main section, main .panel, [role=dialog] section')) {
+    if (overlaps.length >= 12) break;
+    const s = getComputedStyle(el);
+    if (/(hidden|clip)/.test(s.overflowY) && el.scrollHeight > el.clientHeight + 4)
+      overlaps.push({ kind: 'collapsed', a: label(el), h: el.clientHeight, content: el.scrollHeight });
+  }
+  // Spill: an in-flow child that extends below/right of a visible-overflow
+  // parent box (fixed height/width too small), painting over the next card.
+  for (const el of document.querySelectorAll('main *, [role=dialog] *')) {
+    if (overlaps.length >= 16) break;
+    const s = getComputedStyle(el);
+    if (s.position === 'absolute' || s.position === 'fixed' || s.display === 'none') continue;
+    if (el.closest('.sr-only,svg,details:not([open])')) continue;
+    const p = el.parentElement; if (!p) continue;
+    const ps = getComputedStyle(p);
+    if (!/visible/.test(ps.overflowY) || ps.display === 'contents' || ps.display === 'inline') continue;
+    const r = el.getBoundingClientRect(), pr = p.getBoundingClientRect();
+    if (r.height < 2 || pr.height < 2) continue;
+    if (r.bottom > pr.bottom + 4 || r.right > pr.right + 4)
+      overlaps.push({ kind: 'spill', a: label(el), b: label(p), dy: Math.round(r.bottom - pr.bottom), dx: Math.round(r.right - pr.right) });
+  }
+  return { vw, sw, overflow: sw > vw + 1, offenders, clipped, overlaps };
 }
 """
 
@@ -161,7 +210,7 @@ async def settle(page) -> None:
         await page.wait_for_load_state("networkidle", timeout=8000)
     except Exception:
         pass
-    await page.wait_for_timeout(400)
+    await page.wait_for_timeout(1200)
 
 
 async def audit_role(browser, base, role, email, password, access, viewports, out, results):
@@ -211,13 +260,13 @@ async def audit_role(browser, base, role, email, password, access, viewports, ou
             res = await page.evaluate(OVERFLOW_JS)
             results["checks"] += 1
             key = f"{role}:{name}:{path}"
-            if res["overflow"] or res["offenders"] or res["clipped"]:
+            if res["overflow"] or res["offenders"] or res["clipped"] or res["overlaps"]:
                 shot = out / f"{role}_{name}_{path.strip('/').replace('/', '_')}.png"
                 await page.screenshot(path=str(shot))
                 results["failures"].append(
                     {"role": role, "check": "overflow", "viewport": name, "path": path,
                      "scrollWidth": res["sw"], "viewportWidth": res["vw"],
-                     "offenders": res["offenders"], "clipped": res["clipped"],
+                     "offenders": res["offenders"], "clipped": res["clipped"], "overlaps": res["overlaps"],
                      "screenshot": str(shot)})
             else:
                 results["passed"].append(key)
