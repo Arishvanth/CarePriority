@@ -673,19 +673,19 @@ function Contact() {
               required
               placeholder="Full name"
               aria-label="Full name"
-              className="h-11 rounded-xl border border-input bg-surface px-4 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary"
+              className="h-11 w-full min-w-0 rounded-xl border border-input bg-surface px-4 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary"
             />
             <input
               required
               type="email"
               placeholder="Work email"
               aria-label="Work email"
-              className="h-11 rounded-xl border border-input bg-surface px-4 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary"
+              className="h-11 w-full min-w-0 rounded-xl border border-input bg-surface px-4 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary"
             />
             <input
               placeholder="Clinic / Hospital"
               aria-label="Clinic or hospital"
-              className="h-11 rounded-xl border border-input bg-surface px-4 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary"
+              className="h-11 w-full min-w-0 rounded-xl border border-input bg-surface px-4 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary"
             />
             <textarea
               placeholder="Tell us about your patient volume"
