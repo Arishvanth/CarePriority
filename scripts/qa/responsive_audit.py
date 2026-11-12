@@ -60,6 +60,8 @@ VIEWPORTS = [
 QUICK_VIEWPORTS = {"mobile-320", "tablet-768", "laptop-1366x768", "desktop-1920x1080"}
 
 ROLES = ["admin", "doctor", "nurse", "receptionist"]
+ALL_PAGES = False
+INTERACT = False
 ACCOUNT_PAGES = {"/app/notifications", "/app/settings", "/app/profile"}
 
 
@@ -213,6 +215,71 @@ async def settle(page) -> None:
     await page.wait_for_timeout(1200)
 
 
+# Read-only overlay openers only: Radix popup triggers, tabs and expanders.
+# Never clicks submit/confirm buttons; every overlay is closed with Escape.
+TRIGGERS = "main [aria-haspopup]:not([disabled]), main [role=tab]:not([disabled]), main [aria-expanded]:not([disabled]), header [aria-haspopup]:not([disabled])"
+# Buttons that only open a read-only view or an unsubmitted dialog.
+OPENERS = re.compile(r"^(view|details|view details|emergency override|override|add vitals|edit vitals|assess|reassess|filter|more)", re.I)
+
+
+async def interact(page, role, vp, path, out, results):
+    names = await page.eval_on_selector_all("main button:not([disabled])", "els => els.map(e => (e.getAttribute('aria-label') || e.innerText || '').trim())")
+    extra = sorted({n for n in names if OPENERS.search(n)})
+    for label in extra:
+        el = page.locator("main button:not([disabled])").filter(has_text=label).first
+        if not await el.count():
+            el = page.get_by_role("button", name=label).first
+        try:
+            await el.click(timeout=3000)
+            await page.wait_for_timeout(500)
+            res = await page.evaluate(OVERFLOW_JS)
+            fit = await page.evaluate("""() => [...document.querySelectorAll('[role=dialog],[role=alertdialog]')].map(e=>{const r=e.getBoundingClientRect();return {ok:r.left>=-1&&r.right<=innerWidth+1&&r.top>=-1&&r.bottom<=innerHeight+1,w:Math.round(r.width),h:Math.round(r.height)}})""")
+            results["checks"] += 1
+            results.setdefault("interactions", []).append(f"{role}:{vp}:{path}:{label[:40]} dialogs={len(fit)}")
+            if res["overflow"] or res["offenders"] or res["clipped"] or res["overlaps"] or any(not f["ok"] for f in fit):
+                shot = out / f"dlg_{role}_{vp}_{path.strip('/').replace('/', '_')}_{label[:12]}.png"
+                await page.screenshot(path=str(shot))
+                results["failures"].append({"role": role, "check": "dialog", "viewport": vp, "path": path, "trigger": label[:40],
+                    "fit": fit, "offenders": res["offenders"], "clipped": res["clipped"], "overlaps": res["overlaps"], "screenshot": str(shot)})
+        except Exception as exc:  # noqa: BLE001
+            results.setdefault("interaction_skips", []).append(f"{role}:{vp}:{path}:{label[:30]}:{str(exc)[:80]}")
+        for _ in range(2):
+            await page.keyboard.press("Escape")
+            await page.wait_for_timeout(200)
+    n = await page.locator(TRIGGERS).count()
+    for i in range(min(n, 12)):
+        el = page.locator(TRIGGERS).nth(i)
+        try:
+            if not await el.is_visible():
+                continue
+            label = ((await el.get_attribute("aria-label")) or (await el.inner_text()) or "").strip()[:40]
+            if re.search(r"(delete|remove|complete|confirm|submit|save|sign out|override|acknowledge)", label, re.I):
+                continue
+            await el.click(timeout=3000)
+            await page.wait_for_timeout(400)
+            res = await page.evaluate(OVERFLOW_JS)
+            # dialogs must fit the viewport
+            fit = await page.evaluate("""() => [...document.querySelectorAll('[role=dialog],[role=menu],[role=listbox],[data-radix-popper-content-wrapper] > *')].filter(e=>e.getBoundingClientRect().width>0).map(e=>{const r=e.getBoundingClientRect();return {ok:r.left>=-1&&r.right<=innerWidth+1&&r.top>=-1&&r.bottom<=innerHeight+1,w:Math.round(r.width),h:Math.round(r.height)}})""")
+            results["checks"] += 1
+            results.setdefault("interactions", []).append(f"{role}:{vp}:{path}:{label}")
+            bad = res["overflow"] or res["offenders"] or res["clipped"] or res["overlaps"] or any(not f["ok"] for f in fit)
+            if bad:
+                shot = out / f"int_{role}_{vp}_{path.strip('/').replace('/', '_')}_{i}.png"
+                await page.screenshot(path=str(shot))
+                results["failures"].append({"role": role, "check": "interaction", "viewport": vp, "path": path,
+                    "trigger": label, "fit": fit, "offenders": res["offenders"], "clipped": res["clipped"],
+                    "overlaps": res["overlaps"], "screenshot": str(shot)})
+            await page.keyboard.press("Escape")
+            await page.wait_for_timeout(250)
+            if await page.locator("[role=dialog]").count():
+                await page.keyboard.press("Escape")
+            if page.url.replace("http://localhost:8080", "").split("?")[0] != path:
+                await page.goto(f"http://localhost:8080{path}", wait_until="domcontentloaded")
+                await settle(page)
+        except Exception as exc:  # noqa: BLE001
+            results.setdefault("interaction_skips", []).append(f"{role}:{vp}:{path}:{i}:{str(exc)[:80]}")
+
+
 async def audit_role(browser, base, role, email, password, access, viewports, out, results):
     context = await browser.new_context(viewport={"width": 1366, "height": 768})
     page = await context.new_page()
@@ -253,7 +320,7 @@ async def audit_role(browser, base, role, email, password, access, viewports, ou
     for name, w, h in viewports:
         await page.set_viewport_size({"width": w, "height": h})
         for path in allowed:
-            if role != "admin" and path in ACCOUNT_PAGES:
+            if role != "admin" and path in ACCOUNT_PAGES and not ALL_PAGES:
                 continue  # account pages share layout; admin pass covers them
             await page.goto(f"{base}{path}", wait_until="domcontentloaded")
             await settle(page)
@@ -270,6 +337,8 @@ async def audit_role(browser, base, role, email, password, access, viewports, ou
                      "screenshot": str(shot)})
             else:
                 results["passed"].append(key)
+            if INTERACT:
+                await interact(page, role, name, path, out, results)
             # mobile drawer opens and fits
             if w < 1024 and path == allowed[0]:
                 btn = page.get_by_role("button", name="Open navigation")
@@ -296,7 +365,11 @@ async def main() -> int:
     ap.add_argument("--out", default="/tmp/carepriority-qa")
     ap.add_argument("--quick", action="store_true", help="4 representative viewports only")
     ap.add_argument("--roles", default=",".join(ROLES))
+    ap.add_argument("--all-pages", action="store_true")
+    ap.add_argument("--interactions", action="store_true")
     args = ap.parse_args()
+    global ALL_PAGES, INTERACT
+    ALL_PAGES, INTERACT = args.all_pages, args.interactions
 
     base = os.environ.get("BASE_URL", "http://localhost:8080").rstrip("/")
     out = Path(args.out)
