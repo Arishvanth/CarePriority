@@ -218,9 +218,34 @@ async def settle(page) -> None:
 # Read-only overlay openers only: Radix popup triggers, tabs and expanders.
 # Never clicks submit/confirm buttons; every overlay is closed with Escape.
 TRIGGERS = "main [aria-haspopup]:not([disabled]), main [role=tab]:not([disabled]), main [aria-expanded]:not([disabled]), header [aria-haspopup]:not([disabled])"
+# Buttons that only open a read-only view or an unsubmitted dialog.
+OPENERS = re.compile(r"^(view|details|view details|emergency override|override|add vitals|edit vitals|assess|reassess|filter|more)", re.I)
 
 
 async def interact(page, role, vp, path, out, results):
+    names = await page.eval_on_selector_all("main button:not([disabled])", "els => els.map(e => (e.getAttribute('aria-label') || e.innerText || '').trim())")
+    extra = sorted({n for n in names if OPENERS.search(n)})
+    for label in extra:
+        el = page.locator("main button:not([disabled])").filter(has_text=label).first
+        if not await el.count():
+            el = page.get_by_role("button", name=label).first
+        try:
+            await el.click(timeout=3000)
+            await page.wait_for_timeout(500)
+            res = await page.evaluate(OVERFLOW_JS)
+            fit = await page.evaluate("""() => [...document.querySelectorAll('[role=dialog],[role=alertdialog]')].map(e=>{const r=e.getBoundingClientRect();return {ok:r.left>=-1&&r.right<=innerWidth+1&&r.top>=-1&&r.bottom<=innerHeight+1,w:Math.round(r.width),h:Math.round(r.height)}})""")
+            results["checks"] += 1
+            results.setdefault("interactions", []).append(f"{role}:{vp}:{path}:{label[:40]} dialogs={len(fit)}")
+            if res["overflow"] or res["offenders"] or res["clipped"] or res["overlaps"] or any(not f["ok"] for f in fit):
+                shot = out / f"dlg_{role}_{vp}_{path.strip('/').replace('/', '_')}_{label[:12]}.png"
+                await page.screenshot(path=str(shot))
+                results["failures"].append({"role": role, "check": "dialog", "viewport": vp, "path": path, "trigger": label[:40],
+                    "fit": fit, "offenders": res["offenders"], "clipped": res["clipped"], "overlaps": res["overlaps"], "screenshot": str(shot)})
+        except Exception as exc:  # noqa: BLE001
+            results.setdefault("interaction_skips", []).append(f"{role}:{vp}:{path}:{label[:30]}:{str(exc)[:80]}")
+        for _ in range(2):
+            await page.keyboard.press("Escape")
+            await page.wait_for_timeout(200)
     n = await page.locator(TRIGGERS).count()
     for i in range(min(n, 12)):
         el = page.locator(TRIGGERS).nth(i)
